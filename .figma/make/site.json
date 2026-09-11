@@ -1,0 +1,10 @@
+{
+  "description": "This web application streamlines the design process by allowing users to create, edit, and collaborate on mockups efficiently, enhancing productivity and creativity.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
