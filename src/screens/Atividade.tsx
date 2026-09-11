@@ -32,17 +32,17 @@ export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorre
   const historico = [...ocorrencias].sort((a, b) => b.confirmacoes - a.confirmacoes);
 
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
+    <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
       <Cabecalho />
-      <div className="flex-1 overflow-y-auto w-full">
-        <div className="content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
+      <div className="screen-scroll flex-1 overflow-y-auto w-full">
+        <div className="screen-content layout-atividade content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
 
-          <div className="[word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
+          <div className="activity-intro [word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[22px] w-full">Atividade</p>
             <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Acompanhe atualizações e histórico das ocorrências.</p>
           </div>
 
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="activity-period content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[13px] w-full">Filtre por período</p>
             <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
               <CategoriaAtiva label="Hoje" />
@@ -52,7 +52,7 @@ export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorre
             </div>
           </div>
 
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="activity-recent content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <div className="[word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
               <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[18px] w-full">Atualizações recentes</p>
               <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">O que aconteceu nas últimas horas.</p>
@@ -62,7 +62,7 @@ export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorre
             ))}
           </div>
 
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="activity-history content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <div className="[word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
               <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[18px] w-full">Histórico por relevância</p>
               <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Ordenado pelo número de confirmações.</p>
@@ -72,7 +72,7 @@ export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorre
             ))}
           </div>
 
-          <div className="bg-[#075ce5] relative rounded-[20px] shrink-0 w-full">
+          <div className="activity-action bg-[#075ce5] relative rounded-[20px] shrink-0 w-full">
             <div className="content-stretch flex flex-col gap-[8px] items-start p-[16px] relative size-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[10px] text-white w-full">NOVO PROBLEMA</p>
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[16px] text-white w-full">Registrar uma nova ocorrência</p>

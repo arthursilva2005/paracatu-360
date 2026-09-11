@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TabName } from "@/components/Navegacao";
+import Navegacao, { TabName } from "@/components/Navegacao";
 import { Ocorrencia, ocorrenciasIniciais } from "@/data/ocorrencias";
 import Login from "@/screens/Login";
 import Inicio from "@/screens/Inicio";
@@ -76,10 +76,15 @@ export default function App() {
   const commonProps = { activeTab, onNavigate: navigate, onOpenDetalhe: openDetalhe, ocorrencias };
 
   return (
-    <div className="size-full flex items-center justify-center bg-[#c8d8ea]"
-      style={{ background: "radial-gradient(ellipse at 60% 0%, #3b82f6 0%, #1e3a5f 60%, #0f1f33 100%)" }}>
-      <div className="w-full max-w-[390px] h-full max-h-[844px] shadow-2xl overflow-hidden rounded-[28px]"
-        style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08)" }}>
+    <div className={`app-shell ${screen === "login" ? "app-shell--login" : ""}`}>
+      {screen !== "login" && (
+        <aside className="desktop-navigation">
+          <p className="desktop-brand">Paracatu360</p>
+          <p className="desktop-city">Paracatu, Minas Gerais</p>
+          <Navegacao activeTab={activeTab} onNavigate={navigate} />
+        </aside>
+      )}
+      <main className="app-main">
 
         {screen === "login" && <Login onLogin={handleLogin} />}
 
@@ -111,7 +116,7 @@ export default function App() {
             ocorrencias={ocorrencias}
           />
         )}
-      </div>
+      </main>
     </div>
   );
 }

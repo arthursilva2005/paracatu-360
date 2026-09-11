@@ -6,7 +6,7 @@ type Props = {
 
 export default function Login({ onLogin }: Props) {
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-center justify-between size-full overflow-hidden" data-name="Login">
+    <div className="login-layout bg-[#f3f6fa] flex flex-col items-center justify-between size-full" data-name="Login">
       {/* Topo azul com logo */}
       <div className="bg-[#f3f6fa] w-full flex flex-col items-center justify-center pt-[56px] pb-[48px] px-[32px]">
         <img

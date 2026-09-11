@@ -15,13 +15,13 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrenci
   const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + (o.confirmadoPorMim ? 1 : 0), 0);
 
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
+    <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
       <Cabecalho />
-      <div className="flex-1 overflow-y-auto w-full">
-        <div className="content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
+      <div className="screen-scroll flex-1 overflow-y-auto w-full">
+        <div className="screen-content layout-perfil content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
 
           {/* Perfil do usuário */}
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="profile-user content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Perfil</p>
             <div className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full">
               <div className="bg-[#075ce5] content-stretch flex flex-col items-center justify-center relative rounded-[24px] shrink-0 size-[48px]">
@@ -36,7 +36,7 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrenci
           </div>
 
           {/* Ações rápidas */}
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="profile-actions content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ações rápidas</p>
             <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
               <div className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90" onClick={() => onNavigate("nova")}>
@@ -82,7 +82,7 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrenci
           </div>
 
           {/* Minhas ocorrências */}
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="profile-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <div className="[word-break:break-word] content-stretch flex font-['Inter:Bold',sans-serif] font-bold items-center justify-between leading-[1.45] not-italic relative shrink-0 w-full">
               <p className="flex-[1_0_0] min-w-px relative text-[#10284a] text-[18px]">Minhas ocorrências</p>
               <p className="relative shrink-0 text-[#075ce5] text-[13px] whitespace-nowrap">Ver todas</p>
@@ -93,7 +93,7 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrenci
           </div>
 
           {/* Precisa de ajuda */}
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="profile-help content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Precisa de ajuda?</p>
             <p className="[word-break:break-word] font-['Inter:Regular',sans-serif] font-normal leading-[1.45] not-italic relative shrink-0 text-[#586a80] text-[13px] w-full">Acesse o centro de ajuda ou entre em contato com a equipe.</p>
             <div className="bg-[#075ce5] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90">

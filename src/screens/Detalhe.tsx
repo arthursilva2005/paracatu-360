@@ -23,7 +23,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
   const progresso = Math.min(100, Math.round((ocorrencia.confirmacoes / 50) * 100));
 
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
+    <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
       <Cabecalho />
 
       {/* Barra de volta */}
@@ -40,11 +40,11 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] ml-[4px]">Detalhes da ocorrência</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto w-full">
-        <div className="content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
+      <div className="screen-scroll flex-1 overflow-y-auto w-full">
+        <div className="screen-content layout-detalhe content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
 
           {/* Título */}
-          <div className="flex flex-col gap-[8px] w-full">
+          <div className="detail-title flex flex-col gap-[8px] w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5] text-[10px] tracking-widest">
               OCORRÊNCIA · {ocorrencia.categoria.toUpperCase()}
             </p>
@@ -57,7 +57,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
           </div>
 
           {/* Card resumo */}
-          <div className="bg-white rounded-[16px] w-full border border-[#e8eef5]">
+          <div className="detail-summary bg-white rounded-[16px] w-full border border-[#e8eef5]">
             <div className="flex flex-col gap-[14px] p-[16px]">
 
               {/* Status + relevância */}
@@ -119,7 +119,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
           </div>
 
           {/* Atualizações */}
-          <div className="flex flex-col gap-[12px] w-full">
+          <div className="detail-updates flex flex-col gap-[12px] w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</p>
             {[
               { titulo: "Encaminhado para manutenção", tempo: "Há 2 dias", texto: "A ocorrência foi enviada para a equipe de infraestrutura urbana e está em análise para agendamento do reparo." },
@@ -136,7 +136,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
           </div>
 
           {/* Ações */}
-          <div className="flex flex-col gap-[12px] w-full pb-[8px]">
+          <div className="detail-actions flex flex-col gap-[12px] w-full pb-[8px]">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Ações</p>
             <div className="flex gap-[12px] w-full">
               <button

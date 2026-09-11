@@ -52,6 +52,7 @@ type TabProps = {
 function Tab({ label, tab, active, onNavigate, icon }: TabProps) {
   return (
     <button
+      aria-current={active ? "page" : undefined}
       onClick={() => onNavigate(tab)}
       className="flex flex-col items-center justify-center gap-[3px] flex-1 h-full border-none outline-none bg-transparent cursor-pointer py-[6px]"
     >
@@ -66,13 +67,15 @@ function Tab({ label, tab, active, onNavigate, icon }: TabProps) {
 
 export default function Navegacao({ activeTab, onNavigate }: Props) {
   return (
-    <div className="bg-white relative shrink-0 w-full border-t border-[#e8eef5]" style={{ height: 64 }}>
+    <div className="app-navigation bg-white relative shrink-0 w-full border-t border-[#e8eef5]" style={{ height: 64 }}>
       <div className="flex items-stretch h-full px-[4px] relative">
         <Tab label="Início" tab="inicio" active={activeTab === "inicio"} onNavigate={onNavigate} icon={<IconHome active={activeTab === "inicio"} />} />
         <Tab label="Mapa" tab="mapa" active={activeTab === "mapa"} onNavigate={onNavigate} icon={<IconMap active={activeTab === "mapa"} />} />
 
         {/* Botão central + */}
         <button
+          aria-label="Nova ocorrência"
+          aria-current={activeTab === "nova" ? "page" : undefined}
           onClick={() => onNavigate("nova")}
           className="flex flex-col items-center justify-center flex-1 h-full border-none outline-none bg-transparent cursor-pointer"
         >
@@ -81,6 +84,7 @@ export default function Navegacao({ activeTab, onNavigate }: Props) {
               <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
             </svg>
           </div>
+          <span className="desktop-new-label">Nova ocorrência</span>
         </button>
 
         <Tab label="Atividade" tab="atividade" active={activeTab === "atividade"} onNavigate={onNavigate} icon={<IconBell active={activeTab === "atividade"} />} />

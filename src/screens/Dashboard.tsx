@@ -70,7 +70,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
     .slice(0, 3);
 
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
+    <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
       <Cabecalho />
 
       {/* Barra de volta */}
@@ -87,11 +87,11 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] ml-[4px]">Inteligência urbana</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto w-full">
-        <div className="flex flex-col gap-[20px] p-[22px] w-full pb-[16px]">
+      <div className="screen-scroll flex-1 overflow-y-auto w-full">
+        <div className="screen-content layout-dashboard flex flex-col gap-[20px] p-[22px] w-full pb-[16px]">
 
           {/* Cabeçalho do dashboard */}
-          <div className="flex flex-col gap-[4px]">
+          <div className="dashboard-title flex flex-col gap-[4px]">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px]">Dashboard 360</p>
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">
               Visão geral da cidade em tempo real.
@@ -99,7 +99,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           </div>
 
           {/* KPIs — linha 1 */}
-          <div className="flex gap-[10px] w-full">
+          <div className="dashboard-kpis-primary flex gap-[10px] w-full">
             <KPI
               valor={total}
               label="Total de ocorrências"
@@ -121,7 +121,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           </div>
 
           {/* KPIs — linha 2 */}
-          <div className="flex gap-[10px] w-full -mt-[10px]">
+          <div className="dashboard-kpis-secondary flex gap-[10px] w-full -mt-[10px]">
             <KPI
               valor={emAndamento}
               label="Em atendimento"
@@ -143,7 +143,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           </div>
 
           {/* Distribuição por categoria */}
-          <div className="bg-white rounded-[16px] p-[16px] flex flex-col gap-[14px] border border-[#e8eef5]">
+          <div className="dashboard-categories bg-white rounded-[16px] p-[16px] flex flex-col gap-[14px] border border-[#e8eef5]">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Ocorrências por categoria</p>
             {porCategoria.map(({ cat, count, color }) => (
               <div key={cat} className="flex flex-col gap-[5px]">
@@ -162,7 +162,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           </div>
 
           {/* Status overview */}
-          <div className="bg-white rounded-[16px] p-[16px] flex flex-col gap-[12px] border border-[#e8eef5]">
+          <div className="dashboard-status bg-white rounded-[16px] p-[16px] flex flex-col gap-[12px] border border-[#e8eef5]">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Status das ocorrências</p>
             <div className="flex flex-wrap gap-[8px]">
               {porStatus.map(({ status, label, bg, count }) => (
@@ -187,7 +187,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           </div>
 
           {/* Bairros mais ativos (estático ilustrativo) */}
-          <div className="bg-white rounded-[16px] p-[16px] flex flex-col gap-[12px] border border-[#e8eef5]">
+          <div className="dashboard-neighborhoods bg-white rounded-[16px] p-[16px] flex flex-col gap-[12px] border border-[#e8eef5]">
             <div className="flex items-center justify-between">
               <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Bairros mais ativos</p>
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#9aafc4] text-[11px]">Ilustrativo</p>
@@ -208,7 +208,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           </div>
 
           {/* Top ocorrências */}
-          <div className="flex flex-col gap-[12px] w-full">
+          <div className="dashboard-occurrences flex flex-col gap-[12px] w-full">
             <div className="flex items-center justify-between">
               <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Mais confirmadas</p>
               <button
@@ -226,7 +226,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           {/* CTA */}
           <button
             onClick={() => onNavigate("nova")}
-            className="bg-[#075ce5] hover:bg-[#0a47b8] active:scale-[0.98] w-full rounded-[16px] py-[15px] border-none outline-none cursor-pointer transition-all"
+            className="dashboard-action bg-[#075ce5] hover:bg-[#0a47b8] active:scale-[0.98] w-full rounded-[16px] py-[15px] border-none outline-none cursor-pointer transition-all"
           >
             <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[15px]">Registrar nova ocorrência</p>
           </button>

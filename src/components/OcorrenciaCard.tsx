@@ -13,7 +13,7 @@ export default function OcorrenciaCard({ ocorrencia, onClick, showRelevancia = t
 
   return (
     <div
-      className="bg-white relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90 transition-opacity"
+      className="occurrence-card bg-white relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90 transition-opacity"
       onClick={onClick}
     >
       <div className="[word-break:break-word] content-stretch flex flex-col gap-[8px] items-start leading-[1.45] not-italic p-[16px] relative size-full">

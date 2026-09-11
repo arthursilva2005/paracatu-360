@@ -29,13 +29,13 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
   const totalAlta = ocorrencias.filter(o => o.confirmacoes >= 30).length;
 
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
+    <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
       <Cabecalho />
-      <div className="flex-1 overflow-y-auto w-full">
-        <div className="flex flex-col gap-[20px] items-start pb-[16px] pt-[22px] px-[22px] w-full">
+      <div className="screen-scroll flex-1 overflow-y-auto w-full">
+        <div className="screen-content layout-inicio flex flex-col gap-[20px] items-start pb-[16px] pt-[22px] px-[22px] w-full">
 
           {/* Hero */}
-          <div className="bg-[#075ce5] relative rounded-[20px] w-full overflow-hidden">
+          <div className="home-hero bg-[#075ce5] relative rounded-[20px] w-full overflow-hidden">
             <div className="flex flex-col gap-[12px] p-[24px]">
               <p className="font-['Inter:Bold',sans-serif] font-bold text-[10px] text-white/70 tracking-widest">A CIDADE PELOS SEUS OLHOS</p>
               <p className="font-['Inter:Bold',sans-serif] font-bold text-[26px] text-white leading-snug">Uma cidade melhor começa com você.</p>
@@ -52,7 +52,7 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
           {/* Dashboard 360 entry */}
           <button
             onClick={onOpenDashboard}
-            className="w-full bg-[#10284a] rounded-[16px] border-none outline-none cursor-pointer active:opacity-90 transition-opacity overflow-hidden"
+            className="home-dashboard w-full bg-[#10284a] rounded-[16px] border-none outline-none cursor-pointer active:opacity-90 transition-opacity overflow-hidden"
           >
             <div className="flex items-center justify-between px-[18px] py-[14px]">
               <div className="flex items-center gap-[12px]">
@@ -76,7 +76,7 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
           </button>
 
           {/* Categorias + ordenação */}
-          <div className="flex flex-col gap-[12px] w-full">
+          <div className="home-filters flex flex-col gap-[12px] w-full">
             <div className="flex items-center justify-between w-full">
               <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Pela cidade</p>
               <div className="flex gap-[6px]">
@@ -113,7 +113,7 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
           </div>
 
           {/* Lista */}
-          <div className="flex flex-col gap-[12px] w-full">
+          <div className="home-list flex flex-col gap-[12px] w-full">
             {ordenadas.length === 0 ? (
               <div className="bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Nenhuma ocorrência</p>

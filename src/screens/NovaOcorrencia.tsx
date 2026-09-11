@@ -114,9 +114,9 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
   }
 
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full" data-name="02 · Nova ocorrência">
+    <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full" data-name="02 · Nova ocorrência">
       <Cabecalho />
-      <div className="flex-1 overflow-y-auto w-full flex flex-col">
+      <div className="screen-scroll flex-1 overflow-y-auto w-full flex flex-col">
         {sucesso ? (
           <Sucesso
             titulo={tituloRegistrado}
@@ -125,16 +125,16 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
             onNova={() => { setSucesso(false); setDescricao(""); setCategoria("Vias"); }}
           />
         ) : (
-          <div className="content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
+          <div className="screen-content layout-novaocorrencia content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
 
             {/* Introdução */}
-            <div className="[word-break:break-word] content-stretch flex flex-col gap-[8px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
+            <div className="new-intro [word-break:break-word] content-stretch flex flex-col gap-[8px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
               <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[24px] w-full">Nova ocorrência</p>
               <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[14px] w-full">Descreva o problema, adicione fotos e escolha o local para abrir o registro.</p>
             </div>
 
             {/* Categoria — interativa */}
-            <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+            <div className="new-category content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Qual é a categoria?</p>
               <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
                 {CATEGORIAS.map(cat => (
@@ -156,7 +156,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
             </div>
 
             {/* Local */}
-            <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+            <div className="new-location content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Onde aconteceu?</p>
               <div className="bg-white content-stretch flex flex-col gap-[12px] items-start p-[16px] relative rounded-[16px] shrink-0 w-full border border-[#d7e3f0]">
                 <div className="content-stretch flex gap-[12px] items-center relative shrink-0 w-full">
@@ -179,7 +179,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
             </div>
 
             {/* Descrição — textarea real */}
-            <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+            <div className="new-description content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <div className="flex items-center justify-between w-full">
                 <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px]">Descreva o problema</p>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#9aafc4] text-[11px]">{descricao.length}/300</p>
@@ -194,7 +194,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
             </div>
 
             {/* Fotos */}
-            <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+            <div className="new-photos content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos ou vídeo</p>
               <div className="content-stretch flex gap-[12px] items-start relative shrink-0 w-full">
                 {[
@@ -202,7 +202,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
                   { icon: <ImageIcon />, label: "Galeria" },
                   { icon: <VideoIcon />, label: "Vídeo" },
                 ].map(({ icon, label }) => (
-                  <div key={label} className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0]">
+                  <div key={label} className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] photo-option shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0]">
                     {icon}
                     <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#586a80] text-[11px]">{label}</p>
                   </div>
@@ -211,7 +211,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
             </div>
 
             {/* Registrar */}
-            <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full pb-[8px]">
+            <div className="new-submit content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full pb-[8px]">
               <button
                 onClick={handleRegistrar}
                 className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all"

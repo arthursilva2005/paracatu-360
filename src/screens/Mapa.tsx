@@ -30,7 +30,7 @@ function Categoria({ label }: { label: string }) {
 
 function MapPlaceholder({ count }: { count: number }) {
   return (
-    <div className="h-[280px] relative rounded-[20px] shrink-0 w-full bg-[#d7e3f0] overflow-hidden">
+    <div className="map-preview h-[280px] relative rounded-[20px] shrink-0 w-full bg-[#d7e3f0] overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[#e8f0fb] to-[#c5d8f0]" />
       <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 390 280" preserveAspectRatio="xMidYMid slice">
         <line x1="0" y1="70" x2="390" y2="70" stroke="#075ce5" strokeWidth="2"/>
@@ -99,13 +99,13 @@ export default function Mapa({ activeTab, onNavigate, onOpenDetalhe, ocorrencias
   const ordenadas = [...ocorrencias].sort((a, b) => b.confirmacoes - a.confirmacoes);
 
   return (
-    <div className="bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
+    <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
       <Cabecalho />
-      <div className="flex-1 overflow-y-auto w-full">
-        <div className="content-stretch flex flex-col gap-[16px] items-start p-[22px] relative w-full">
+      <div className="screen-scroll flex-1 overflow-y-auto w-full">
+        <div className="screen-content layout-mapa content-stretch flex flex-col gap-[16px] items-start p-[22px] relative w-full">
           <MapPlaceholder count={ocorrencias.length} />
 
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="map-filters content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Filtros</p>
             <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
               <CategoriaAtiva label="Todas" />
@@ -116,7 +116,7 @@ export default function Mapa({ activeTab, onNavigate, onOpenDetalhe, ocorrencias
             </div>
           </div>
 
-          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+          <div className="map-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ocorrências próximas</p>
             {ordenadas.map(o => (
               <OcorrenciaCard key={o.id} ocorrencia={o} onClick={() => onOpenDetalhe(o.id)} />
@@ -124,7 +124,7 @@ export default function Mapa({ activeTab, onNavigate, onOpenDetalhe, ocorrencias
           </div>
 
           <div
-            className="bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90"
+            className="map-action bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90"
             onClick={() => onNavigate("nova")}
           >
             <div className="content-stretch flex flex-col items-start p-[14px] relative size-full">
