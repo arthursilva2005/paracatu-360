@@ -45,6 +45,14 @@ body,
 .photo-option { width: min(96px, calc((100% - 24px) / 3)); height: auto; aspect-ratio: 1; }
 .occurrence-card { min-width: 0; overflow-wrap: anywhere; }
 
+/* Compact only the Home spacing below the existing tablet breakpoint. */
+@media (width < 768px) {
+  .layout-inicio { padding-top: 16px; gap: 16px; }
+  .layout-inicio > .home-hero > div { padding-block: 18px; gap: 10px; }
+  .layout-inicio > .home-hero button { margin-top: 2px; }
+  .layout-inicio > .home-filters { gap: 10px; }
+}
+
 /* Tablet: more room for content, keeping the familiar bottom navigation. */
 @media (min-width: 768px) {
   .screen-content { max-width: 1440px; padding: 32px; gap: 24px; }
