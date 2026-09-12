@@ -7,7 +7,9 @@ import Navegacao, { TabName } from "@/components/Navegacao";
 type Props = {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
-  onRegistrar: (nova: Omit<Ocorrencia, "id">) => void;
+  onRegistrar: (nova: Omit<Ocorrencia, "id">) => string;
+  onOpenDetalhe: (id: string) => void;
+  onVoltarInicio: () => void;
 };
 
 function MapPin() {
@@ -53,58 +55,67 @@ function VideoIcon() {
   );
 }
 
-function Sucesso({ titulo, categoria, onAcompanhar, onNova }: {
-  titulo: string; categoria: string; onAcompanhar: () => void; onNova: () => void;
+function Sucesso({ titulo, categoria, onVerOcorrencia, onVoltarInicio }: {
+  titulo: string; categoria: string; onVerOcorrencia: () => void; onVoltarInicio: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 px-[28px] gap-[24px] text-center">
+    <div className="flex flex-col items-center justify-center flex-1 px-[28px] py-[24px] gap-[24px] text-center">
       <div className="w-[80px] h-[80px] rounded-full bg-[#e8f5e9] flex items-center justify-center">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
           <circle cx="20" cy="20" r="20" fill="#22c55e" opacity="0.15"/>
           <path d="M12 20l6 6 10-12" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
-      <div className="flex flex-col gap-[8px]">
+      <div className="flex flex-col gap-[8px] w-full min-w-0 [overflow-wrap:anywhere]">
         <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px]">Ocorrência registrada!</p>
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[14px] leading-relaxed">
-          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a]">"{titulo}"</span> foi enviada como{" "}
+          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] break-words">"{titulo}"</span> foi enviada como{" "}
           <span className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5]">{categoria}</span>.
           <br/>Você receberá atualizações sobre o andamento.
         </p>
       </div>
       <div className="flex flex-col gap-[10px] w-full">
         <button
-          onClick={onAcompanhar}
+          onClick={onVerOcorrencia}
           className="bg-[#075ce5] hover:bg-[#0a47b8] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all"
         >
-          <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[15px]">Acompanhar ocorrência</p>
+          <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[15px]">Ver ocorrência</p>
         </button>
         <button
-          onClick={onNova}
+          onClick={onVoltarInicio}
           className="bg-white w-full rounded-[16px] py-[15px] cursor-pointer border border-[#d7e3f0] outline-none active:opacity-80 transition-all"
         >
-          <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Registrar outra</p>
+          <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Voltar para o início</p>
         </button>
       </div>
     </div>
   );
 }
 
-export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: Props) {
+export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar, onOpenDetalhe, onVoltarInicio }: Props) {
   const [categoriaId, setCategoriaId] = useState(CATEGORIAS_OCORRENCIA[0].id);
   const categoria = nomeCategoria(categoriaId);
   const [descricao, setDescricao] = useState("");
-  const [sucesso, setSucesso] = useState(false);
+  const [idRegistrado, setIdRegistrado] = useState<string | null>(null);
+  const sucesso = idRegistrado !== null;
+  const [titulo, setTitulo] = useState("");
+  const [erroTitulo, setErroTitulo] = useState("");
   const [tituloRegistrado, setTituloRegistrado] = useState("");
 
   function handleRegistrar() {
-    const titulo = descricao.trim().split("\n")[0].slice(0, 60) || `Problema em ${categoria}`;
-    setTituloRegistrado(titulo);
+    if (sucesso) return;
+    const tituloValido = titulo.trim();
+    if (tituloValido.length < 5 || tituloValido.length > 80) {
+      setErroTitulo("Informe um título com 5 a 80 caracteres.");
+      return;
+    }
+    setErroTitulo("");
+    setTituloRegistrado(tituloValido);
     const agora = new Date().toISOString();
-    onRegistrar({
+    const id = onRegistrar({
       categoriaId,
-      status: "em_analise",
-      titulo,
+      status: "registrado",
+      titulo: tituloValido,
       autorId: "usuario-mock-local",
       endereco: "Rua da Praça",
       bairro: "Centro",
@@ -119,7 +130,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
       descricao: descricao || "Sem descrição.",
       quantidadeConfirmacoes: 0,
     });
-    setSucesso(true);
+    setIdRegistrado(id);
   }
 
   return (
@@ -130,8 +141,8 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
           <Sucesso
             titulo={tituloRegistrado}
             categoria={categoria}
-            onAcompanhar={() => onNavigate("atividade")}
-            onNova={() => { setSucesso(false); setDescricao(""); setCategoriaId(CATEGORIAS_OCORRENCIA[0].id); }}
+            onVerOcorrencia={() => onOpenDetalhe(idRegistrado!)}
+            onVoltarInicio={onVoltarInicio}
           />
         ) : (
           <div className="screen-content layout-novaocorrencia content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
@@ -189,6 +200,21 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
 
             {/* Descrição — textarea real */}
             <div className="new-description content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+              <label htmlFor="titulo-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Título da ocorrência</label>
+              <input
+                id="titulo-ocorrencia"
+                value={titulo}
+                onChange={e => { setTitulo(e.target.value.slice(0, 80)); setErroTitulo(""); }}
+                required
+                minLength={5}
+                maxLength={80}
+                aria-invalid={!!erroTitulo}
+                aria-describedby={erroTitulo ? "erro-titulo" : undefined}
+                placeholder="Resuma o problema em um título"
+                className="bg-white w-full min-w-0 rounded-[16px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce]"
+              />
+              {erroTitulo && <p id="erro-titulo" role="alert" className="font-['Inter:Regular',sans-serif] text-[#586a80] text-[12px]">{erroTitulo}</p>}
+
               <div className="flex items-center justify-between w-full">
                 <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px]">Descreva o problema</p>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#9aafc4] text-[11px]">{descricao.length}/300</p>
@@ -225,7 +251,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
                 onClick={handleRegistrar}
                 className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all"
               >
-                <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">Registrar problema</p>
+                <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">Registrar ocorrência</p>
               </button>
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] text-center w-full">
                 Ao registrar, você receberá atualizações sobre o andamento do caso.

@@ -28,7 +28,7 @@ export default function App() {
     ocorrencias: Ocorrencia[];
     confirmadas: string[];
   }>({ ocorrencias: ocorrenciasIniciais, confirmadas: [] });
-  const navigationState = location.state as { from?: string; activeTab?: TabName } | null;
+  const navigationState = location.state as { from?: string; activeTab?: TabName; registroConcluido?: boolean } | null;
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const activeTab: TabName =
     (Object.keys(tabPaths) as TabName[]).find(tab => tabPaths[tab] === pathname) ??
@@ -77,7 +77,7 @@ export default function App() {
   function registrarNovaOcorrencia(nova: Omit<Ocorrencia, "id">) {
     const id = String(Date.now());
     setEstado(prev => ({ ...prev, ocorrencias: [{ ...nova, id }, ...prev.ocorrencias] }));
-    navigate("inicio");
+    return id;
   }
 
   const ocorrenciaSelecionada =
@@ -98,10 +98,12 @@ export default function App() {
 
         <Routes>
           <Route path="/entrar" element={<Login onLogin={handleLogin} />} />
-          <Route path="/" element={<Inicio {...commonProps} onOpenDashboard={openDashboard} />} />
+          <Route path="/" element={<Inicio {...commonProps} onOpenDashboard={openDashboard} ordemInicial={navigationState?.registroConcluido ? "recente" : "relevancia"} />} />
           <Route path="/mapa" element={<Mapa {...commonProps} />} />
           <Route path="/ocorrencias/nova" element={
-            <NovaOcorrencia activeTab={activeTab} onNavigate={navigate} onRegistrar={registrarNovaOcorrencia} />
+            <NovaOcorrencia key={location.key} activeTab={activeTab} onNavigate={navigate}
+              onRegistrar={registrarNovaOcorrencia} onOpenDetalhe={openDetalhe}
+              onVoltarInicio={() => navigateTo("/", { state: { registroConcluido: true } })} />
           } />
           <Route path="/atividade" element={<Atividade {...commonProps} />} />
           <Route path="/perfil" element={<Perfil {...commonProps} confirmadas={confirmadas} />} />

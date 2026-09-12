@@ -10,12 +10,13 @@ type Props = {
   onOpenDetalhe: (id: string) => void;
   onOpenDashboard: () => void;
   ocorrencias: Ocorrencia[];
+  ordemInicial?: Ordem;
 };
 
 type Ordem = "relevancia" | "recente";
 
-export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDashboard, ocorrencias }: Props) {
-  const [ordem, setOrdem] = useState<Ordem>("relevancia");
+export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDashboard, ocorrencias, ordemInicial = "relevancia" }: Props) {
+  const [ordem, setOrdem] = useState<Ordem>(ordemInicial);
   const [catFiltro, setCatFiltro] = useState("");
 
   const filtradas = ocorrencias.filter(o => catFiltro === "" || o.categoriaId === catFiltro);
