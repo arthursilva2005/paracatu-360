@@ -21,7 +21,9 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
 
   const filtradas = ocorrencias.filter(o => catFiltro === "" || o.categoriaId === catFiltro);
   const ordenadas = [...filtradas].sort((a, b) =>
-    ordem === "relevancia" ? b.quantidadeConfirmacoes - a.quantidadeConfirmacoes : 0
+    ordem === "relevancia"
+      ? b.quantidadeConfirmacoes - a.quantidadeConfirmacoes
+      : new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
   );
 
   const totalAlta = ocorrencias.filter(o => calcularRelevancia(o.quantidadeConfirmacoes) === "alta").length;

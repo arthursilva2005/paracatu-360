@@ -67,18 +67,11 @@ export const CATEGORIAS_OFICIAIS: CategoriaOcorrencia[] = [
   { id: "limpeza-urbana", nome: "Limpeza Urbana", slug: "limpeza-urbana", ativa: true, ordem: 3 },
   { id: "meio-ambiente", nome: "Meio Ambiente", slug: "meio-ambiente", ativa: true, ordem: 4 },
   { id: "agua-saneamento", nome: "Água e Saneamento", slug: "agua-saneamento", ativa: true, ordem: 5 },
-  { id: "outros", nome: "Outros", slug: "outros", ativa: true, ordem: 6 },
+  { id: "seguranca", nome: "Segurança", slug: "seguranca", ativa: true, ordem: 6 },
+  { id: "outros", nome: "Outros", slug: "outros", ativa: true, ordem: 7 },
 ];
 
-// Compatibilidade autorizada: a UI mantém as categorias antigas até a migração visual.
-// IDs próprios evitam reclassificar silenciosamente os mocks (especialmente Segurança).
-export const CATEGORIAS_OCORRENCIA: CategoriaOcorrencia[] = [
-  { id: "legado-vias", nome: "Vias", slug: "vias", ativa: true, ordem: 1 },
-  { id: "legado-iluminacao", nome: "Iluminação", slug: "iluminacao", ativa: true, ordem: 2 },
-  { id: "legado-limpeza", nome: "Limpeza", slug: "limpeza", ativa: true, ordem: 3 },
-  { id: "legado-seguranca", nome: "Segurança", slug: "seguranca", ativa: true, ordem: 4 },
-  CATEGORIAS_OFICIAIS[5],
-];
+export const CATEGORIAS_OCORRENCIA = CATEGORIAS_OFICIAIS;
 
 export const FILTROS_CATEGORIA = [{ id: "", nome: "Todas" }, ...CATEGORIAS_OCORRENCIA];
 
@@ -92,7 +85,7 @@ export const METADADOS_STATUS: Record<StatusOcorrencia, { label: string; bg: str
   registrado: { label: "Registrado", bg: "#586a80", classeBg: "bg-[#586a80]" },
   em_analise: { label: "Em análise", bg: "#d97706", classeBg: "bg-[#d97706]" },
   encaminhado: { label: "Encaminhado", bg: "#075ce5", classeBg: "bg-[#075ce5]" },
-  em_andamento: { label: "Em atendimento", bg: "#7c3aed", classeBg: "bg-[#7c3aed]" },
+  em_andamento: { label: "Em andamento", bg: "#7c3aed", classeBg: "bg-[#7c3aed]" },
   resolvido: { label: "Resolvido", bg: "#16a34a", classeBg: "bg-[#16a34a]" },
   rejeitado: { label: "Rejeitado", bg: "#586a80", classeBg: "bg-[#586a80]" },
   duplicado: { label: "Duplicado", bg: "#586a80", classeBg: "bg-[#586a80]" },
@@ -120,7 +113,7 @@ export function localOcorrencia(ocorrencia: Ocorrencia): string {
 export const ocorrenciasIniciais: Ocorrencia[] = [
   {
     id: "1",
-    categoriaId: "legado-vias",
+    categoriaId: "transito-vias",
     status: "encaminhado",
     titulo: "Buraco na via próximo à escola",
     endereco: "Rua da Praça",
@@ -139,7 +132,7 @@ export const ocorrenciasIniciais: Ocorrencia[] = [
   },
   {
     id: "2",
-    categoriaId: "legado-iluminacao",
+    categoriaId: "infraestrutura",
     status: "em_analise",
     titulo: "Ponto de iluminação apagado",
     endereco: "Rua das Flores",
@@ -158,7 +151,7 @@ export const ocorrenciasIniciais: Ocorrencia[] = [
   },
   {
     id: "3",
-    categoriaId: "legado-limpeza",
+    categoriaId: "limpeza-urbana",
     status: "resolvido",
     titulo: "Entulho retirado da calçada",
     endereco: "Calçada da Igreja",
@@ -177,7 +170,7 @@ export const ocorrenciasIniciais: Ocorrencia[] = [
   },
   {
     id: "4",
-    categoriaId: "legado-seguranca",
+    categoriaId: "seguranca",
     status: "em_analise",
     titulo: "Semáforo com defeito no cruzamento",
     endereco: "Av. Olegário Maciel",
@@ -196,7 +189,7 @@ export const ocorrenciasIniciais: Ocorrencia[] = [
   },
   {
     id: "5",
-    categoriaId: "legado-vias",
+    categoriaId: "transito-vias",
     status: "em_andamento",
     titulo: "Alagamento na Rua das Acácias",
     endereco: "Rua das Acácias",

@@ -47,14 +47,6 @@ function ImageIcon() {
     </svg>
   );
 }
-function VideoIcon() {
-  return (
-    <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-      <path d={svgPaths.p83a900} stroke="#075CE5" strokeLinecap="round" strokeWidth="2" />
-    </svg>
-  );
-}
-
 function Sucesso({ titulo, categoria, onVerOcorrencia, onVoltarInicio }: {
   titulo: string; categoria: string; onVerOcorrencia: () => void; onVoltarInicio: () => void;
 }) {
@@ -230,12 +222,11 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar, onO
 
             {/* Fotos */}
             <div className="new-photos content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos ou vídeo</p>
+              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos</p>
               <div className="content-stretch flex gap-[12px] items-start relative shrink-0 w-full">
                 {[
                   { icon: <CameraIcon />, label: "Câmera" },
                   { icon: <ImageIcon />, label: "Galeria" },
-                  { icon: <VideoIcon />, label: "Vídeo" },
                 ].map(({ icon, label }) => (
                   <div key={label} className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] photo-option shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0]">
                     {icon}

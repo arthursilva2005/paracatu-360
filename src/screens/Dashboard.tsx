@@ -26,11 +26,13 @@ function KPI({ valor, label, cor, icon }: KPIProps) {
 }
 
 const catColors: Record<string, string> = {
-  "legado-vias":        "#075ce5",
-  "legado-iluminacao":  "#d97706",
-  "legado-limpeza":     "#16a34a",
-  "legado-seguranca":   "#dc2626",
-  "outros":      "#7c3aed",
+  "transito-vias":      "#075ce5",
+  "infraestrutura":     "#d97706",
+  "limpeza-urbana":     "#16a34a",
+  "meio-ambiente":      "#0284c7",
+  "agua-saneamento":    "#0f766e",
+  "seguranca":          "#dc2626",
+  "outros":             "#7c3aed",
 };
 
 export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe, ocorrencias }: Props) {
@@ -117,7 +119,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           <div className="dashboard-kpis-secondary flex gap-[10px] w-full -mt-[10px]">
             <KPI
               valor={emAndamento}
-              label="Em atendimento"
+              label="Em andamento"
               cor="bg-[#f3e8ff]"
               icon={<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#7c3aed" strokeWidth="1.8" strokeLinecap="round"/></svg>}
             />
