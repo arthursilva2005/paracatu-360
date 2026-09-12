@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "react-router";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { Ocorrencia, ocorrenciasIniciais } from "@/data/ocorrencias";
 import Login from "@/screens/Login";
@@ -10,45 +11,53 @@ import Perfil from "@/screens/Perfil";
 import Detalhe from "@/screens/Detalhe";
 import Dashboard from "@/screens/Dashboard";
 
-export type AppScreen = "login" | TabName | "detalhe" | "dashboard";
+const tabPaths: Record<TabName, string> = {
+  inicio: "/",
+  mapa: "/mapa",
+  nova: "/ocorrencias/nova",
+  atividade: "/atividade",
+  perfil: "/perfil",
+};
 
 export default function App() {
-  // Pilha de navegação: permite voltar para a tela anterior
-  const [stack, setStack] = useState<AppScreen[]>(["login"]);
-  const [activeTab, setActiveTab] = useState<TabName>("inicio");
+  const navigateTo = useNavigate();
+  const location = useLocation();
+  const isLogin = useMatch("/entrar") !== null;
+  const detalheMatch = useMatch("/ocorrencias/:id");
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>(ocorrenciasIniciais);
-  const [ocorrenciaSelecionadaId, setOcorrenciaSelecionadaId] = useState<string>("1");
+  const navigationState = location.state as { from?: string; activeTab?: TabName } | null;
+  const pathname = location.pathname.replace(/\/+$/, "") || "/";
+  const activeTab: TabName =
+    (Object.keys(tabPaths) as TabName[]).find(tab => tabPaths[tab] === pathname) ??
+    (navigationState?.activeTab && Object.prototype.hasOwnProperty.call(tabPaths, navigationState.activeTab)
+      ? navigationState.activeTab
+      : "inicio");
 
-  const screen = stack[stack.length - 1];
-
-  // Navega para uma aba (limpa a pilha)
   function navigate(tab: TabName) {
-    setActiveTab(tab);
-    setStack([tab]);
-  }
-
-  // Empurra uma tela sem mudar a aba ativa
-  function push(s: AppScreen) {
-    setStack(prev => [...prev, s]);
+    navigateTo(tabPaths[tab], { replace: pathname === tabPaths[tab] });
   }
 
   // Volta para a tela anterior
   function goBack() {
-    setStack(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    // Acesso direto não tem uma tela anterior dentro do aplicativo.
+    if (navigationState?.from) navigateTo(-1);
+    else navigateTo("/", { replace: true });
   }
 
   function openDetalhe(id: string) {
-    setOcorrenciaSelecionadaId(id);
-    push("detalhe");
+    navigateTo(`/ocorrencias/${encodeURIComponent(id)}`, {
+      state: { from: location.pathname, activeTab },
+    });
   }
 
   function openDashboard() {
-    push("dashboard");
+    navigateTo("/indicadores", {
+      state: { from: location.pathname, activeTab },
+    });
   }
 
   function handleLogin() {
-    setStack(["inicio"]);
-    setActiveTab("inicio");
+    navigateTo("/", { replace: true });
   }
 
   function confirmarOcorrencia(id: string) {
@@ -71,13 +80,13 @@ export default function App() {
   }
 
   const ocorrenciaSelecionada =
-    ocorrencias.find(o => o.id === ocorrenciaSelecionadaId) ?? ocorrencias[0];
+    ocorrencias.find(o => o.id === detalheMatch?.params.id);
 
   const commonProps = { activeTab, onNavigate: navigate, onOpenDetalhe: openDetalhe, ocorrencias };
 
   return (
-    <div className={`app-shell ${screen === "login" ? "app-shell--login" : ""}`}>
-      {screen !== "login" && (
+    <div className={`app-shell ${isLogin ? "app-shell--login" : ""}`}>
+      {!isLogin && (
         <aside className="desktop-navigation">
           <p className="desktop-brand">Paracatu360</p>
           <p className="desktop-city">Paracatu, Minas Gerais</p>
@@ -86,36 +95,35 @@ export default function App() {
       )}
       <main className="app-main">
 
-        {screen === "login" && <Login onLogin={handleLogin} />}
-
-        {screen === "inicio" && (
-          <Inicio {...commonProps} onOpenDashboard={openDashboard} />
-        )}
-        {screen === "mapa" && <Mapa {...commonProps} />}
-        {screen === "nova" && (
-          <NovaOcorrencia activeTab={activeTab} onNavigate={navigate} onRegistrar={registrarNovaOcorrencia} />
-        )}
-        {screen === "atividade" && <Atividade {...commonProps} />}
-        {screen === "perfil" && <Perfil {...commonProps} />}
-
-        {screen === "detalhe" && (
-          <Detalhe
-            activeTab={activeTab}
-            onNavigate={navigate}
-            onBack={goBack}
-            ocorrencia={ocorrenciaSelecionada}
-            onConfirmar={confirmarOcorrencia}
-          />
-        )}
-        {screen === "dashboard" && (
-          <Dashboard
-            activeTab={activeTab}
-            onNavigate={navigate}
-            onBack={goBack}
-            onOpenDetalhe={openDetalhe}
-            ocorrencias={ocorrencias}
-          />
-        )}
+        <Routes>
+          <Route path="/entrar" element={<Login onLogin={handleLogin} />} />
+          <Route path="/" element={<Inicio {...commonProps} onOpenDashboard={openDashboard} />} />
+          <Route path="/mapa" element={<Mapa {...commonProps} />} />
+          <Route path="/ocorrencias/nova" element={
+            <NovaOcorrencia activeTab={activeTab} onNavigate={navigate} onRegistrar={registrarNovaOcorrencia} />
+          } />
+          <Route path="/atividade" element={<Atividade {...commonProps} />} />
+          <Route path="/perfil" element={<Perfil {...commonProps} />} />
+          <Route path="/ocorrencias/:id" element={ocorrenciaSelecionada ? (
+            <Detalhe
+              activeTab={activeTab}
+              onNavigate={navigate}
+              onBack={goBack}
+              ocorrencia={ocorrenciaSelecionada}
+              onConfirmar={confirmarOcorrencia}
+            />
+          ) : <Navigate to="/" replace />} />
+          <Route path="/indicadores" element={
+            <Dashboard
+              activeTab={activeTab}
+              onNavigate={navigate}
+              onBack={goBack}
+              onOpenDetalhe={openDetalhe}
+              ocorrencias={ocorrencias}
+            />
+          } />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
     </div>
   );
