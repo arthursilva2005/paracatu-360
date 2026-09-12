@@ -96,7 +96,7 @@ function MapPlaceholder({ count }: { count: number }) {
 }
 
 export default function Mapa({ activeTab, onNavigate, onOpenDetalhe, ocorrencias }: Props) {
-  const ordenadas = [...ocorrencias].sort((a, b) => b.confirmacoes - a.confirmacoes);
+  const ordenadas = [...ocorrencias].sort((a, b) => b.quantidadeConfirmacoes - a.quantidadeConfirmacoes);
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">

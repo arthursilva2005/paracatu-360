@@ -24,7 +24,10 @@ export default function App() {
   const location = useLocation();
   const isLogin = useMatch("/entrar") !== null;
   const detalheMatch = useMatch("/ocorrencias/:id");
-  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>(ocorrenciasIniciais);
+  const [{ ocorrencias, confirmadas }, setEstado] = useState<{
+    ocorrencias: Ocorrencia[];
+    confirmadas: string[];
+  }>({ ocorrencias: ocorrenciasIniciais, confirmadas: [] });
   const navigationState = location.state as { from?: string; activeTab?: TabName } | null;
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const activeTab: TabName =
@@ -61,21 +64,19 @@ export default function App() {
   }
 
   function confirmarOcorrencia(id: string) {
-    setOcorrencias(prev =>
-      prev.map(o =>
-        o.id === id && !o.confirmadoPorMim
-          ? { ...o, confirmacoes: o.confirmacoes + 1, confirmadoPorMim: true }
-          : o
-      )
-    );
+    setEstado(prev => {
+      if (prev.confirmadas.includes(id) || !prev.ocorrencias.some(o => o.id === id)) return prev;
+      return {
+        ocorrencias: prev.ocorrencias.map(o => o.id === id
+          ? { ...o, quantidadeConfirmacoes: o.quantidadeConfirmacoes + 1 } : o),
+        confirmadas: [...prev.confirmadas, id],
+      };
+    });
   }
 
-  function registrarNovaOcorrencia(nova: Omit<Ocorrencia, "id" | "confirmadoPorMim">) {
+  function registrarNovaOcorrencia(nova: Omit<Ocorrencia, "id">) {
     const id = String(Date.now());
-    setOcorrencias(prev => [
-      { ...nova, id, confirmadoPorMim: false },
-      ...prev,
-    ]);
+    setEstado(prev => ({ ...prev, ocorrencias: [{ ...nova, id }, ...prev.ocorrencias] }));
     navigate("inicio");
   }
 
@@ -103,13 +104,14 @@ export default function App() {
             <NovaOcorrencia activeTab={activeTab} onNavigate={navigate} onRegistrar={registrarNovaOcorrencia} />
           } />
           <Route path="/atividade" element={<Atividade {...commonProps} />} />
-          <Route path="/perfil" element={<Perfil {...commonProps} />} />
+          <Route path="/perfil" element={<Perfil {...commonProps} confirmadas={confirmadas} />} />
           <Route path="/ocorrencias/:id" element={ocorrenciaSelecionada ? (
             <Detalhe
               activeTab={activeTab}
               onNavigate={navigate}
               onBack={goBack}
               ocorrencia={ocorrenciaSelecionada}
+              confirmadoPorMim={confirmadas.includes(ocorrenciaSelecionada.id)}
               onConfirmar={confirmarOcorrencia}
             />
           ) : <Navigate to="/" replace />} />

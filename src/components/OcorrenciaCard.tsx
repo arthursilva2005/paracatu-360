@@ -1,4 +1,4 @@
-import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, nomeCategoria, localOcorrencia, tempoOcorrencia, METADADOS_STATUS } from "@/data/ocorrencias";
 
 type Props = {
   ocorrencia: Ocorrencia;
@@ -7,7 +7,10 @@ type Props = {
 };
 
 export default function OcorrenciaCard({ ocorrencia, onClick, showRelevancia = true }: Props) {
-  const { categoria, status, titulo, local, confirmacoes, tempo } = ocorrencia;
+  const { status, titulo, quantidadeConfirmacoes: confirmacoes } = ocorrencia;
+  const categoria = nomeCategoria(ocorrencia.categoriaId);
+  const local = localOcorrencia(ocorrencia);
+  const tempo = tempoOcorrencia(ocorrencia);
   const relevancia = calcularRelevancia(confirmacoes);
   const cor = corRelevancia[relevancia];
 
@@ -20,7 +23,7 @@ export default function OcorrenciaCard({ ocorrencia, onClick, showRelevancia = t
         {/* Linha superior: categoria + badge relevância */}
         <div className="flex items-center justify-between w-full gap-[8px]">
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[12px]">
-            {categoria} · {status}
+            {categoria} · {METADADOS_STATUS[status].label}
           </p>
           {showRelevancia && (
             <div className={`flex items-center gap-[4px] px-[8px] py-[3px] rounded-[999px] shrink-0 ${cor.bg}`}>

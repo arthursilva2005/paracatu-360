@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Ocorrencia, CATEGORIAS_OCORRENCIA, calcularRelevancia } from "@/data/ocorrencias";
+import { Ocorrencia, FILTROS_CATEGORIA, calcularRelevancia } from "@/data/ocorrencias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
@@ -14,19 +14,16 @@ type Props = {
 
 type Ordem = "relevancia" | "recente";
 
-const CATEGORIAS = ["Todas", ...CATEGORIAS_OCORRENCIA] as const;
-type CatFiltro = typeof CATEGORIAS[number];
-
 export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDashboard, ocorrencias }: Props) {
   const [ordem, setOrdem] = useState<Ordem>("relevancia");
-  const [catFiltro, setCatFiltro] = useState<CatFiltro>("Todas");
+  const [catFiltro, setCatFiltro] = useState("");
 
-  const filtradas = ocorrencias.filter(o => catFiltro === "Todas" || o.categoria === catFiltro);
+  const filtradas = ocorrencias.filter(o => catFiltro === "" || o.categoriaId === catFiltro);
   const ordenadas = [...filtradas].sort((a, b) =>
-    ordem === "relevancia" ? b.confirmacoes - a.confirmacoes : 0
+    ordem === "relevancia" ? b.quantidadeConfirmacoes - a.quantidadeConfirmacoes : 0
   );
 
-  const totalAlta = ocorrencias.filter(o => calcularRelevancia(o.confirmacoes) === "alta").length;
+  const totalAlta = ocorrencias.filter(o => calcularRelevancia(o.quantidadeConfirmacoes) === "alta").length;
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
@@ -96,16 +93,16 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
 
             {/* Pills de categoria */}
             <div className="flex flex-wrap gap-[8px]">
-              {CATEGORIAS.map(cat => (
+              {FILTROS_CATEGORIA.map(cat => (
                 <button
-                  key={cat}
-                  onClick={() => setCatFiltro(cat)}
+                  key={cat.id}
+                  onClick={() => setCatFiltro(cat.id)}
                   className={`px-[12px] py-[7px] rounded-[999px] border-none outline-none cursor-pointer transition-colors ${
-                    catFiltro === cat ? "bg-[#075ce5]" : "bg-white border border-[#d7e3f0]"
+                    catFiltro === cat.id ? "bg-[#075ce5]" : "bg-white border border-[#d7e3f0]"
                   }`}
                 >
-                  <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] ${catFiltro === cat ? "text-white" : "text-[#10284a]"}`}>
-                    {cat}
+                  <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] ${catFiltro === cat.id ? "text-white" : "text-[#10284a]"}`}>
+                    {cat.nome}
                   </p>
                 </button>
               ))}
@@ -118,7 +115,7 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
               <div className="bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Nenhuma ocorrência</p>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px] text-center">
-                  Não há ocorrências na categoria "{catFiltro}" ainda.
+                  Não há ocorrências na categoria "{FILTROS_CATEGORIA.find(cat => cat.id === catFiltro)?.nome}" ainda.
                 </p>
               </div>
             ) : (

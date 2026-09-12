@@ -1,13 +1,13 @@
 import { useState } from "react";
 import svgPaths from "@/assets/svg-4r6l0jr5e2";
-import { Ocorrencia, CategoriaOcorrencia, CATEGORIAS_OCORRENCIA } from "@/data/ocorrencias";
+import { Ocorrencia, CATEGORIAS_OCORRENCIA, nomeCategoria } from "@/data/ocorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
 type Props = {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
-  onRegistrar: (nova: Omit<Ocorrencia, "id" | "confirmadoPorMim">) => void;
+  onRegistrar: (nova: Omit<Ocorrencia, "id">) => void;
 };
 
 function MapPin() {
@@ -91,7 +91,8 @@ function Sucesso({ titulo, categoria, onAcompanhar, onNova }: {
 }
 
 export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: Props) {
-  const [categoria, setCategoria] = useState<CategoriaOcorrencia>("Vias");
+  const [categoriaId, setCategoriaId] = useState(CATEGORIAS_OCORRENCIA[0].id);
+  const categoria = nomeCategoria(categoriaId);
   const [descricao, setDescricao] = useState("");
   const [sucesso, setSucesso] = useState(false);
   const [tituloRegistrado, setTituloRegistrado] = useState("");
@@ -99,14 +100,24 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
   function handleRegistrar() {
     const titulo = descricao.trim().split("\n")[0].slice(0, 60) || `Problema em ${categoria}`;
     setTituloRegistrado(titulo);
+    const agora = new Date().toISOString();
     onRegistrar({
-      categoria,
-      status: "Em análise",
+      categoriaId,
+      status: "em_analise",
       titulo,
-      local: "Centro · Rua da Praça",
+      autorId: "usuario-mock-local",
+      endereco: "Rua da Praça",
+      bairro: "Centro",
+      latitude: -17.221,
+      longitude: -46.871,
+      fotos: [],
+      criadoEm: agora,
+      atualizadoEm: agora,
+      resolvidoEm: null,
+      arquivadoEm: null,
+      ocorrenciaPrincipalId: null,
       descricao: descricao || "Sem descrição.",
-      confirmacoes: 0,
-      tempo: "Agora mesmo",
+      quantidadeConfirmacoes: 0,
     });
     setSucesso(true);
   }
@@ -120,7 +131,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
             titulo={tituloRegistrado}
             categoria={categoria}
             onAcompanhar={() => onNavigate("atividade")}
-            onNova={() => { setSucesso(false); setDescricao(""); setCategoria("Vias"); }}
+            onNova={() => { setSucesso(false); setDescricao(""); setCategoriaId(CATEGORIAS_OCORRENCIA[0].id); }}
           />
         ) : (
           <div className="screen-content layout-novaocorrencia content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
@@ -137,16 +148,16 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
               <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
                 {CATEGORIAS_OCORRENCIA.map(cat => (
                   <button
-                    key={cat}
-                    onClick={() => setCategoria(cat)}
+                    key={cat.id}
+                    onClick={() => setCategoriaId(cat.id)}
                     className={`px-[12px] py-[8px] rounded-[999px] border-none outline-none cursor-pointer transition-all ${
-                      categoria === cat
+                      categoriaId === cat.id
                         ? "bg-[#075ce5]"
                         : "bg-white border border-[#d7e3f0]"
                     }`}
                   >
-                    <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] whitespace-nowrap ${categoria === cat ? "text-white" : "text-[#10284a]"}`}>
-                      {cat}
+                    <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] whitespace-nowrap ${categoriaId === cat.id ? "text-white" : "text-[#10284a]"}`}>
+                      {cat.nome}
                     </p>
                   </button>
                 ))}

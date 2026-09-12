@@ -9,10 +9,11 @@ type Props = {
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
   ocorrencias: Ocorrencia[];
+  confirmadas: string[];
 };
 
-export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrencias }: Props) {
-  const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + (o.confirmadoPorMim ? 1 : 0), 0);
+export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrencias, confirmadas }: Props) {
+  const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + (confirmadas.includes(o.id) ? 1 : 0), 0);
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">

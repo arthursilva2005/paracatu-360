@@ -1,4 +1,4 @@
-import { Ocorrencia, calcularRelevancia, CategoriaOcorrencia, CATEGORIAS_OCORRENCIA, METADADOS_STATUS } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, CATEGORIAS_OCORRENCIA, METADADOS_STATUS, STATUS_DASHBOARD } from "@/data/ocorrencias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
@@ -25,41 +25,41 @@ function KPI({ valor, label, cor, icon }: KPIProps) {
   );
 }
 
-const catColors: Record<CategoriaOcorrencia, string> = {
-  Vias:        "#075ce5",
-  Iluminação:  "#d97706",
-  Limpeza:     "#16a34a",
-  Segurança:   "#dc2626",
-  Outros:      "#7c3aed",
+const catColors: Record<string, string> = {
+  "legado-vias":        "#075ce5",
+  "legado-iluminacao":  "#d97706",
+  "legado-limpeza":     "#16a34a",
+  "legado-seguranca":   "#dc2626",
+  "outros":      "#7c3aed",
 };
 
 export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe, ocorrencias }: Props) {
   const total = ocorrencias.length;
-  const resolvidos = ocorrencias.filter(o => o.status === "Resolvido").length;
-  const emAndamento = ocorrencias.filter(o => o.status === "Em atendimento").length;
-  const altaRel = ocorrencias.filter(o => calcularRelevancia(o.confirmacoes) === "alta").length;
+  const resolvidos = ocorrencias.filter(o => o.status === "resolvido").length;
+  const emAndamento = ocorrencias.filter(o => o.status === "em_andamento").length;
+  const altaRel = ocorrencias.filter(o => calcularRelevancia(o.quantidadeConfirmacoes) === "alta").length;
   const taxaResolucao = total > 0 ? Math.round((resolvidos / total) * 100) : 0;
-  const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + o.confirmacoes, 0);
+  const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + o.quantidadeConfirmacoes, 0);
 
   // Distribuição por categoria
   const porCategoria = CATEGORIAS_OCORRENCIA.map(cat => ({
-    cat,
-    count: ocorrencias.filter(o => o.categoria === cat).length,
-    color: catColors[cat],
+    cat: cat.nome,
+    count: ocorrencias.filter(o => o.categoriaId === cat.id).length,
+    color: catColors[cat.id],
   }));
   const maxCat = Math.max(...porCategoria.map(c => c.count), 1);
 
   // Distribuição por status
-  const porStatus = Object.entries(METADADOS_STATUS).map(([status, meta]) => ({
+  const porStatus = STATUS_DASHBOARD.map(status => ({
     status,
-    label: status,
-    bg: meta.bg,
+    label: METADADOS_STATUS[status].label,
+    bg: METADADOS_STATUS[status].bg,
     count: ocorrencias.filter(o => o.status === status).length,
   }));
 
   // Top por relevância
   const topOcorrencias = [...ocorrencias]
-    .sort((a, b) => b.confirmacoes - a.confirmacoes)
+    .sort((a, b) => b.quantidadeConfirmacoes - a.quantidadeConfirmacoes)
     .slice(0, 3);
 
   return (

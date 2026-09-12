@@ -1,4 +1,4 @@
-import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, nomeCategoria, localOcorrencia, tempoOcorrencia } from "@/data/ocorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
@@ -7,13 +7,14 @@ type Props = {
   onNavigate: (tab: TabName) => void;
   onBack: () => void;
   ocorrencia: Ocorrencia;
+  confirmadoPorMim: boolean;
   onConfirmar: (id: string) => void;
 };
 
-export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onConfirmar }: Props) {
-  const relevancia = calcularRelevancia(ocorrencia.confirmacoes);
+export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onConfirmar, confirmadoPorMim }: Props) {
+  const relevancia = calcularRelevancia(ocorrencia.quantidadeConfirmacoes);
   const cor = corRelevancia[relevancia];
-  const progresso = Math.min(100, Math.round((ocorrencia.confirmacoes / 50) * 100));
+  const progresso = Math.min(100, Math.round((ocorrencia.quantidadeConfirmacoes / 50) * 100));
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
@@ -39,13 +40,13 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
           {/* Título */}
           <div className="detail-title flex flex-col gap-[8px] w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5] text-[10px] tracking-widest">
-              OCORRÊNCIA · {ocorrencia.categoria.toUpperCase()}
+              OCORRÊNCIA · {nomeCategoria(ocorrencia.categoriaId).toUpperCase()}
             </p>
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px] leading-snug w-full">
               {ocorrencia.titulo}
             </p>
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">
-              {ocorrencia.local}
+              {localOcorrencia(ocorrencia)}
             </p>
           </div>
 
@@ -56,7 +57,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
               {/* Status + relevância */}
               <div className="flex items-center justify-between w-full gap-[8px]">
                 <span className={`${METADADOS_STATUS[ocorrencia.status]?.classeBg ?? "bg-[#586a80]"} px-[10px] py-[5px] rounded-[999px]`}>
-                  <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[12px]">{ocorrencia.status}</p>
+                  <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[12px]">{METADADOS_STATUS[ocorrencia.status].label}</p>
                 </span>
                 <div className={`flex items-center gap-[5px] px-[10px] py-[5px] rounded-[999px] ${cor.bg}`}>
                   <div className={`w-[6px] h-[6px] rounded-full shrink-0 ${cor.dot}`} />
@@ -70,7 +71,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
               <div className="flex flex-col gap-[6px] w-full">
                 <div className="flex items-center justify-between">
                   <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">
-                    {ocorrencia.confirmacoes} confirmações
+                    {ocorrencia.quantidadeConfirmacoes} confirmações
                   </p>
                   <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">
                     {progresso}% da meta
@@ -98,9 +99,9 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
               {/* Informações */}
               <div className="flex flex-col gap-[10px] w-full pt-[4px] border-t border-[#f3f6fa]">
                 {[
-                  { label: "Categoria", value: ocorrencia.categoria },
-                  { label: "Local", value: ocorrencia.local },
-                  { label: "Registrado", value: ocorrencia.tempo },
+                  { label: "Categoria", value: nomeCategoria(ocorrencia.categoriaId) },
+                  { label: "Local", value: localOcorrencia(ocorrencia) },
+                  { label: "Registrado", value: tempoOcorrencia(ocorrencia) },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between">
                     <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">{label}</p>
@@ -116,7 +117,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</p>
             {[
               { titulo: "Encaminhado para manutenção", tempo: "Há 2 dias", texto: "A ocorrência foi enviada para a equipe de infraestrutura urbana e está em análise para agendamento do reparo." },
-              { titulo: `${ocorrencia.confirmacoes} confirmações recebidas`, tempo: "Há 3 dias", texto: "Moradores confirmaram a ocorrência. A equipe iniciou o levantamento do local para priorização." },
+              { titulo: `${ocorrencia.quantidadeConfirmacoes} confirmações recebidas`, tempo: "Há 3 dias", texto: "Moradores confirmaram a ocorrência. A equipe iniciou o levantamento do local para priorização." },
             ].map((a, i) => (
               <div key={i} className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[8px]">
                 <div className="flex items-start justify-between gap-[8px]">
@@ -133,15 +134,15 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Ações</p>
             <div className="flex gap-[12px] w-full">
               <button
-                onClick={() => !ocorrencia.confirmadoPorMim && onConfirmar(ocorrencia.id)}
-                disabled={ocorrencia.confirmadoPorMim}
+                onClick={() => !confirmadoPorMim && onConfirmar(ocorrencia.id)}
+                disabled={confirmadoPorMim}
                 className={`flex-1 rounded-[16px] py-[14px] px-[8px] border-none outline-none cursor-pointer transition-all duration-150 active:scale-[0.98] flex flex-col items-center gap-[4px] ${
-                  ocorrencia.confirmadoPorMim
+                  confirmadoPorMim
                     ? "bg-[#e8f0fe] cursor-default"
                     : "bg-[#075ce5] hover:bg-[#0a47b8]"
                 }`}
               >
-                {ocorrencia.confirmadoPorMim ? (
+                {confirmadoPorMim ? (
                   <>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#075ce5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -158,7 +159,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
               </button>
             </div>
 
-            {ocorrencia.confirmadoPorMim && (
+            {confirmadoPorMim && (
               <div className="bg-[#e8f0fe] rounded-[12px] px-[14px] py-[10px] w-full">
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[12px] text-center">
                   Obrigado! Sua confirmação ajuda a priorizar esta ocorrência.

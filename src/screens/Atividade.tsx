@@ -29,7 +29,7 @@ function Categoria({ label }: { label: string }) {
 
 export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorrencias }: Props) {
   const recentes = [...ocorrencias].slice(0, 3);
-  const historico = [...ocorrencias].sort((a, b) => b.confirmacoes - a.confirmacoes);
+  const historico = [...ocorrencias].sort((a, b) => b.quantidadeConfirmacoes - a.quantidadeConfirmacoes);
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
