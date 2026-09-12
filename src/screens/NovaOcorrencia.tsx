@@ -1,5 +1,5 @@
 import { useState } from "react";
-import svgPaths from "../../imports/svg-4r6l0jr5e2";
+import svgPaths from "@/assets/svg-4r6l0jr5e2";
 import { Ocorrencia, CategoriaOcorrencia } from "@/data/ocorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";

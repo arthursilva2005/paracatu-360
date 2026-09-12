@@ -1,4 +1,4 @@
-import svgPaths from "./svg-fgppstdvre";
+import svgPaths from "@/assets/svg-fgppstdvre";
 import imgMapa from "./8c6226c3f6130d9d0b9b971f7d598b626029572d.png";
 
 function Navegacao({ className }: { className?: string }) {

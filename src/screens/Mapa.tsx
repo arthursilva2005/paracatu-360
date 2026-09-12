@@ -1,4 +1,4 @@
-import svgPaths from "../../imports/svg-fgppstdvre";
+import svgPaths from "@/assets/svg-fgppstdvre";
 import { Ocorrencia } from "@/data/ocorrencias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";

@@ -1,4 +1,4 @@
-import svgPaths from "./svg-w4jnqeqhpf";
+import svgPaths from "@/assets/svg-w4jnqeqhpf";
 
 function Navegacao({ className }: { className?: string }) {
   return (

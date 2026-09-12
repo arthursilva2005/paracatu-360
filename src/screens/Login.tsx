@@ -1,4 +1,4 @@
-import logo from "../imports/logoptu360.jpg";
+import logo from "@/assets/logoptu360.jpg";
 
 type Props = {
   onLogin: () => void;
