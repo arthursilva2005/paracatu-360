@@ -1,4 +1,4 @@
-import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS } from "@/data/ocorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
@@ -8,13 +8,6 @@ type Props = {
   onBack: () => void;
   ocorrencia: Ocorrencia;
   onConfirmar: (id: string) => void;
-};
-
-const statusColor: Record<string, string> = {
-  "Encaminhado": "bg-[#075ce5]",
-  "Em análise":  "bg-[#d97706]",
-  "Em atendimento": "bg-[#7c3aed]",
-  "Resolvido":   "bg-[#16a34a]",
 };
 
 export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onConfirmar }: Props) {
@@ -62,7 +55,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
 
               {/* Status + relevância */}
               <div className="flex items-center justify-between w-full gap-[8px]">
-                <span className={`${statusColor[ocorrencia.status] ?? "bg-[#586a80]"} px-[10px] py-[5px] rounded-[999px]`}>
+                <span className={`${METADADOS_STATUS[ocorrencia.status]?.classeBg ?? "bg-[#586a80]"} px-[10px] py-[5px] rounded-[999px]`}>
                   <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[12px]">{ocorrencia.status}</p>
                 </span>
                 <div className={`flex items-center gap-[5px] px-[10px] py-[5px] rounded-[999px] ${cor.bg}`}>

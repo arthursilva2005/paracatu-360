@@ -1,6 +1,6 @@
 import { useState } from "react";
 import svgPaths from "@/assets/svg-4r6l0jr5e2";
-import { Ocorrencia, CategoriaOcorrencia } from "@/data/ocorrencias";
+import { Ocorrencia, CategoriaOcorrencia, CATEGORIAS_OCORRENCIA } from "@/data/ocorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
@@ -9,8 +9,6 @@ type Props = {
   onNavigate: (tab: TabName) => void;
   onRegistrar: (nova: Omit<Ocorrencia, "id" | "confirmadoPorMim">) => void;
 };
-
-const CATEGORIAS: CategoriaOcorrencia[] = ["Vias", "Iluminação", "Limpeza", "Segurança", "Outros"];
 
 function MapPin() {
   return (
@@ -137,7 +135,7 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar }: P
             <div className="new-category content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Qual é a categoria?</p>
               <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
-                {CATEGORIAS.map(cat => (
+                {CATEGORIAS_OCORRENCIA.map(cat => (
                   <button
                     key={cat}
                     onClick={() => setCategoria(cat)}

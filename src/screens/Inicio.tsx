@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Ocorrencia } from "@/data/ocorrencias";
+import { Ocorrencia, CATEGORIAS_OCORRENCIA, calcularRelevancia } from "@/data/ocorrencias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
@@ -14,7 +14,7 @@ type Props = {
 
 type Ordem = "relevancia" | "recente";
 
-const CATEGORIAS = ["Todas", "Vias", "Iluminação", "Limpeza", "Segurança", "Outros"] as const;
+const CATEGORIAS = ["Todas", ...CATEGORIAS_OCORRENCIA] as const;
 type CatFiltro = typeof CATEGORIAS[number];
 
 export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDashboard, ocorrencias }: Props) {
@@ -26,7 +26,7 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
     ordem === "relevancia" ? b.confirmacoes - a.confirmacoes : 0
   );
 
-  const totalAlta = ocorrencias.filter(o => o.confirmacoes >= 30).length;
+  const totalAlta = ocorrencias.filter(o => calcularRelevancia(o.confirmacoes) === "alta").length;
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">

@@ -1,4 +1,4 @@
-import { Ocorrencia, calcularRelevancia, CategoriaOcorrencia } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, CategoriaOcorrencia, CATEGORIAS_OCORRENCIA, METADADOS_STATUS } from "@/data/ocorrencias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
@@ -33,13 +33,6 @@ const catColors: Record<CategoriaOcorrencia, string> = {
   Outros:      "#7c3aed",
 };
 
-const statusColors: Record<string, { bg: string; label: string }> = {
-  "Em análise":     { bg: "#d97706", label: "Em análise" },
-  "Em atendimento": { bg: "#7c3aed", label: "Em atendimento" },
-  "Encaminhado":    { bg: "#075ce5", label: "Encaminhado" },
-  "Resolvido":      { bg: "#16a34a", label: "Resolvido" },
-};
-
 export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe, ocorrencias }: Props) {
   const total = ocorrencias.length;
   const resolvidos = ocorrencias.filter(o => o.status === "Resolvido").length;
@@ -49,7 +42,7 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
   const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + o.confirmacoes, 0);
 
   // Distribuição por categoria
-  const porCategoria = (["Vias", "Iluminação", "Limpeza", "Segurança", "Outros"] as CategoriaOcorrencia[]).map(cat => ({
+  const porCategoria = CATEGORIAS_OCORRENCIA.map(cat => ({
     cat,
     count: ocorrencias.filter(o => o.categoria === cat).length,
     color: catColors[cat],
@@ -57,9 +50,9 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
   const maxCat = Math.max(...porCategoria.map(c => c.count), 1);
 
   // Distribuição por status
-  const porStatus = Object.entries(statusColors).map(([status, meta]) => ({
+  const porStatus = Object.entries(METADADOS_STATUS).map(([status, meta]) => ({
     status,
-    label: meta.label,
+    label: status,
     bg: meta.bg,
     count: ocorrencias.filter(o => o.status === status).length,
   }));

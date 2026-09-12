@@ -1,5 +1,14 @@
-export type StatusOcorrencia = "Encaminhado" | "Em análise" | "Em atendimento" | "Resolvido";
-export type CategoriaOcorrencia = "Vias" | "Iluminação" | "Limpeza" | "Segurança" | "Outros";
+export const CATEGORIAS_OCORRENCIA = ["Vias", "Iluminação", "Limpeza", "Segurança", "Outros"] as const;
+export type CategoriaOcorrencia = typeof CATEGORIAS_OCORRENCIA[number];
+
+// A ordem mantém a apresentação atual dos status no Dashboard.
+export const METADADOS_STATUS = {
+  "Em análise": { bg: "#d97706", classeBg: "bg-[#d97706]" },
+  "Em atendimento": { bg: "#7c3aed", classeBg: "bg-[#7c3aed]" },
+  "Encaminhado": { bg: "#075ce5", classeBg: "bg-[#075ce5]" },
+  "Resolvido": { bg: "#16a34a", classeBg: "bg-[#16a34a]" },
+} as const;
+export type StatusOcorrencia = keyof typeof METADADOS_STATUS;
 
 export type Ocorrencia = {
   id: string;
