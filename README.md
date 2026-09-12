@@ -1,6 +1,7 @@
 # Paracatu 360
 
-O Paracatu 360 é um protótipo de participação cidadã para Paracatu, Minas Gerais. A aplicação permite registrar problemas da cidade, consultar ocorrências, acompanhar seu status e visualizar indicadores básicos da atividade urbana.
+O Paracatu 360 é uma plataforma de participação cidadã voltada ao registro e acompanhamento de problemas urbanos em Paracatu-MG. A proposta é facilitar a comunicação de situações relacionadas à infraestrutura, trânsito e vias, limpeza urbana, meio ambiente, água e saneamento, reunindo essas informações de forma organizada, visual e acessível.
+Atualmente, o projeto encontra-se na fase de protótipo/MVP web, utilizada para validar a experiência do usuário, os fluxos da aplicação e as principais regras de negócio.
 
 ## Estado atual
 
@@ -101,19 +102,67 @@ interface Ocorrencia {
 
 Os IDs são strings para manter compatibilidade com os mocks atuais e futuros UUIDs. Status usam códigos internos, como `registrado`, `em_analise`, `encaminhado`, `em_andamento` e `resolvido`, enquanto textos e cores da interface vêm de metadados centralizados. A relevância é derivada: 0–14 confirmações representam baixa, 15–29 média e 30 ou mais alta.
 
+### Status das ocorrências
+
+O fluxo principal previsto é:
+
+`Registrado → Em análise → Encaminhado → Em andamento → Resolvido`
+
+Também estão previstos os estados especiais:
+
+- `Rejeitado`: ocorrência inválida, inadequada ou fora do escopo;
+- `Duplicado`: problema já representado por outra ocorrência;
+- `Arquivado`: ocorrência retirada dos fluxos ativos sem exclusão definitiva.
+
+Os estados especiais estão preparados no modelo, mas os fluxos de moderação ainda não estão implementados.
+
+### Categorias
+
+O catálogo de domínio preparado para a evolução do projeto contém:
+
+- Trânsito e Vias
+- Infraestrutura
+- Limpeza Urbana
+- Meio Ambiente
+- Água e Saneamento
+- Outros
+
+A interface atual ainda mantém temporariamente categorias legadas do protótipo para preservar os mocks, filtros e comportamento visual existentes. A migração completa da interface para o catálogo oficial será realizada em uma etapa posterior.
+
 ## Roadmap
 
-1. Persistência das ocorrências em backend.
-2. Autenticação e autoria privada.
-3. Upload de uma a três fotos por ocorrência.
-4. GPS e mapa com localização ajustável.
-5. Histórico e sinalizações da comunidade.
-6. Gestão de categorias, status e permissões de moderação.
+### Base atual
+
+- Interface web responsiva
+- Navegação com React Router
+- Modelo de Ocorrência estruturado
+- Cadastro e consulta de ocorrências em memória
+- Confirmações e cálculo de relevância no frontend
+
+### Próximas etapas
+
+1. Integração com Supabase
+2. Autenticação e perfis de usuários
+3. Persistência das ocorrências
+4. Upload de uma a três fotos
+5. GPS e mapa com localização real
+6. Confirmações persistentes
+7. Histórico e sinalizações da comunidade
+8. Moderação e gestão de categorias/status
+9. Indicadores alimentados por dados reais
+
+### Futuro
+
+- PWA
+- Aplicativo mobile
+- Notificações
+- Possíveis integrações com a gestão pública
 
 ## Equipe
 
-Projeto Paracatu 360 — equipe de produto, design e desenvolvimento responsável pelo protótipo de participação cidadã.
-
-## Escopo desta documentação
-
-Este README foi atualizado com base somente em `README.md`, `package.json`, `src/App.tsx` e `src/data/ocorrencias.ts`, conforme solicitado. Descrições detalhadas de componentes, estilos, assets e telas não foram ampliadas porque exigiriam analisar outros arquivos.
+- Arthur
+- Bruno
+- Samuel
+- Hugo
+- Rodrigo
+- Vinicius
