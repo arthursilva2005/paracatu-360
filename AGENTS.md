@@ -19,9 +19,18 @@ This is the canonical project structure. Start with task-relevant files below. O
 - `index.html` - Vite HTML shell containing the `#root` element and loading `src/main.tsx`
 - `package.json` - Project dependencies and the Vite build, development, preview, and formatting scripts
 - `vite.config.ts` - Vite configuration with React, Tailwind CSS v4, and Figma Make plugins plus the `@` alias for `src`
-- `.mise.toml` - Toolchain versions for Node.js and pnpm
+- `.mise.toml` - Preserved Node.js and pnpm toolchain for the existing Figma Make integration
 
 ## Dependencies
+
+### Package manager
+
+- Use npm for local development: `npm install`, `npm run dev`, and `npm run build`.
+- `package-lock.json` is the official lockfile for the local npm workflow; `.npmrc` enables it explicitly.
+- Validate types with `npx tsc --noEmit`.
+- Do not use pnpm for local dependency changes.
+- The existing Figma Make integration is an explicit exception: preserve its pnpm scripts, `.mise.toml`, and `pnpm-lock.yaml` until a separately authorized migration is validated in Figma. Its lockfile currently resolves different package versions from the npm lockfile.
+- See `README.md` for the two workflows and the reason `packageManager` is not declared yet.
 
 - Runtime: React 19 and React DOM 19
 - Styling: Tailwind CSS v4 with the `@tailwindcss/vite` plugin
