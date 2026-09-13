@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "react-router";
 import Navegacao, { TabName } from "@/components/Navegacao";
+import { useAuth } from "@/context/AuthContext";
 import { Ocorrencia, ocorrenciasIniciais } from "@/data/ocorrencias";
 import Login from "@/screens/Login";
 import Inicio from "@/screens/Inicio";
@@ -18,6 +19,49 @@ const tabPaths: Record<TabName, string> = {
   atividade: "/atividade",
   perfil: "/perfil",
 };
+
+const rotasProtegidas = new Set(["/ocorrencias/nova", "/atividade", "/perfil"]);
+
+function rotaOrigemSegura(state: unknown): string {
+  if (!state || typeof state !== "object" || !("from" in state)) return "/";
+
+  const from = (state as { from?: unknown }).from;
+  if (typeof from !== "string" || !from.startsWith("/") || from.startsWith("//")) return "/";
+
+  const pathname = from.split(/[?#]/, 1)[0];
+  return rotasProtegidas.has(pathname) ? from : "/";
+}
+
+function RotaProtegida({ children }: { children: ReactNode }) {
+  const { session, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <div className="app-screen bg-[#f3f6fa]" aria-busy="true" />;
+  }
+
+  if (!session) {
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to="/entrar" replace state={{ from }} />;
+  }
+
+  return children;
+}
+
+function RotaLogin() {
+  const { session, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <div className="app-screen bg-[#f3f6fa]" aria-busy="true" />;
+  }
+
+  if (session) {
+    return <Navigate to={rotaOrigemSegura(location.state)} replace />;
+  }
+
+  return <Login />;
+}
 
 export default function App() {
   const navigateTo = useNavigate();
@@ -59,10 +103,6 @@ export default function App() {
     });
   }
 
-  function handleLogin() {
-    navigateTo("/", { replace: true });
-  }
-
   function confirmarOcorrencia(id: string) {
     setEstado(prev => {
       if (prev.confirmadas.includes(id) || !prev.ocorrencias.some(o => o.id === id)) return prev;
@@ -97,16 +137,26 @@ export default function App() {
       <main className="app-main">
 
         <Routes>
-          <Route path="/entrar" element={<Login onLogin={handleLogin} />} />
+          <Route path="/entrar" element={<RotaLogin />} />
           <Route path="/" element={<Inicio {...commonProps} onOpenDashboard={openDashboard} ordemInicial={navigationState?.registroConcluido ? "recente" : "relevancia"} />} />
           <Route path="/mapa" element={<Mapa {...commonProps} />} />
           <Route path="/ocorrencias/nova" element={
-            <NovaOcorrencia key={location.key} activeTab={activeTab} onNavigate={navigate}
-              onRegistrar={registrarNovaOcorrencia} onOpenDetalhe={openDetalhe}
-              onVoltarInicio={() => navigateTo("/", { state: { registroConcluido: true } })} />
+            <RotaProtegida>
+              <NovaOcorrencia key={location.key} activeTab={activeTab} onNavigate={navigate}
+                onRegistrar={registrarNovaOcorrencia} onOpenDetalhe={openDetalhe}
+                onVoltarInicio={() => navigateTo("/", { state: { registroConcluido: true } })} />
+            </RotaProtegida>
           } />
-          <Route path="/atividade" element={<Atividade {...commonProps} />} />
-          <Route path="/perfil" element={<Perfil {...commonProps} confirmadas={confirmadas} />} />
+          <Route path="/atividade" element={
+            <RotaProtegida>
+              <Atividade {...commonProps} />
+            </RotaProtegida>
+          } />
+          <Route path="/perfil" element={
+            <RotaProtegida>
+              <Perfil {...commonProps} confirmadas={confirmadas} />
+            </RotaProtegida>
+          } />
           <Route path="/ocorrencias/:id" element={ocorrenciaSelecionada ? (
             <Detalhe
               activeTab={activeTab}
