@@ -1,9 +1,10 @@
-import { Ocorrencia, calcularRelevancia, CATEGORIAS_OCORRENCIA, METADADOS_STATUS, STATUS_DASHBOARD } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, METADADOS_STATUS, STATUS_DASHBOARD } from "@/data/ocorrencias";
+import { EstadoCategorias, normalizarCodigoCategoria, resolverCategoria } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
-type Props = {
+type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onBack: () => void;
@@ -35,7 +36,16 @@ const catColors: Record<string, string> = {
   "outros":             "#7c3aed",
 };
 
-export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe, ocorrencias }: Props) {
+export default function Dashboard({
+  activeTab,
+  onNavigate,
+  onBack,
+  onOpenDetalhe,
+  ocorrencias,
+  categorias,
+  categoriasLoading,
+  categoriasError,
+}: Props) {
   const total = ocorrencias.length;
   const resolvidos = ocorrencias.filter(o => o.status === "resolvido").length;
   const emAndamento = ocorrencias.filter(o => o.status === "em_andamento").length;
@@ -44,10 +54,12 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
   const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + o.quantidadeConfirmacoes, 0);
 
   // Distribuição por categoria
-  const porCategoria = CATEGORIAS_OCORRENCIA.map(cat => ({
+  const porCategoria = categorias.map(cat => ({
     cat: cat.nome,
-    count: ocorrencias.filter(o => o.categoriaId === cat.id).length,
-    color: catColors[cat.id],
+    count: ocorrencias.filter(ocorrencia =>
+      resolverCategoria(ocorrencia.categoriaId, categorias)?.id === cat.id
+    ).length,
+    color: catColors[normalizarCodigoCategoria(cat.codigo).replace(/_/g, "-")] ?? "#586a80",
   }));
   const maxCat = Math.max(...porCategoria.map(c => c.count), 1);
 
@@ -140,7 +152,16 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
           {/* Distribuição por categoria */}
           <div className="dashboard-categories bg-white rounded-[16px] p-[16px] flex flex-col gap-[14px] border border-[#e8eef5]">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Ocorrências por categoria</p>
-            {porCategoria.map(({ cat, count, color }) => (
+            {categoriasLoading && (
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
+            )}
+            {!categoriasLoading && categoriasError && (
+              <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{categoriasError}</p>
+            )}
+            {!categoriasLoading && !categoriasError && categorias.length === 0 && (
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
+            )}
+            {!categoriasLoading && !categoriasError && porCategoria.map(({ cat, count, color }) => (
               <div key={cat} className="flex flex-col gap-[5px]">
                 <div className="flex items-center justify-between">
                   <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#10284a] text-[13px]">{cat}</p>
@@ -214,7 +235,13 @@ export default function Dashboard({ activeTab, onNavigate, onBack, onOpenDetalhe
               </button>
             </div>
             {topOcorrencias.map(o => (
-              <OcorrenciaCard key={o.id} ocorrencia={o} onClick={() => onOpenDetalhe(o.id)} />
+              <OcorrenciaCard
+                key={o.id}
+                ocorrencia={o}
+                categorias={categorias}
+                categoriasLoading={categoriasLoading}
+                onClick={() => onOpenDetalhe(o.id)}
+              />
             ))}
           </div>
 

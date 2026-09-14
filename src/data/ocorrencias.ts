@@ -1,11 +1,3 @@
-export interface CategoriaOcorrencia {
-  id: string;
-  nome: string;
-  slug: string;
-  ativa: boolean;
-  ordem: number;
-}
-
 export interface FotoOcorrencia {
   id: string;
   url: string;
@@ -19,7 +11,7 @@ export type StatusOcorrencia =
 export interface Ocorrencia {
   id: string;
   autorId: string;
-  categoriaId: string;
+  categoriaId: string; // UUID real ou código legado com hífen enquanto os mocks permanecerem locais.
   titulo: string;
   descricao: string;
   status: StatusOcorrencia;
@@ -60,25 +52,6 @@ export interface HistoricoOcorrencia {
 }
 
 export type PapelUsuario = "cidadao" | "moderador" | "administrador";
-
-export const CATEGORIAS_OFICIAIS: CategoriaOcorrencia[] = [
-  { id: "transito-vias", nome: "Trânsito e Vias", slug: "transito-vias", ativa: true, ordem: 1 },
-  { id: "infraestrutura", nome: "Infraestrutura", slug: "infraestrutura", ativa: true, ordem: 2 },
-  { id: "limpeza-urbana", nome: "Limpeza Urbana", slug: "limpeza-urbana", ativa: true, ordem: 3 },
-  { id: "meio-ambiente", nome: "Meio Ambiente", slug: "meio-ambiente", ativa: true, ordem: 4 },
-  { id: "agua-saneamento", nome: "Água e Saneamento", slug: "agua-saneamento", ativa: true, ordem: 5 },
-  { id: "seguranca", nome: "Segurança", slug: "seguranca", ativa: true, ordem: 6 },
-  { id: "outros", nome: "Outros", slug: "outros", ativa: true, ordem: 7 },
-];
-
-export const CATEGORIAS_OCORRENCIA = CATEGORIAS_OFICIAIS;
-
-export const FILTROS_CATEGORIA = [{ id: "", nome: "Todas" }, ...CATEGORIAS_OCORRENCIA];
-
-export function nomeCategoria(id: string): string {
-  return CATEGORIAS_OCORRENCIA.find(c => c.id === id)?.nome
-    ?? CATEGORIAS_OFICIAIS.find(c => c.id === id)?.nome ?? "Outros";
-}
 
 // Labels e cores atuais preservados; os novos estados ainda não aparecem no Dashboard.
 export const METADADOS_STATUS: Record<StatusOcorrencia, { label: string; bg: string; classeBg: string }> = {

@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "rea
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
 import { Ocorrencia, ocorrenciasIniciais } from "@/data/ocorrencias";
+import useCategorias from "@/hooks/useCategorias";
 import Login from "@/screens/Login";
 import Inicio from "@/screens/Inicio";
 import Mapa from "@/screens/Mapa";
@@ -66,6 +67,7 @@ function RotaLogin() {
 export default function App() {
   const navigateTo = useNavigate();
   const location = useLocation();
+  const categoriasState = useCategorias();
   const isLogin = useMatch("/entrar") !== null;
   const detalheMatch = useMatch("/ocorrencias/:id");
   const [{ ocorrencias, confirmadas }, setEstado] = useState<{
@@ -123,7 +125,13 @@ export default function App() {
   const ocorrenciaSelecionada =
     ocorrencias.find(o => o.id === detalheMatch?.params.id);
 
-  const commonProps = { activeTab, onNavigate: navigate, onOpenDetalhe: openDetalhe, ocorrencias };
+  const commonProps = {
+    activeTab,
+    onNavigate: navigate,
+    onOpenDetalhe: openDetalhe,
+    ocorrencias,
+    ...categoriasState,
+  };
 
   return (
     <div className={`app-shell ${isLogin ? "app-shell--login" : ""}`}>
@@ -144,7 +152,8 @@ export default function App() {
             <RotaProtegida>
               <NovaOcorrencia key={location.key} activeTab={activeTab} onNavigate={navigate}
                 onRegistrar={registrarNovaOcorrencia} onOpenDetalhe={openDetalhe}
-                onVoltarInicio={() => navigateTo("/", { state: { registroConcluido: true } })} />
+                onVoltarInicio={() => navigateTo("/", { state: { registroConcluido: true } })}
+                {...categoriasState} />
             </RotaProtegida>
           } />
           <Route path="/atividade" element={
@@ -165,6 +174,7 @@ export default function App() {
               ocorrencia={ocorrenciaSelecionada}
               confirmadoPorMim={confirmadas.includes(ocorrenciaSelecionada.id)}
               onConfirmar={confirmarOcorrencia}
+              {...categoriasState}
             />
           ) : <Navigate to="/" replace />} />
           <Route path="/indicadores" element={
@@ -174,6 +184,7 @@ export default function App() {
               onBack={goBack}
               onOpenDetalhe={openDetalhe}
               ocorrencias={ocorrencias}
+              {...categoriasState}
             />
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

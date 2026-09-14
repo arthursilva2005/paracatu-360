@@ -1,9 +1,10 @@
 import { Ocorrencia } from "@/data/ocorrencias";
+import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
-type Props = {
+type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
@@ -27,7 +28,7 @@ function Categoria({ label }: { label: string }) {
   );
 }
 
-export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorrencias }: Props) {
+export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorrencias, categorias, categoriasLoading }: Props) {
   const recentes = [...ocorrencias].slice(0, 3);
   const historico = [...ocorrencias].sort((a, b) => b.quantidadeConfirmacoes - a.quantidadeConfirmacoes);
 
@@ -58,7 +59,13 @@ export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorre
               <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">O que aconteceu nas últimas horas.</p>
             </div>
             {recentes.map(o => (
-              <OcorrenciaCard key={o.id} ocorrencia={o} onClick={() => onOpenDetalhe(o.id)} />
+              <OcorrenciaCard
+                key={o.id}
+                ocorrencia={o}
+                categorias={categorias}
+                categoriasLoading={categoriasLoading}
+                onClick={() => onOpenDetalhe(o.id)}
+              />
             ))}
           </div>
 
@@ -68,7 +75,13 @@ export default function Atividade({ activeTab, onNavigate, onOpenDetalhe, ocorre
               <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Ordenado pelo número de confirmações.</p>
             </div>
             {historico.map(o => (
-              <OcorrenciaCard key={o.id} ocorrencia={o} onClick={() => onOpenDetalhe(o.id)} />
+              <OcorrenciaCard
+                key={o.id}
+                ocorrencia={o}
+                categorias={categorias}
+                categoriasLoading={categoriasLoading}
+                onClick={() => onOpenDetalhe(o.id)}
+              />
             ))}
           </div>
 

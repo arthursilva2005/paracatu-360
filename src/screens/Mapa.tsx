@@ -1,10 +1,11 @@
 import svgPaths from "@/assets/svg-fgppstdvre";
 import { Ocorrencia } from "@/data/ocorrencias";
+import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
-type Props = {
+type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
@@ -95,7 +96,15 @@ function MapPlaceholder({ count }: { count: number }) {
   );
 }
 
-export default function Mapa({ activeTab, onNavigate, onOpenDetalhe, ocorrencias }: Props) {
+export default function Mapa({
+  activeTab,
+  onNavigate,
+  onOpenDetalhe,
+  ocorrencias,
+  categorias,
+  categoriasLoading,
+  categoriasError,
+}: Props) {
   const ordenadas = [...ocorrencias].sort((a, b) => b.quantidadeConfirmacoes - a.quantidadeConfirmacoes);
 
   return (
@@ -109,17 +118,29 @@ export default function Mapa({ activeTab, onNavigate, onOpenDetalhe, ocorrencias
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Filtros</p>
             <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
               <CategoriaAtiva label="Todas" />
-              <Categoria label="Vias" />
-              <Categoria label="Iluminação" />
-              <Categoria label="Limpeza" />
-              <Categoria label="Segurança" />
+              {categorias.map(cat => <Categoria key={cat.id} label={cat.nome} />)}
             </div>
+            {categoriasLoading && (
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
+            )}
+            {!categoriasLoading && categoriasError && (
+              <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{categoriasError}</p>
+            )}
+            {!categoriasLoading && !categoriasError && categorias.length === 0 && (
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
+            )}
           </div>
 
           <div className="map-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ocorrências próximas</p>
             {ordenadas.map(o => (
-              <OcorrenciaCard key={o.id} ocorrencia={o} onClick={() => onOpenDetalhe(o.id)} />
+              <OcorrenciaCard
+                key={o.id}
+                ocorrencia={o}
+                categorias={categorias}
+                categoriasLoading={categoriasLoading}
+                onClick={() => onOpenDetalhe(o.id)}
+              />
             ))}
           </div>
 

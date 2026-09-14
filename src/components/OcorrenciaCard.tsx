@@ -1,14 +1,19 @@
-import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, nomeCategoria, localOcorrencia, tempoOcorrencia, METADADOS_STATUS } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, localOcorrencia, tempoOcorrencia, METADADOS_STATUS } from "@/data/ocorrencias";
+import { CategoriaOcorrencia, resolverCategoria } from "@/hooks/useCategorias";
 
 type Props = {
   ocorrencia: Ocorrencia;
+  categorias: CategoriaOcorrencia[];
+  categoriasLoading: boolean;
   onClick?: () => void;
   showRelevancia?: boolean;
 };
 
-export default function OcorrenciaCard({ ocorrencia, onClick, showRelevancia = true }: Props) {
+export default function OcorrenciaCard({ ocorrencia, categorias, categoriasLoading, onClick, showRelevancia = true }: Props) {
   const { status, titulo, quantidadeConfirmacoes: confirmacoes } = ocorrencia;
-  const categoria = nomeCategoria(ocorrencia.categoriaId);
+  const categoria = resolverCategoria(ocorrencia.categoriaId, categorias);
+  const categoriaNome = categoria?.nome
+    ?? (categoriasLoading ? "Carregando categoria" : "Categoria indisponível");
   const local = localOcorrencia(ocorrencia);
   const tempo = tempoOcorrencia(ocorrencia);
   const relevancia = calcularRelevancia(confirmacoes);
@@ -23,7 +28,7 @@ export default function OcorrenciaCard({ ocorrencia, onClick, showRelevancia = t
         {/* Linha superior: categoria + badge relevância */}
         <div className="flex items-center justify-between w-full gap-[8px]">
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[12px]">
-            {categoria} · {METADADOS_STATUS[status].label}
+            {categoriaNome} · {METADADOS_STATUS[status].label}
           </p>
           {showRelevancia && (
             <div className={`flex items-center gap-[4px] px-[8px] py-[3px] rounded-[999px] shrink-0 ${cor.bg}`}>

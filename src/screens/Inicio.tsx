@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Ocorrencia, FILTROS_CATEGORIA, calcularRelevancia } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia } from "@/data/ocorrencias";
+import { EstadoCategorias, resolverCategoria } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
-type Props = {
+type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
@@ -15,11 +16,24 @@ type Props = {
 
 type Ordem = "relevancia" | "recente";
 
-export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDashboard, ocorrencias, ordemInicial = "relevancia" }: Props) {
+export default function Inicio({
+  activeTab,
+  onNavigate,
+  onOpenDetalhe,
+  onOpenDashboard,
+  ocorrencias,
+  ordemInicial = "relevancia",
+  categorias,
+  categoriasLoading,
+  categoriasError,
+}: Props) {
   const [ordem, setOrdem] = useState<Ordem>(ordemInicial);
   const [catFiltro, setCatFiltro] = useState("");
 
-  const filtradas = ocorrencias.filter(o => catFiltro === "" || o.categoriaId === catFiltro);
+  const filtradas = ocorrencias.filter(ocorrencia => {
+    if (catFiltro === "") return true;
+    return resolverCategoria(ocorrencia.categoriaId, categorias)?.id === catFiltro;
+  });
   const ordenadas = [...filtradas].sort((a, b) =>
     ordem === "relevancia"
       ? b.quantidadeConfirmacoes - a.quantidadeConfirmacoes
@@ -96,7 +110,17 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
 
             {/* Pills de categoria */}
             <div className="flex flex-wrap gap-[8px]">
-              {FILTROS_CATEGORIA.map(cat => (
+              <button
+                onClick={() => setCatFiltro("")}
+                className={`px-[12px] py-[7px] rounded-[999px] border-none outline-none cursor-pointer transition-colors ${
+                  catFiltro === "" ? "bg-[#075ce5]" : "bg-white border border-[#d7e3f0]"
+                }`}
+              >
+                <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] ${catFiltro === "" ? "text-white" : "text-[#10284a]"}`}>
+                  Todas
+                </p>
+              </button>
+              {categorias.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setCatFiltro(cat.id)}
@@ -110,6 +134,15 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
                 </button>
               ))}
             </div>
+            {categoriasLoading && (
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
+            )}
+            {!categoriasLoading && categoriasError && (
+              <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{categoriasError}</p>
+            )}
+            {!categoriasLoading && !categoriasError && categorias.length === 0 && (
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
+            )}
           </div>
 
           {/* Lista */}
@@ -118,12 +151,18 @@ export default function Inicio({ activeTab, onNavigate, onOpenDetalhe, onOpenDas
               <div className="bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Nenhuma ocorrência</p>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px] text-center">
-                  Não há ocorrências na categoria "{FILTROS_CATEGORIA.find(cat => cat.id === catFiltro)?.nome}" ainda.
+                  Não há ocorrências na categoria "{categorias.find(cat => cat.id === catFiltro)?.nome ?? "selecionada"}" ainda.
                 </p>
               </div>
             ) : (
               ordenadas.map(o => (
-                <OcorrenciaCard key={o.id} ocorrencia={o} onClick={() => onOpenDetalhe(o.id)} />
+                <OcorrenciaCard
+                  key={o.id}
+                  ocorrencia={o}
+                  categorias={categorias}
+                  categoriasLoading={categoriasLoading}
+                  onClick={() => onOpenDetalhe(o.id)}
+                />
               ))
             )}
           </div>

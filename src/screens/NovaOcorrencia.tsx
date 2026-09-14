@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import svgPaths from "@/assets/svg-4r6l0jr5e2";
-import { Ocorrencia, CATEGORIAS_OCORRENCIA, nomeCategoria } from "@/data/ocorrencias";
+import { Ocorrencia } from "@/data/ocorrencias";
+import { EstadoCategorias, resolverCategoria } from "@/hooks/useCategorias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
-type Props = {
+type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onRegistrar: (nova: Omit<Ocorrencia, "id">) => string;
@@ -84,18 +85,40 @@ function Sucesso({ titulo, categoria, onVerOcorrencia, onVoltarInicio }: {
   );
 }
 
-export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar, onOpenDetalhe, onVoltarInicio }: Props) {
-  const [categoriaId, setCategoriaId] = useState(CATEGORIAS_OCORRENCIA[0].id);
-  const categoria = nomeCategoria(categoriaId);
+export default function NovaOcorrencia({
+  activeTab,
+  onNavigate,
+  onRegistrar,
+  onOpenDetalhe,
+  onVoltarInicio,
+  categorias,
+  categoriasLoading,
+  categoriasError,
+}: Props) {
+  const [categoriaId, setCategoriaId] = useState("");
+  const categoriaSelecionada = resolverCategoria(categoriaId, categorias);
+  const categoria = categoriaSelecionada?.nome ?? "";
   const [descricao, setDescricao] = useState("");
   const [idRegistrado, setIdRegistrado] = useState<string | null>(null);
   const sucesso = idRegistrado !== null;
   const [titulo, setTitulo] = useState("");
   const [erroTitulo, setErroTitulo] = useState("");
+  const [erroCategoria, setErroCategoria] = useState("");
   const [tituloRegistrado, setTituloRegistrado] = useState("");
+
+  useEffect(() => {
+    setCategoriaId(categoriaAtual => {
+      if (categorias.some(cat => cat.id === categoriaAtual)) return categoriaAtual;
+      return categorias[0]?.id ?? "";
+    });
+  }, [categorias]);
 
   function handleRegistrar() {
     if (sucesso) return;
+    if (!categoriaSelecionada || categoriasLoading || categoriasError) {
+      setErroCategoria("Selecione uma categoria disponível antes de registrar.");
+      return;
+    }
     const tituloValido = titulo.trim();
     if (tituloValido.length < 5 || tituloValido.length > 80) {
       setErroTitulo("Informe um título com 5 a 80 caracteres.");
@@ -149,10 +172,10 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar, onO
             <div className="new-category content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Qual é a categoria?</p>
               <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
-                {CATEGORIAS_OCORRENCIA.map(cat => (
+                {categorias.map(cat => (
                   <button
                     key={cat.id}
-                    onClick={() => setCategoriaId(cat.id)}
+                    onClick={() => { setCategoriaId(cat.id); setErroCategoria(""); }}
                     className={`px-[12px] py-[8px] rounded-[999px] border-none outline-none cursor-pointer transition-all ${
                       categoriaId === cat.id
                         ? "bg-[#075ce5]"
@@ -165,6 +188,18 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar, onO
                   </button>
                 ))}
               </div>
+              {categoriasLoading && (
+                <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
+              )}
+              {!categoriasLoading && categoriasError && (
+                <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{categoriasError}</p>
+              )}
+              {!categoriasLoading && !categoriasError && categorias.length === 0 && (
+                <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
+              )}
+              {erroCategoria && (
+                <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px]">{erroCategoria}</p>
+              )}
             </div>
 
             {/* Local */}
@@ -240,7 +275,8 @@ export default function NovaOcorrencia({ activeTab, onNavigate, onRegistrar, onO
             <div className="new-submit content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full pb-[8px]">
               <button
                 onClick={handleRegistrar}
-                className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all"
+                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError)}
+                className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
               >
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">Registrar ocorrência</p>
               </button>

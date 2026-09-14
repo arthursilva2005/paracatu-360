@@ -1,4 +1,5 @@
-import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, nomeCategoria, localOcorrencia, tempoOcorrencia } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, tempoOcorrencia } from "@/data/ocorrencias";
+import { CategoriaOcorrencia, resolverCategoria } from "@/hooks/useCategorias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
@@ -7,12 +8,17 @@ type Props = {
   onNavigate: (tab: TabName) => void;
   onBack: () => void;
   ocorrencia: Ocorrencia;
+  categorias: CategoriaOcorrencia[];
+  categoriasLoading: boolean;
   confirmadoPorMim: boolean;
   onConfirmar: (id: string) => void;
 };
 
-export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onConfirmar, confirmadoPorMim }: Props) {
+export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, onConfirmar, confirmadoPorMim }: Props) {
   const relevancia = calcularRelevancia(ocorrencia.quantidadeConfirmacoes);
+  const categoria = resolverCategoria(ocorrencia.categoriaId, categorias);
+  const categoriaNome = categoria?.nome
+    ?? (categoriasLoading ? "Carregando categoria" : "Categoria indisponível");
   const cor = corRelevancia[relevancia];
   const progresso = Math.min(100, Math.round((ocorrencia.quantidadeConfirmacoes / 50) * 100));
 
@@ -40,7 +46,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
           {/* Título */}
           <div className="detail-title flex flex-col gap-[8px] w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5] text-[10px] tracking-widest">
-              OCORRÊNCIA · {nomeCategoria(ocorrencia.categoriaId).toUpperCase()}
+              OCORRÊNCIA · {categoriaNome.toUpperCase()}
             </p>
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px] leading-snug w-full">
               {ocorrencia.titulo}
@@ -99,7 +105,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, onC
               {/* Informações */}
               <div className="flex flex-col gap-[10px] w-full pt-[4px] border-t border-[#f3f6fa]">
                 {[
-                  { label: "Categoria", value: nomeCategoria(ocorrencia.categoriaId) },
+                  { label: "Categoria", value: categoriaNome },
                   { label: "Local", value: localOcorrencia(ocorrencia) },
                   { label: "Registrado", value: tempoOcorrencia(ocorrencia) },
                 ].map(({ label, value }) => (

@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import svgPaths from "@/assets/svg-w4jnqeqhpf";
 import { Ocorrencia } from "@/data/ocorrencias";
+import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
 
-type Props = {
+type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
@@ -22,7 +23,7 @@ function calcularIniciais(nome: string): string {
   return `${partes[0].charAt(0)}${partes[partes.length - 1].charAt(0)}`.toUpperCase();
 }
 
-export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrencias, confirmadas }: Props) {
+export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrencias, confirmadas, categorias, categoriasLoading }: Props) {
   const navigate = useNavigate();
   const { user, profile, profileError, signOut } = useAuth();
   const [saindo, setSaindo] = useState(false);
@@ -149,7 +150,13 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrenci
               <p className="relative shrink-0 text-[#075ce5] text-[13px] whitespace-nowrap">Ver todas</p>
             </div>
             {ocorrencias.map(o => (
-              <OcorrenciaCard key={o.id} ocorrencia={o} onClick={() => onOpenDetalhe(o.id)} />
+              <OcorrenciaCard
+                key={o.id}
+                ocorrencia={o}
+                categorias={categorias}
+                categoriasLoading={categoriasLoading}
+                onClick={() => onOpenDetalhe(o.id)}
+              />
             ))}
           </div>
 
