@@ -23,6 +23,10 @@ type ResultadoAuth = {
   error: AuthError | null;
 };
 
+type ResultadoCadastro = ResultadoAuth & {
+  session: Session | null;
+};
+
 type AuthContextValue = {
   user: User | null;
   session: Session | null;
@@ -30,6 +34,7 @@ type AuthContextValue = {
   profileError: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<ResultadoAuth>;
+  signUp: (nome: string, email: string, password: string) => Promise<ResultadoCadastro>;
   signOut: () => Promise<ResultadoAuth>;
 };
 
@@ -176,6 +181,20 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   }
 
+  async function signUp(nome: string, email: string, password: string): Promise<ResultadoCadastro> {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nome,
+        },
+      },
+    });
+
+    return { error, session: data.session };
+  }
+
   async function signOut(): Promise<ResultadoAuth> {
     const { error } = await supabase.auth.signOut();
     return { error };
@@ -191,6 +210,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     profileError: profileState.error,
     loading,
     signIn,
+    signUp,
     signOut,
   }), [loading, profileState.error, profileState.profile, session, user]);
 

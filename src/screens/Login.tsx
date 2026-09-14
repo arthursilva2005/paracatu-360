@@ -16,26 +16,84 @@ function mensagemErroLogin(error: { message: string; status?: number } | null): 
   return "Não foi possível entrar agora. Tente novamente.";
 }
 
+function mensagemErroCadastro(error: { message: string; status?: number } | null): string {
+  if (!error) return "";
+
+  const message = error.message.toLowerCase();
+  if (message.includes("already registered") || message.includes("already been registered")) {
+    return "Já existe uma conta com este e-mail.";
+  }
+  if (message.includes("password") && message.includes("least")) {
+    return "A senha deve ter pelo menos 6 caracteres.";
+  }
+  if (message.includes("invalid") && message.includes("email")) {
+    return "Informe um e-mail válido.";
+  }
+
+  return "Não foi possível criar sua conta agora. Tente novamente.";
+}
+
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
+  const [modo, setModo] = useState<"login" | "cadastro">("login");
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [erro, setErro] = useState("");
+  const [mensagem, setMensagem] = useState("");
+
+  function trocarModo(novoModo: "login" | "cadastro") {
+    setModo(novoModo);
+    setSenha("");
+    setConfirmacaoSenha("");
+    setErro("");
+    setMensagem("");
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
 
+    if (modo === "cadastro" && !nome.trim()) {
+      setErro("Informe seu nome.");
+      return;
+    }
+
+    if (modo === "cadastro" && senha !== confirmacaoSenha) {
+      setErro("A senha e a confirmação devem ser iguais.");
+      return;
+    }
+
     setSubmitting(true);
     setErro("");
+    setMensagem("");
 
     try {
+      if (modo === "cadastro") {
+        const { error, session } = await signUp(nome.trim(), email.trim(), senha);
+        if (error) {
+          setErro(mensagemErroCadastro(error));
+          return;
+        }
+
+        if (!session) {
+          setModo("login");
+          setSenha("");
+          setConfirmacaoSenha("");
+          setMensagem("Conta criada. Confirme seu e-mail antes de entrar.");
+        }
+        return;
+      }
+
       const { error } = await signIn(email.trim(), senha);
       if (error) setErro(mensagemErroLogin(error));
     } catch (error) {
-      console.error("Falha inesperada durante o login.", error);
-      setErro("Não foi possível entrar agora. Tente novamente.");
+      console.error(`Falha inesperada durante o ${modo}.`, error);
+      setErro(modo === "login"
+        ? "Não foi possível entrar agora. Tente novamente."
+        : "Não foi possível criar sua conta agora. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
@@ -58,11 +116,34 @@ export default function Login() {
       {/* Formulário */}
       <form className="flex-1 w-full flex flex-col justify-center px-[28px] gap-[20px]" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-[6px]">
-          <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[24px]">Bem-vindo!</p>
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[14px]">Entre para acompanhar e registrar ocorrências na sua cidade.</p>
+          <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[24px]">
+            {modo === "login" ? "Bem-vindo!" : "Crie sua conta"}
+          </p>
+          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[14px]">
+            {modo === "login"
+              ? "Entre para acompanhar e registrar ocorrências na sua cidade."
+              : "Cadastre-se para participar e acompanhar sua cidade."}
+          </p>
         </div>
 
         <div className="flex flex-col gap-[12px]">
+          {modo === "cadastro" && (
+            <div className="flex flex-col gap-[6px]">
+              <label htmlFor="nome" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Nome</label>
+              <input
+                id="nome"
+                type="text"
+                value={nome}
+                onChange={event => { setNome(event.target.value); setErro(""); }}
+                placeholder="Seu nome"
+                autoComplete="name"
+                required
+                disabled={submitting}
+                className="bg-white rounded-[14px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce] w-full disabled:opacity-70"
+              />
+            </div>
+          )}
+
           {/* E-mail */}
           <div className="flex flex-col gap-[6px]">
             <label htmlFor="email" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">E-mail</label>
@@ -88,14 +169,40 @@ export default function Login() {
               value={senha}
               onChange={event => { setSenha(event.target.value); setErro(""); }}
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete={modo === "login" ? "current-password" : "new-password"}
+              minLength={6}
               required
               disabled={submitting}
               className="bg-white rounded-[14px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce] w-full disabled:opacity-70"
             />
           </div>
 
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[13px] text-right cursor-pointer">Esqueci minha senha</p>
+          {modo === "cadastro" && (
+            <div className="flex flex-col gap-[6px]">
+              <label htmlFor="confirmacao-senha" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Confirmar senha</label>
+              <input
+                id="confirmacao-senha"
+                type="password"
+                value={confirmacaoSenha}
+                onChange={event => { setConfirmacaoSenha(event.target.value); setErro(""); }}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                minLength={6}
+                required
+                disabled={submitting}
+                className="bg-white rounded-[14px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce] w-full disabled:opacity-70"
+              />
+            </div>
+          )}
+
+          {modo === "login" && (
+            <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[13px] text-right cursor-pointer">Esqueci minha senha</p>
+          )}
+          {mensagem && (
+            <p role="status" className="font-['Inter:Regular',sans-serif] font-normal text-[#18794e] text-[13px] text-center">
+              {mensagem}
+            </p>
+          )}
           {erro && (
             <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[13px] text-center">
               {erro}
@@ -110,7 +217,9 @@ export default function Login() {
           className="bg-[#075ce5] hover:bg-[#0a47b8] active:bg-[#083a96] active:scale-[0.98] w-full rounded-[16px] py-[16px] cursor-pointer border-none outline-none transition-all duration-150 shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 disabled:active:scale-100"
         >
           <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[16px] text-center">
-            {submitting ? "Entrando..." : "Entrar"}
+            {submitting
+              ? (modo === "login" ? "Entrando..." : "Criando conta...")
+              : (modo === "login" ? "Entrar" : "Criar conta")}
           </p>
         </button>
 
@@ -123,8 +232,17 @@ export default function Login() {
 
         {/* Cadastro */}
         <div className="flex flex-col items-center gap-[4px]">
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">Não tem conta?</p>
-          <p className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5] text-[13px] cursor-pointer">Criar conta gratuita</p>
+          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">
+            {modo === "login" ? "Não tem conta?" : "Já tem uma conta?"}
+          </p>
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => trocarModo(modo === "login" ? "cadastro" : "login")}
+            className="bg-transparent border-none p-0 font-['Inter:Bold',sans-serif] font-bold text-[#075ce5] text-[13px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {modo === "login" ? "Criar conta gratuita" : "Voltar para entrar"}
+          </button>
         </div>
       </form>
 
