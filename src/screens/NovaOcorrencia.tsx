@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import svgPaths from "@/assets/svg-4r6l0jr5e2";
-import { Ocorrencia } from "@/data/ocorrencias";
 import { EstadoCategorias, resolverCategoria } from "@/hooks/useCategorias";
+import type { DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
 type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
-  onRegistrar: (nova: Omit<Ocorrencia, "id">) => string;
+  onRegistrar: (nova: DadosCriacaoOcorrencia) => Promise<string>;
   onOpenDetalhe: (id: string) => void;
   onVoltarInicio: () => void;
 };
@@ -104,6 +104,8 @@ export default function NovaOcorrencia({
   const [titulo, setTitulo] = useState("");
   const [erroTitulo, setErroTitulo] = useState("");
   const [erroCategoria, setErroCategoria] = useState("");
+  const [erroRegistro, setErroRegistro] = useState("");
+  const [registrando, setRegistrando] = useState(false);
   const [tituloRegistrado, setTituloRegistrado] = useState("");
 
   useEffect(() => {
@@ -113,8 +115,8 @@ export default function NovaOcorrencia({
     });
   }, [categorias]);
 
-  function handleRegistrar() {
-    if (sucesso) return;
+  async function handleRegistrar() {
+    if (sucesso || registrando) return;
     if (!categoriaSelecionada || categoriasLoading || categoriasError) {
       setErroCategoria("Selecione uma categoria disponível antes de registrar.");
       return;
@@ -125,27 +127,28 @@ export default function NovaOcorrencia({
       return;
     }
     setErroTitulo("");
-    setTituloRegistrado(tituloValido);
-    const agora = new Date().toISOString();
-    const id = onRegistrar({
-      categoriaId,
-      status: "registrado",
-      titulo: tituloValido,
-      autorId: "usuario-mock-local",
-      endereco: "Rua da Praça",
-      bairro: "Centro",
-      latitude: -17.221,
-      longitude: -46.871,
-      fotos: [],
-      criadoEm: agora,
-      atualizadoEm: agora,
-      resolvidoEm: null,
-      arquivadoEm: null,
-      ocorrenciaPrincipalId: null,
-      descricao: descricao || "Sem descrição.",
-      quantidadeConfirmacoes: 0,
-    });
-    setIdRegistrado(id);
+    setErroRegistro("");
+    setRegistrando(true);
+
+    try {
+      const id = await onRegistrar({
+        categoriaId,
+        titulo: tituloValido,
+        descricao: descricao || "Sem descrição.",
+        // Localização demonstrativa mantida até a etapa de GPS/mapa.
+        endereco: "Rua da Praça",
+        bairro: "Centro",
+        latitude: -17.221,
+        longitude: -46.871,
+      });
+      setTituloRegistrado(tituloValido);
+      setIdRegistrado(id);
+    } catch (error) {
+      console.error("Não foi possível registrar a ocorrência.", error);
+      setErroRegistro("Não foi possível registrar a ocorrência. Tente novamente.");
+    } finally {
+      setRegistrando(false);
+    }
   }
 
   return (
@@ -275,11 +278,18 @@ export default function NovaOcorrencia({
             <div className="new-submit content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full pb-[8px]">
               <button
                 onClick={handleRegistrar}
-                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError)}
+                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError) || registrando}
                 className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
               >
-                <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">Registrar ocorrência</p>
+                <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">
+                  {registrando ? "Registrando..." : "Registrar ocorrência"}
+                </p>
               </button>
+              {erroRegistro && (
+                <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px] text-center w-full">
+                  {erroRegistro}
+                </p>
+              )}
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] text-center w-full">
                 Ao registrar, você receberá atualizações sobre o andamento do caso.
               </p>

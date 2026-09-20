@@ -4,6 +4,7 @@ import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
 import { Ocorrencia, ocorrenciasIniciais } from "@/data/ocorrencias";
 import useCategorias from "@/hooks/useCategorias";
+import { criarOcorrencia, type DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
 import Login from "@/screens/Login";
 import Inicio from "@/screens/Inicio";
 import Mapa from "@/screens/Mapa";
@@ -67,6 +68,7 @@ function RotaLogin() {
 export default function App() {
   const navigateTo = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const categoriasState = useCategorias();
   const isLogin = useMatch("/entrar") !== null;
   const detalheMatch = useMatch("/ocorrencias/:id");
@@ -116,10 +118,17 @@ export default function App() {
     });
   }
 
-  function registrarNovaOcorrencia(nova: Omit<Ocorrencia, "id">) {
-    const id = String(Date.now());
-    setEstado(prev => ({ ...prev, ocorrencias: [{ ...nova, id }, ...prev.ocorrencias] }));
-    return id;
+  async function registrarNovaOcorrencia(dados: DadosCriacaoOcorrencia): Promise<string> {
+    if (!user) {
+      throw new Error("Sessão de usuário não encontrada.");
+    }
+
+    const novaOcorrencia = await criarOcorrencia(dados, user.id);
+    setEstado(prev => ({
+      ...prev,
+      ocorrencias: [novaOcorrencia, ...prev.ocorrencias],
+    }));
+    return novaOcorrencia.id;
   }
 
   const ocorrenciaSelecionada =
