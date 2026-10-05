@@ -4,7 +4,14 @@ import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
 import { Ocorrencia, ocorrenciasIniciais } from "@/data/ocorrencias";
 import useCategorias from "@/hooks/useCategorias";
+import {
+  ErroEnvioFotos,
+  RegistroIncompletoError,
+  enviarFotosOcorrencia,
+  validarFotos,
+} from "@/lib/fotosOcorrencias";
 import { criarOcorrencia, type DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
+import { supabase } from "@/lib/supabase";
 import Login from "@/screens/Login";
 import Inicio from "@/screens/Inicio";
 import Mapa from "@/screens/Mapa";
@@ -118,15 +125,48 @@ export default function App() {
     });
   }
 
-  async function registrarNovaOcorrencia(dados: DadosCriacaoOcorrencia): Promise<string> {
+  async function registrarNovaOcorrencia(
+    dados: DadosCriacaoOcorrencia,
+    arquivos: readonly File[],
+    onEnviandoFotos: () => void,
+  ): Promise<string> {
     if (!user) {
       throw new Error("Sessão de usuário não encontrada.");
     }
 
+    validarFotos(arquivos);
     const novaOcorrencia = await criarOcorrencia(dados, user.id);
+    let fotos: Ocorrencia["fotos"];
+
+    try {
+      onEnviandoFotos();
+      fotos = await enviarFotosOcorrencia(novaOcorrencia.id, arquivos);
+    } catch (error) {
+      let ocorrenciaRemovida = false;
+      if (error instanceof ErroEnvioFotos && error.limpeza.objetosRemovidos) {
+        try {
+          const { data, error: erroExclusao } = await supabase
+            .from("ocorrencias")
+            .delete()
+            .eq("id", novaOcorrencia.id)
+            .select("id")
+            .maybeSingle();
+          ocorrenciaRemovida = !erroExclusao && data?.id === novaOcorrencia.id;
+        } catch (erroExclusao) {
+          console.error("Não foi possível remover a ocorrência incompleta.", erroExclusao);
+        }
+      }
+
+      if (!ocorrenciaRemovida) {
+        console.error("A ocorrência pode precisar de limpeza manual.", novaOcorrencia.id, error);
+        throw new RegistroIncompletoError(novaOcorrencia.id);
+      }
+      throw error;
+    }
+
     setEstado(prev => ({
       ...prev,
-      ocorrencias: [novaOcorrencia, ...prev.ocorrencias],
+      ocorrencias: [{ ...novaOcorrencia, fotos }, ...prev.ocorrencias],
     }));
     return novaOcorrencia.id;
   }

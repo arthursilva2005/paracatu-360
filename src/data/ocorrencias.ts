@@ -1,6 +1,6 @@
 export interface FotoOcorrencia {
   id: string;
-  url: string;
+  storagePath: string;
   ordem: number;
 }
 

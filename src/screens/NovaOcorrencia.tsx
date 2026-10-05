@@ -1,16 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import svgPaths from "@/assets/svg-4r6l0jr5e2";
 import { EstadoCategorias, resolverCategoria } from "@/hooks/useCategorias";
 import type { DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
+import {
+  MAX_FOTOS,
+  RegistroIncompletoError,
+  chaveArquivoFoto,
+  erroArquivoFoto,
+  validarFotos,
+} from "@/lib/fotosOcorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
 type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
-  onRegistrar: (nova: DadosCriacaoOcorrencia) => Promise<string>;
+  onRegistrar: (
+    nova: DadosCriacaoOcorrencia,
+    fotos: readonly File[],
+    onEnviandoFotos: () => void,
+  ) => Promise<string>;
   onOpenDetalhe: (id: string) => void;
   onVoltarInicio: () => void;
+};
+
+type FotoSelecionada = {
+  arquivo: File;
+  chave: string;
+  previewUrl: string;
 };
 
 function MapPin() {
@@ -105,8 +122,21 @@ export default function NovaOcorrencia({
   const [erroTitulo, setErroTitulo] = useState("");
   const [erroCategoria, setErroCategoria] = useState("");
   const [erroRegistro, setErroRegistro] = useState("");
-  const [registrando, setRegistrando] = useState(false);
+  const [erroFotos, setErroFotos] = useState("");
+  const [fotosSelecionadas, setFotosSelecionadas] = useState<FotoSelecionada[]>([]);
+  const [faseRegistro, setFaseRegistro] = useState<"idle" | "registrando" | "enviando">("idle");
+  const [registroIncompleto, setRegistroIncompleto] = useState(false);
   const [tituloRegistrado, setTituloRegistrado] = useState("");
+  const fotosRef = useRef<FotoSelecionada[]>([]);
+  const envioEmAndamento = useRef(false);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galeriaRef = useRef<HTMLInputElement>(null);
+  const registrando = faseRegistro !== "idle";
+
+  useEffect(() => () => {
+    fotosRef.current.forEach(foto => URL.revokeObjectURL(foto.previewUrl));
+    fotosRef.current = [];
+  }, []);
 
   useEffect(() => {
     setCategoriaId(categoriaAtual => {
@@ -115,8 +145,54 @@ export default function NovaOcorrencia({
     });
   }, [categorias]);
 
+  function adicionarFotos(event: ChangeEvent<HTMLInputElement>) {
+    const arquivos = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (registrando || registroIncompleto || arquivos.length === 0) return;
+
+    const selecionadas = [...fotosRef.current];
+    const chaves = new Set(selecionadas.map(foto => foto.chave));
+    let aviso = "";
+
+    for (const arquivo of arquivos) {
+      if (selecionadas.length >= MAX_FOTOS) {
+        aviso = "Você pode adicionar no máximo 3 fotos. Remova uma para escolher outra.";
+        break;
+      }
+
+      const erro = erroArquivoFoto(arquivo);
+      const chave = chaveArquivoFoto(arquivo);
+      if (erro || chaves.has(chave)) {
+        aviso = erro ?? "Esta foto já foi selecionada.";
+        continue;
+      }
+
+      selecionadas.push({
+        arquivo,
+        chave,
+        previewUrl: URL.createObjectURL(arquivo),
+      });
+      chaves.add(chave);
+    }
+
+    fotosRef.current = selecionadas;
+    setFotosSelecionadas(selecionadas);
+    setErroFotos(aviso);
+  }
+
+  function removerFoto(chave: string) {
+    if (registrando || registroIncompleto) return;
+    const foto = fotosRef.current.find(item => item.chave === chave);
+    if (!foto) return;
+    URL.revokeObjectURL(foto.previewUrl);
+    const restantes = fotosRef.current.filter(item => item.chave !== chave);
+    fotosRef.current = restantes;
+    setFotosSelecionadas(restantes);
+    setErroFotos("");
+  }
+
   async function handleRegistrar() {
-    if (sucesso || registrando) return;
+    if (sucesso || envioEmAndamento.current || registroIncompleto) return;
     if (!categoriaSelecionada || categoriasLoading || categoriasError) {
       setErroCategoria("Selecione uma categoria disponível antes de registrar.");
       return;
@@ -126,9 +202,17 @@ export default function NovaOcorrencia({
       setErroTitulo("Informe um título com 5 a 80 caracteres.");
       return;
     }
+    try {
+      validarFotos(fotosSelecionadas.map(foto => foto.arquivo));
+    } catch (error) {
+      setErroFotos(error instanceof Error ? error.message : "Selecione de 1 a 3 fotos válidas.");
+      return;
+    }
     setErroTitulo("");
+    setErroFotos("");
     setErroRegistro("");
-    setRegistrando(true);
+    envioEmAndamento.current = true;
+    setFaseRegistro("registrando");
 
     try {
       const id = await onRegistrar({
@@ -140,14 +224,23 @@ export default function NovaOcorrencia({
         bairro: "Centro",
         latitude: -17.221,
         longitude: -46.871,
-      });
+      }, fotosSelecionadas.map(foto => foto.arquivo), () => setFaseRegistro("enviando"));
+      fotosRef.current.forEach(foto => URL.revokeObjectURL(foto.previewUrl));
+      fotosRef.current = [];
+      setFotosSelecionadas([]);
       setTituloRegistrado(tituloValido);
       setIdRegistrado(id);
     } catch (error) {
       console.error("Não foi possível registrar a ocorrência.", error);
-      setErroRegistro("Não foi possível registrar a ocorrência. Tente novamente.");
+      if (error instanceof RegistroIncompletoError) {
+        setRegistroIncompleto(true);
+        setErroRegistro("O registro não foi concluído e pode ter ficado pendente. Não tente enviá-lo novamente; entre em contato com o suporte.");
+      } else {
+        setErroRegistro("Não foi possível registrar a ocorrência. Tente novamente.");
+      }
     } finally {
-      setRegistrando(false);
+      envioEmAndamento.current = false;
+      setFaseRegistro("idle");
     }
   }
 
@@ -178,6 +271,7 @@ export default function NovaOcorrencia({
                 {categorias.map(cat => (
                   <button
                     key={cat.id}
+                    disabled={registrando || registroIncompleto}
                     onClick={() => { setCategoriaId(cat.id); setErroCategoria(""); }}
                     className={`px-[12px] py-[8px] rounded-[999px] border-none outline-none cursor-pointer transition-all ${
                       categoriaId === cat.id
@@ -234,6 +328,7 @@ export default function NovaOcorrencia({
               <input
                 id="titulo-ocorrencia"
                 value={titulo}
+                disabled={registrando || registroIncompleto}
                 onChange={e => { setTitulo(e.target.value.slice(0, 80)); setErroTitulo(""); }}
                 required
                 minLength={5}
@@ -251,6 +346,7 @@ export default function NovaOcorrencia({
               </div>
               <textarea
                 value={descricao}
+                disabled={registrando || registroIncompleto}
                 onChange={e => setDescricao(e.target.value.slice(0, 300))}
                 maxLength={300}
                 placeholder="Descreva o que está acontecendo, onde exatamente o problema está e qualquer detalhe importante..."
@@ -261,28 +357,69 @@ export default function NovaOcorrencia({
             {/* Fotos */}
             <div className="new-photos content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos</p>
+              <input
+                ref={cameraRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="sr-only"
+                disabled={registrando || registroIncompleto}
+                onChange={adicionarFotos}
+                aria-label="Tirar foto"
+              />
+              <input
+                ref={galeriaRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                className="sr-only"
+                disabled={registrando || registroIncompleto}
+                onChange={adicionarFotos}
+                aria-label="Selecionar fotos da galeria"
+              />
               <div className="content-stretch flex gap-[12px] items-start relative shrink-0 w-full">
-                {[
-                  { icon: <CameraIcon />, label: "Câmera" },
-                  { icon: <ImageIcon />, label: "Galeria" },
-                ].map(({ icon, label }) => (
-                  <div key={label} className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] photo-option shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0]">
-                    {icon}
-                    <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#586a80] text-[11px]">{label}</p>
-                  </div>
-                ))}
+                <button type="button" disabled={registrando || registroIncompleto} onClick={() => cameraRef.current?.click()}
+                  className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] photo-option shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0] disabled:cursor-not-allowed disabled:opacity-60">
+                  <CameraIcon />
+                  <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#586a80] text-[11px]">Câmera</span>
+                </button>
+                <button type="button" disabled={registrando || registroIncompleto} onClick={() => galeriaRef.current?.click()}
+                  className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] photo-option shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0] disabled:cursor-not-allowed disabled:opacity-60">
+                  <ImageIcon />
+                  <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#586a80] text-[11px]">Galeria</span>
+                </button>
               </div>
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">
+                {fotosSelecionadas.length}/{MAX_FOTOS} fotos · JPEG, PNG ou WebP · até 5 MiB cada
+              </p>
+              {fotosSelecionadas.length > 0 && (
+                <div className="flex flex-wrap gap-[8px] w-full">
+                  {fotosSelecionadas.map((foto, indice) => (
+                    <div key={foto.chave} className="relative size-[80px] shrink-0">
+                      <img src={foto.previewUrl} alt={"Foto selecionada " + (indice + 1)}
+                        className="size-full rounded-[12px] object-cover border border-[#d7e3f0]" />
+                      <button type="button" onClick={() => removerFoto(foto.chave)}
+                        disabled={registrando || registroIncompleto}
+                        aria-label={"Remover foto " + (indice + 1)}
+                        className="absolute right-0 top-0 size-[28px] rounded-full bg-[#10284a] text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {erroFotos && <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px]">{erroFotos}</p>}
             </div>
 
             {/* Registrar */}
             <div className="new-submit content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full pb-[8px]">
               <button
                 onClick={handleRegistrar}
-                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError) || registrando}
+                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError) || registrando || registroIncompleto}
                 className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
               >
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">
-                  {registrando ? "Registrando..." : "Registrar ocorrência"}
+                  {faseRegistro === "registrando" ? "Registrando..." : faseRegistro === "enviando" ? "Enviando fotos..." : "Registrar ocorrência"}
                 </p>
               </button>
               {erroRegistro && (
