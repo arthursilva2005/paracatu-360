@@ -83,6 +83,8 @@ export default function App() {
     ocorrencias: Ocorrencia[];
     confirmadas: string[];
   }>({ ocorrencias: ocorrenciasIniciais, confirmadas: [] });
+  // Cache público só para abrir os detalhes já carregados pela Home na sessão.
+  const [ocorrenciasHome, setOcorrenciasHome] = useState<Ocorrencia[]>([]);
   const navigationState = location.state as { from?: string; activeTab?: TabName; registroConcluido?: boolean } | null;
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const activeTab: TabName =
@@ -116,7 +118,8 @@ export default function App() {
 
   function confirmarOcorrencia(id: string) {
     setEstado(prev => {
-      if (prev.confirmadas.includes(id) || !prev.ocorrencias.some(o => o.id === id)) return prev;
+      if (prev.confirmadas.includes(id) ||
+        ![...prev.ocorrencias, ...ocorrenciasHome].some(o => o.id === id)) return prev;
       return {
         ocorrencias: prev.ocorrencias.map(o => o.id === id
           ? { ...o, quantidadeConfirmacoes: o.quantidadeConfirmacoes + 1 } : o),
@@ -171,8 +174,15 @@ export default function App() {
     return novaOcorrencia.id;
   }
 
-  const ocorrenciaSelecionada =
-    ocorrencias.find(o => o.id === detalheMatch?.params.id);
+  const ocorrenciaPublicaSelecionada = ocorrenciasHome.find(o => o.id === detalheMatch?.params.id);
+  const ocorrenciaSelecionada = ocorrenciaPublicaSelecionada
+    ? {
+      ...ocorrenciaPublicaSelecionada,
+      // Confirmação demonstrativa no Detalhe; a Home sempre consulta a contagem real.
+      quantidadeConfirmacoes: ocorrenciaPublicaSelecionada.quantidadeConfirmacoes +
+        (confirmadas.includes(ocorrenciaPublicaSelecionada.id) ? 1 : 0),
+    }
+    : ocorrencias.find(o => o.id === detalheMatch?.params.id);
 
   const commonProps = {
     activeTab,
@@ -195,7 +205,10 @@ export default function App() {
 
         <Routes>
           <Route path="/entrar" element={<RotaLogin />} />
-          <Route path="/" element={<Inicio {...commonProps} onOpenDashboard={openDashboard} ordemInicial={navigationState?.registroConcluido ? "recente" : "relevancia"} />} />
+          <Route path="/" element={<Inicio activeTab={activeTab} onNavigate={navigate}
+            onOpenDetalhe={openDetalhe} onOcorrenciasCarregadas={setOcorrenciasHome}
+            {...categoriasState} onOpenDashboard={openDashboard}
+            ordemInicial={navigationState?.registroConcluido ? "recente" : "relevancia"} />} />
           <Route path="/mapa" element={<Mapa {...commonProps} />} />
           <Route path="/ocorrencias/nova" element={
             <RotaProtegida>

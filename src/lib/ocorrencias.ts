@@ -1,5 +1,10 @@
 import type { Ocorrencia, StatusOcorrencia } from "@/data/ocorrencias";
 import { supabase } from "@/lib/supabase";
+import { carregarCapasOcorrencias } from "@/lib/fotosOcorrencias";
+
+export type OcorrenciaHome = Ocorrencia & { fotoPrincipalUrl: string | null };
+
+const COLUNAS_PUBLICAS = "id, categoria_id, titulo, descricao, status, endereco, bairro, latitude, longitude, ocorrencia_principal_id, created_at, updated_at, resolvida_at, arquivada_at";
 
 export type DadosCriacaoOcorrencia = Pick<
   Ocorrencia,
@@ -23,6 +28,85 @@ type OcorrenciaInserida = {
   arquivada_at: string | null;
 };
 
+function mapearOcorrencia(data: OcorrenciaInserida): Omit<Ocorrencia, "quantidadeConfirmacoes"> {
+  return {
+    id: data.id,
+    categoriaId: data.categoria_id,
+    titulo: data.titulo,
+    descricao: data.descricao,
+    status: data.status,
+    endereco: data.endereco,
+    bairro: data.bairro,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    fotos: [],
+    criadoEm: data.created_at,
+    atualizadoEm: data.updated_at,
+    resolvidoEm: data.resolvida_at,
+    arquivadoEm: data.arquivada_at,
+    ocorrenciaPrincipalId: data.ocorrencia_principal_id,
+  };
+}
+
+async function contarConfirmacoesAtivas(ids: string[]): Promise<Map<string, number>> {
+  const contagens = new Map<string, number>();
+  const tamanhoPagina = 500;
+  // Lê somente colunas concedidas a anon/authenticated; nunca usuario_id.
+  for (let inicio = 0; ; inicio += tamanhoPagina) {
+    const { data, error } = await supabase
+      .from("confirmacoes")
+      .select("id, ocorrencia_id")
+      .in("ocorrencia_id", ids)
+      .is("desfeito_at", null)
+      .order("id", { ascending: true })
+      .range(inicio, inicio + tamanhoPagina - 1);
+    if (error) throw error;
+    for (const confirmacao of data ?? []) {
+      contagens.set(confirmacao.ocorrencia_id, (contagens.get(confirmacao.ocorrencia_id) ?? 0) + 1);
+    }
+    if (!data || data.length < tamanhoPagina) break;
+  }
+  return contagens;
+}
+
+export async function listarOcorrenciasPublicas(): Promise<OcorrenciaHome[]> {
+  const resultado: OcorrenciaHome[] = [];
+  const tamanhoLote = 100;
+
+  for (let inicio = 0; ; inicio += tamanhoLote) {
+    const { data, error } = await supabase
+      .from("ocorrencias")
+      .select(COLUNAS_PUBLICAS)
+      // Mantém a Home pública mesmo quando a sessão pode ler registros privados.
+      .not("status", "in", "(rejeitado,arquivado)")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(inicio, inicio + tamanhoLote - 1)
+      .returns<OcorrenciaInserida[]>();
+    if (error) throw error;
+    if (!data?.length) break;
+
+    const ids = data.map(ocorrencia => ocorrencia.id);
+    const [contagens, capas] = await Promise.all([
+      contarConfirmacoesAtivas(ids),
+      carregarCapasOcorrencias(ids),
+    ]);
+    resultado.push(...data.map(ocorrencia => {
+      const capa = capas.get(ocorrencia.id);
+      return {
+        ...mapearOcorrencia(ocorrencia),
+        // Zero apenas após consulta bem-sucedida sem confirmações ativas.
+        quantidadeConfirmacoes: contagens.get(ocorrencia.id) ?? 0,
+        fotos: capa ? [capa.foto] : [],
+        fotoPrincipalUrl: capa?.url ?? null,
+      };
+    }));
+    if (data.length < tamanhoLote) break;
+  }
+
+  return resultado;
+}
+
 export async function criarOcorrencia(
   dados: DadosCriacaoOcorrencia,
   autorId: string,
@@ -39,9 +123,7 @@ export async function criarOcorrencia(
       latitude: dados.latitude,
       longitude: dados.longitude,
     })
-    .select(
-      "id, categoria_id, titulo, descricao, status, endereco, bairro, latitude, longitude, ocorrencia_principal_id, created_at, updated_at, resolvida_at, arquivada_at",
-    )
+    .select(COLUNAS_PUBLICAS)
     .single<OcorrenciaInserida>();
 
   if (error || !data?.id) {
@@ -49,22 +131,10 @@ export async function criarOcorrencia(
   }
 
   return {
-    id: data.id,
+    ...mapearOcorrencia(data),
     autorId,
-    categoriaId: data.categoria_id,
-    titulo: data.titulo,
-    descricao: data.descricao,
-    status: data.status,
-    endereco: data.endereco,
-    bairro: data.bairro,
     latitude: data.latitude ?? dados.latitude,
     longitude: data.longitude ?? dados.longitude,
-    fotos: [],
-    criadoEm: data.created_at,
-    atualizadoEm: data.updated_at,
-    resolvidoEm: data.resolvida_at,
-    arquivadoEm: data.arquivada_at,
-    ocorrenciaPrincipalId: data.ocorrencia_principal_id,
     quantidadeConfirmacoes: 0,
   };
 }

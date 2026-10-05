@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Ocorrencia, calcularRelevancia } from "@/data/ocorrencias";
-import { EstadoCategorias, resolverCategoria } from "@/hooks/useCategorias";
+import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
+import { useAuth } from "@/context/AuthContext";
+import { listarOcorrenciasPublicas, type OcorrenciaHome } from "@/lib/ocorrencias";
 
 type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
   onOpenDashboard: () => void;
-  ocorrencias: Ocorrencia[];
+  onOcorrenciasCarregadas: (ocorrencias: Ocorrencia[]) => void;
   ordemInicial?: Ordem;
 };
 
@@ -21,7 +23,7 @@ export default function Inicio({
   onNavigate,
   onOpenDetalhe,
   onOpenDashboard,
-  ocorrencias,
+  onOcorrenciasCarregadas,
   ordemInicial = "relevancia",
   categorias,
   categoriasLoading,
@@ -29,10 +31,35 @@ export default function Inicio({
 }: Props) {
   const [ordem, setOrdem] = useState<Ordem>(ordemInicial);
   const [catFiltro, setCatFiltro] = useState("");
+  const [ocorrencias, setOcorrencias] = useState<OcorrenciaHome[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    let ativo = true;
+    setCarregando(true);
+    setErro(false);
+    setOcorrencias([]);
+
+    void listarOcorrenciasPublicas().then(lista => {
+      if (!ativo) return;
+      setOcorrencias(lista);
+      onOcorrenciasCarregadas(lista);
+    }).catch(() => {
+      if (!ativo) return;
+      setErro(true);
+      onOcorrenciasCarregadas([]);
+    }).finally(() => {
+      if (ativo) setCarregando(false);
+    });
+
+    return () => { ativo = false; };
+  }, [onOcorrenciasCarregadas, user?.id]);
 
   const filtradas = ocorrencias.filter(ocorrencia => {
     if (catFiltro === "") return true;
-    return resolverCategoria(ocorrencia.categoriaId, categorias)?.id === catFiltro;
+    return ocorrencia.categoriaId === catFiltro;
   });
   const ordenadas = [...filtradas].sort((a, b) =>
     ordem === "relevancia"
@@ -79,7 +106,8 @@ export default function Inicio({
                 <div className="text-left">
                   <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[14px]">Dashboard 360</p>
                   <p className="font-['Inter:Regular',sans-serif] font-normal text-white/60 text-[11px]">
-                    {ocorrencias.length} ocorrências · {totalAlta} de alta relevância
+                    {carregando ? "Carregando ocorrências..." : erro ? "Ocorrências indisponíveis" :
+                      `${ocorrencias.length} ocorrências · ${totalAlta} de alta relevância`}
                   </p>
                 </div>
               </div>
@@ -147,11 +175,16 @@ export default function Inicio({
 
           {/* Lista */}
           <div className="home-list flex flex-col gap-[12px] w-full">
-            {ordenadas.length === 0 ? (
-              <div className="bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
+            {carregando ? (
+              <p role="status" className="col-span-full bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px]">Carregando ocorrências...</p>
+            ) : erro ? (
+              <p role="alert" className="col-span-full bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências agora.</p>
+            ) : ordenadas.length === 0 ? (
+              <div className="col-span-full bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Nenhuma ocorrência</p>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px] text-center">
-                  Não há ocorrências na categoria "{categorias.find(cat => cat.id === catFiltro)?.nome ?? "selecionada"}" ainda.
+                  {ocorrencias.length === 0 ? "Nenhuma ocorrência registrada ainda." :
+                    `Não há ocorrências na categoria "${categorias.find(cat => cat.id === catFiltro)?.nome ?? "selecionada"}" ainda.`}
                 </p>
               </div>
             ) : (
@@ -161,6 +194,8 @@ export default function Inicio({
                   ocorrencia={o}
                   categorias={categorias}
                   categoriasLoading={categoriasLoading}
+                  exibirFoto
+                  fotoPrincipalUrl={o.fotoPrincipalUrl}
                   onClick={() => onOpenDetalhe(o.id)}
                 />
               ))

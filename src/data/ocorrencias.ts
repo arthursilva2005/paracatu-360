@@ -10,15 +10,15 @@ export type StatusOcorrencia =
 
 export interface Ocorrencia {
   id: string;
-  autorId: string;
+  autorId?: string; // Ausente na leitura pública: a autoria permanece privada no banco.
   categoriaId: string; // UUID real ou código legado com hífen enquanto os mocks permanecerem locais.
   titulo: string;
   descricao: string;
   status: StatusOcorrencia;
   endereco: string;
   bairro: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   fotos: FotoOcorrencia[];
   criadoEm: string;
   atualizadoEm: string;

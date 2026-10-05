@@ -2,6 +2,7 @@ import type { FotoOcorrencia } from "@/data/ocorrencias";
 import { supabase } from "@/lib/supabase";
 
 const BUCKET = "ocorrencia-fotos";
+const VALIDADE_CAPA_SEGUNDOS = 3600;
 export const MAX_FOTOS = 3;
 export const TAMANHO_MAXIMO_FOTO = 5 * 1024 * 1024;
 
@@ -10,6 +11,50 @@ const EXTENSOES: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
+
+type CapaOcorrencia = { foto: FotoOcorrencia; url: string | null };
+
+/** Recebe um lote de IDs públicos; falhas nas capas não impedem a listagem. */
+export async function carregarCapasOcorrencias(ids: string[]): Promise<Map<string, CapaOcorrencia>> {
+  const capas = new Map<string, CapaOcorrencia>();
+  if (ids.length === 0) return capas;
+
+  try {
+    const { data, error } = await supabase
+      .from("ocorrencia_fotos")
+      .select("id, ocorrencia_id, storage_path, ordem")
+      .in("ocorrencia_id", ids)
+      .eq("ordem", 1)
+      .order("ordem", { ascending: true });
+    if (error) throw error;
+
+    const fotos = data ?? [];
+    for (const foto of fotos) {
+      capas.set(foto.ocorrencia_id, {
+        foto: { id: foto.id, storagePath: foto.storage_path, ordem: foto.ordem },
+        url: null,
+      });
+    }
+    if (fotos.length === 0) return capas;
+
+    const { data: assinadas, error: erroAssinatura } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrls(fotos.map(foto => foto.storage_path), VALIDADE_CAPA_SEGUNDOS);
+    if (erroAssinatura) throw erroAssinatura;
+
+    const urlsPorPath = new Map(
+      (assinadas ?? []).filter(item => !item.error && item.signedUrl)
+        .map(item => [item.path, item.signedUrl]),
+    );
+    for (const capa of capas.values()) {
+      capa.url = urlsPorPath.get(capa.foto.storagePath) ?? null;
+    }
+  } catch {
+    console.warn("Não foi possível carregar algumas capas das ocorrências.");
+  }
+
+  return capas;
+}
 
 export function chaveArquivoFoto(arquivo: File): string {
   return [arquivo.name, arquivo.size, arquivo.lastModified].join("|");
