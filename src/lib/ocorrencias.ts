@@ -53,7 +53,7 @@ function mapearOcorrencia(data: OcorrenciaInserida): Omit<Ocorrencia, "quantidad
   };
 }
 
-async function contarConfirmacoesAtivas(ids: string[]): Promise<Map<string, number>> {
+export async function contarConfirmacoesAtivas(ids: string[]): Promise<Map<string, number>> {
   const contagens = new Map<string, number>();
   const tamanhoPagina = 500;
   // Lê somente colunas concedidas a anon/authenticated; nunca usuario_id.

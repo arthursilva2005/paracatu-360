@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, tempoOcorrencia } from "@/data/ocorrencias";
 import { CategoriaOcorrencia, resolverCategoria } from "@/hooks/useCategorias";
 import Cabecalho from "@/components/Cabecalho";
@@ -7,6 +8,7 @@ import GaleriaOcorrencia from "@/components/GaleriaOcorrencia";
 import { useAuth } from "@/context/AuthContext";
 import { buscarOcorrenciaPorId, ehUuidOcorrencia, type DetalheOcorrencia } from "@/lib/ocorrencias";
 import type { FotoOcorrenciaLeitura } from "@/lib/fotosOcorrencias";
+import { buscarMinhaConfirmacao, buscarEstadoConfirmacao, confirmarOcorrencia, desfazerConfirmacao, mensagemErroConfirmacao, sessaoConfirmacaoExpirada } from "@/lib/confirmacoes";
 
 type Props = {
   activeTab: TabName;
@@ -70,20 +72,157 @@ export default function Detalhe(props: Props) {
     );
   }
 
-  return <ConteudoDetalhe {...props} ocorrencia={ocorrencia} real={real}
+  return <ConteudoDetalhe key={`${props.id}:${usuarioId ?? "anon"}`} {...props} ocorrencia={ocorrencia} real={real}
     confirmadoPorMim={!real && props.confirmadoPorMim}
     fotos={real && estado.status === "pronto" ? estado.dados.fotos : []} />;
+}
+
+function useConfirmacaoReal(ocorrencia: Ocorrencia, real: boolean) {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const usuarioId = user?.id;
+  const id = ocorrencia.id;
+  const [confirmacaoId, setConfirmacaoId] = useState<string | null>(null);
+  const [quantidade, setQuantidade] = useState(ocorrencia.quantidadeConfirmacoes);
+  const [fase, setFase] = useState<"carregando" | "pronto" | "confirmando" | "desfazendo" | "erro">(
+    real && usuarioId ? "carregando" : "pronto",
+  );
+  const [mensagem, setMensagem] = useState("");
+  const [precisaEntrar, setPrecisaEntrar] = useState(false);
+  const operando = useRef(false);
+  const geracao = useRef(0);
+
+  async function carregar(inicial: boolean, versao: number) {
+    if (!real || !usuarioId || operando.current) return;
+    operando.current = true;
+    setFase("carregando");
+    setMensagem("");
+    try {
+      // O Detalhe já carregou a contagem inicial; não a consulta duas vezes.
+      const dados = inicial
+        ? { confirmacaoId: await buscarMinhaConfirmacao(id), quantidade: ocorrencia.quantidadeConfirmacoes }
+        : await buscarEstadoConfirmacao(id);
+      if (geracao.current !== versao) return;
+      setConfirmacaoId(dados.confirmacaoId);
+      setQuantidade(dados.quantidade);
+      setFase("pronto");
+      setPrecisaEntrar(false);
+    } catch (error) {
+      if (geracao.current !== versao) return;
+      setFase("erro");
+      setPrecisaEntrar(sessaoConfirmacaoExpirada(error));
+      setMensagem(sessaoConfirmacaoExpirada(error) ? mensagemErroConfirmacao(error)
+        : "Não foi possível consultar sua confirmação. Tente novamente.");
+    } finally {
+      if (geracao.current === versao) operando.current = false;
+    }
+  }
+
+  useEffect(() => {
+    const versao = ++geracao.current;
+    void carregar(true, versao);
+    const atualizarAoRetornar = () => {
+      if (document.visibilityState === "visible") void carregar(false, versao);
+    };
+    window.addEventListener("focus", atualizarAoRetornar);
+    document.addEventListener("visibilitychange", atualizarAoRetornar);
+    return () => {
+      ++geracao.current;
+      operando.current = false;
+      window.removeEventListener("focus", atualizarAoRetornar);
+      document.removeEventListener("visibilitychange", atualizarAoRetornar);
+    };
+  }, [id, real, usuarioId]);
+
+  async function alterar() {
+    if (!real || operando.current) return;
+    if (!usuarioId) {
+      navigate("/entrar", { state: { from: `/ocorrencias/${id}` } });
+      return;
+    }
+    const versao = geracao.current;
+    if (precisaEntrar) {
+      operando.current = true;
+      setFase("carregando");
+      try {
+        const { error } = await signOut();
+        if (error) throw error;
+        navigate("/entrar", { state: { from: `/ocorrencias/${id}` } });
+      } catch {
+        if (geracao.current === versao) {
+          setFase("erro");
+          setMensagem("Não foi possível renovar o acesso. Tente entrar novamente.");
+        }
+      } finally {
+        if (geracao.current === versao) operando.current = false;
+      }
+      return;
+    }
+    if (fase === "erro") {
+      await carregar(false, versao);
+      return;
+    }
+    operando.current = true;
+    const desfazendo = confirmacaoId !== null;
+    setFase(desfazendo ? "desfazendo" : "confirmando");
+    setMensagem("");
+    let falha: unknown;
+    try {
+      if (confirmacaoId) await desfazerConfirmacao(id, confirmacaoId, usuarioId);
+      else await confirmarOcorrencia(id, usuarioId);
+    } catch (error) {
+      falha = error;
+    }
+
+    // Relê inclusive após conflito, zero linhas ou resposta perdida na rede.
+    // Nenhuma contagem ou confirmação é aplicada de forma otimista.
+    try {
+      if (geracao.current !== versao) return;
+      const dados = await buscarEstadoConfirmacao(id);
+      if (geracao.current !== versao) return;
+      setConfirmacaoId(dados.confirmacaoId);
+      setQuantidade(dados.quantidade);
+      setFase("pronto");
+      setPrecisaEntrar(false);
+      const resultadoEsperado = desfazendo ? dados.confirmacaoId === null : dados.confirmacaoId !== null;
+      setMensagem(resultadoEsperado
+        ? (desfazendo ? "Sua confirmação foi removida." : "")
+        : falha ? mensagemErroConfirmacao(falha, desfazendo)
+          : "O estado mudou durante a operação. Sua confirmação foi atualizada.");
+    } catch (error) {
+      if (geracao.current !== versao) return;
+      setFase("erro");
+      setPrecisaEntrar(sessaoConfirmacaoExpirada(falha) || sessaoConfirmacaoExpirada(error));
+      setMensagem(falha ? mensagemErroConfirmacao(falha, desfazendo)
+        : sessaoConfirmacaoExpirada(error) ? mensagemErroConfirmacao(error)
+          : "Não foi possível atualizar sua confirmação. Consulte novamente antes de repetir a ação.");
+    } finally {
+      if (geracao.current === versao) operando.current = false;
+    }
+  }
+
+  return { confirmacaoId, quantidade, fase, mensagem, precisaEntrar, alterar };
 }
 
 function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, onConfirmar, confirmadoPorMim, real, fotos }: Props & {
   ocorrencia: Ocorrencia; real: boolean; fotos: FotoOcorrenciaLeitura[];
 }) {
-  const relevancia = calcularRelevancia(ocorrencia.quantidadeConfirmacoes);
+  const confirmacao = useConfirmacaoReal(ocorrencia, real);
+  const quantidade = real ? confirmacao.quantidade : ocorrencia.quantidadeConfirmacoes;
+  const confirmado = real ? confirmacao.fase === "pronto" && confirmacao.confirmacaoId !== null : confirmadoPorMim;
+  const ocupado = real && ["carregando", "confirmando", "desfazendo"].includes(confirmacao.fase);
+  const textoAcao = confirmacao.fase === "carregando" ? "Consultando confirmação..."
+    : confirmacao.fase === "confirmando" ? "Confirmando..."
+    : confirmacao.fase === "desfazendo" ? "Removendo confirmação..."
+    : confirmacao.precisaEntrar ? "Entrar novamente"
+    : confirmacao.fase === "erro" ? "Consultar novamente"
+    : confirmado ? "Desfazer confirmação" : "Também encontrei este problema";
+  const relevancia = calcularRelevancia(quantidade);
   const categoria = resolverCategoria(ocorrencia.categoriaId, categorias);
   const categoriaNome = categoria?.nome
     ?? (categoriasLoading ? "Carregando categoria" : "Categoria indisponível");
   const cor = corRelevancia[relevancia];
-  const progresso = Math.min(100, Math.round((ocorrencia.quantidadeConfirmacoes / 50) * 100));
+  const progresso = Math.min(100, Math.round((quantidade / 50) * 100));
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
@@ -142,7 +281,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
               <div className="flex flex-col gap-[6px] w-full">
                 <div className="flex items-center justify-between">
                   <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">
-                    {ocorrencia.quantidadeConfirmacoes} confirmações
+                    {quantidade} confirmações
                   </p>
                   <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">
                     {progresso}% da meta
@@ -205,15 +344,20 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Ações</p>
             <div className="flex gap-[12px] w-full">
               <button
-                onClick={() => !real && !confirmadoPorMim && onConfirmar(ocorrencia.id)}
-                disabled={real || confirmadoPorMim}
+                onClick={() => real ? void confirmacao.alterar() : !confirmadoPorMim && onConfirmar(ocorrencia.id)}
+                disabled={real ? ocupado : confirmadoPorMim}
+                aria-busy={ocupado}
                 className={`flex-1 rounded-[16px] py-[14px] px-[8px] border-none outline-none cursor-pointer transition-all duration-150 active:scale-[0.98] flex flex-col items-center gap-[4px] ${
-                  real ? "bg-[#075ce5] opacity-60 cursor-not-allowed" : confirmadoPorMim
-                    ? "bg-[#e8f0fe] cursor-default"
+                  ocupado ? "bg-[#075ce5] opacity-60 cursor-not-allowed" : confirmado
+                    ? (real ? "bg-[#e8f0fe]" : "bg-[#e8f0fe] cursor-default")
                     : "bg-[#075ce5] hover:bg-[#0a47b8]"
                 }`}
               >
-                {confirmadoPorMim ? (
+                {real ? (
+                  <p className={`font-['Inter:Bold',sans-serif] font-bold text-[13px] ${confirmado ? "text-[#075ce5]" : "text-white"}`}>
+                    {textoAcao}
+                  </p>
+                ) : confirmadoPorMim ? (
                   <>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#075ce5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -230,12 +374,12 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
               </button>
             </div>
 
-            {real && <p className="text-[#586a80] text-[12px]">A confirmação de ocorrências estará disponível em breve.</p>}
+            {real && confirmacao.mensagem && <p role="status" className="text-[#586a80] text-[12px]">{confirmacao.mensagem}</p>}
 
-            {confirmadoPorMim && (
+            {confirmado && (
               <div className="bg-[#e8f0fe] rounded-[12px] px-[14px] py-[10px] w-full">
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[12px] text-center">
-                  Obrigado! Sua confirmação ajuda a priorizar esta ocorrência.
+                  {real ? "Você confirmou este problema." : "Obrigado! Sua confirmação ajuda a priorizar esta ocorrência."}
                 </p>
               </div>
             )}

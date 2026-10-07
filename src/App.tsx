@@ -35,10 +35,12 @@ function rotaOrigemSegura(state: unknown): string {
   if (!state || typeof state !== "object" || !("from" in state)) return "/";
 
   const from = (state as { from?: unknown }).from;
-  if (typeof from !== "string" || !from.startsWith("/") || from.startsWith("//")) return "/";
+  if (typeof from !== "string" || !from.startsWith("/") || from.startsWith("//") ||
+    /[\\\u0000-\u0020\u007f]/.test(from)) return "/";
 
   const pathname = from.split(/[?#]/, 1)[0];
-  return rotasProtegidas.has(pathname) ? from : "/";
+  const detalhe = pathname.match(/^\/ocorrencias\/([^/]+)$/);
+  return rotasProtegidas.has(pathname) || (detalhe && ehUuidOcorrencia(detalhe[1])) ? from : "/";
 }
 
 function RotaProtegida({ children }: { children: ReactNode }) {
