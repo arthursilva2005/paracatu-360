@@ -10,7 +10,7 @@ import {
   enviarFotosOcorrencia,
   validarFotos,
 } from "@/lib/fotosOcorrencias";
-import { criarOcorrencia, type DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
+import { criarOcorrencia, ehUuidOcorrencia, type DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
 import { supabase } from "@/lib/supabase";
 import Login from "@/screens/Login";
 import Inicio from "@/screens/Inicio";
@@ -83,8 +83,6 @@ export default function App() {
     ocorrencias: Ocorrencia[];
     confirmadas: string[];
   }>({ ocorrencias: ocorrenciasIniciais, confirmadas: [] });
-  // Cache público só para abrir os detalhes já carregados pela Home na sessão.
-  const [ocorrenciasHome, setOcorrenciasHome] = useState<Ocorrencia[]>([]);
   const navigationState = location.state as { from?: string; activeTab?: TabName; registroConcluido?: boolean } | null;
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const activeTab: TabName =
@@ -117,9 +115,10 @@ export default function App() {
   }
 
   function confirmarOcorrencia(id: string) {
+    if (ehUuidOcorrencia(id)) return;
     setEstado(prev => {
       if (prev.confirmadas.includes(id) ||
-        ![...prev.ocorrencias, ...ocorrenciasHome].some(o => o.id === id)) return prev;
+        !prev.ocorrencias.some(o => o.id === id)) return prev;
       return {
         ocorrencias: prev.ocorrencias.map(o => o.id === id
           ? { ...o, quantidadeConfirmacoes: o.quantidadeConfirmacoes + 1 } : o),
@@ -174,15 +173,7 @@ export default function App() {
     return novaOcorrencia.id;
   }
 
-  const ocorrenciaPublicaSelecionada = ocorrenciasHome.find(o => o.id === detalheMatch?.params.id);
-  const ocorrenciaSelecionada = ocorrenciaPublicaSelecionada
-    ? {
-      ...ocorrenciaPublicaSelecionada,
-      // Confirmação demonstrativa no Detalhe; a Home sempre consulta a contagem real.
-      quantidadeConfirmacoes: ocorrenciaPublicaSelecionada.quantidadeConfirmacoes +
-        (confirmadas.includes(ocorrenciaPublicaSelecionada.id) ? 1 : 0),
-    }
-    : ocorrencias.find(o => o.id === detalheMatch?.params.id);
+  const detalheId = detalheMatch?.params.id ?? "";
 
   const commonProps = {
     activeTab,
@@ -206,7 +197,7 @@ export default function App() {
         <Routes>
           <Route path="/entrar" element={<RotaLogin />} />
           <Route path="/" element={<Inicio activeTab={activeTab} onNavigate={navigate}
-            onOpenDetalhe={openDetalhe} onOcorrenciasCarregadas={setOcorrenciasHome}
+            onOpenDetalhe={openDetalhe}
             {...categoriasState} onOpenDashboard={openDashboard}
             ordemInicial={navigationState?.registroConcluido ? "recente" : "relevancia"} />} />
           <Route path="/mapa" element={<Mapa {...commonProps} />} />
@@ -228,17 +219,19 @@ export default function App() {
               <Perfil {...commonProps} confirmadas={confirmadas} />
             </RotaProtegida>
           } />
-          <Route path="/ocorrencias/:id" element={ocorrenciaSelecionada ? (
+          <Route path="/ocorrencias/:id" element={
             <Detalhe
+              key={detalheId}
+              id={detalheId}
               activeTab={activeTab}
               onNavigate={navigate}
               onBack={goBack}
-              ocorrencia={ocorrenciaSelecionada}
-              confirmadoPorMim={confirmadas.includes(ocorrenciaSelecionada.id)}
+              ocorrenciaMock={ocorrencias.find(o => o.id === detalheId)}
+              confirmadoPorMim={confirmadas.includes(detalheId)}
               onConfirmar={confirmarOcorrencia}
               {...categoriasState}
             />
-          ) : <Navigate to="/" replace />} />
+          } />
           <Route path="/indicadores" element={
             <Dashboard
               activeTab={activeTab}

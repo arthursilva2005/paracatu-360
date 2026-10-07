@@ -1,20 +1,83 @@
+import { useEffect, useState } from "react";
 import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, tempoOcorrencia } from "@/data/ocorrencias";
 import { CategoriaOcorrencia, resolverCategoria } from "@/hooks/useCategorias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
+import GaleriaOcorrencia from "@/components/GaleriaOcorrencia";
+import { useAuth } from "@/context/AuthContext";
+import { buscarOcorrenciaPorId, ehUuidOcorrencia, type DetalheOcorrencia } from "@/lib/ocorrencias";
+import type { FotoOcorrenciaLeitura } from "@/lib/fotosOcorrencias";
 
 type Props = {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onBack: () => void;
-  ocorrencia: Ocorrencia;
+  id: string;
+  ocorrenciaMock?: Ocorrencia;
   categorias: CategoriaOcorrencia[];
   categoriasLoading: boolean;
   confirmadoPorMim: boolean;
   onConfirmar: (id: string) => void;
 };
 
-export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, onConfirmar, confirmadoPorMim }: Props) {
+type EstadoDetalhe =
+  | { status: "carregando" | "erro" | "nao-encontrado" }
+  | { status: "pronto"; dados: DetalheOcorrencia; usuarioId: string | null };
+
+export default function Detalhe(props: Props) {
+  const real = ehUuidOcorrencia(props.id);
+  const { user, loading } = useAuth();
+  const usuarioId = user?.id ?? null;
+  const [estado, setEstado] = useState<EstadoDetalhe>({ status: "carregando" });
+
+  useEffect(() => {
+    if (!real || loading) return;
+    let ativo = true;
+    setEstado({ status: "carregando" });
+    void buscarOcorrenciaPorId(props.id).then(dados => {
+      if (ativo) setEstado(dados ? { status: "pronto", dados, usuarioId } : { status: "nao-encontrado" });
+    }).catch(() => {
+      if (ativo) setEstado({ status: "erro" });
+    });
+    return () => { ativo = false; };
+  }, [props.id, real, loading, usuarioId]);
+
+  const aguardando = real && (loading || estado.status === "carregando" ||
+    (estado.status === "pronto" && estado.usuarioId !== usuarioId));
+  const ocorrencia = real
+    ? (!aguardando && estado.status === "pronto" ? estado.dados.ocorrencia : undefined)
+    : props.ocorrenciaMock;
+
+  if (!ocorrencia) {
+    const erro = real && !aguardando && estado.status === "erro";
+    return (
+      <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
+        <Cabecalho />
+        <div className="screen-scroll flex-1 overflow-y-auto w-full">
+          <div className="screen-content flex flex-col gap-[16px] p-[22px] w-full">
+            <p role={erro ? "alert" : "status"} className="text-[#10284a] text-[16px]">
+              {aguardando ? "Carregando ocorrência..." : erro
+                ? "Não foi possível carregar esta ocorrência agora." : "Ocorrência não encontrada."}
+            </p>
+            <button onClick={() => props.onNavigate("inicio")}
+              className="self-start bg-[#075ce5] text-white rounded-[12px] px-[16px] py-[12px] cursor-pointer">
+              Voltar para o início
+            </button>
+          </div>
+        </div>
+        <Navegacao activeTab={props.activeTab} onNavigate={props.onNavigate} />
+      </div>
+    );
+  }
+
+  return <ConteudoDetalhe {...props} ocorrencia={ocorrencia} real={real}
+    confirmadoPorMim={!real && props.confirmadoPorMim}
+    fotos={real && estado.status === "pronto" ? estado.dados.fotos : []} />;
+}
+
+function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, onConfirmar, confirmadoPorMim, real, fotos }: Props & {
+  ocorrencia: Ocorrencia; real: boolean; fotos: FotoOcorrenciaLeitura[];
+}) {
   const relevancia = calcularRelevancia(ocorrencia.quantidadeConfirmacoes);
   const categoria = resolverCategoria(ocorrencia.categoriaId, categorias);
   const categoriaNome = categoria?.nome
@@ -41,7 +104,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, cat
       </div>
 
       <div className="screen-scroll flex-1 overflow-y-auto w-full">
-        <div className="screen-content layout-detalhe content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
+        <div className={`screen-content layout-detalhe content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full ${real ? "[overflow-wrap:anywhere]" : ""}`}>
 
           {/* Título */}
           <div className="detail-title flex flex-col gap-[8px] w-full">
@@ -60,8 +123,10 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, cat
           <div className="detail-summary bg-white rounded-[16px] w-full border border-[#e8eef5]">
             <div className="flex flex-col gap-[14px] p-[16px]">
 
+              {real && <GaleriaOcorrencia fotos={fotos} titulo={ocorrencia.titulo} />}
+
               {/* Status + relevância */}
-              <div className="flex items-center justify-between w-full gap-[8px]">
+              <div className={`flex items-center justify-between w-full gap-[8px] ${real ? "flex-wrap" : ""}`}>
                 <span className={`${METADADOS_STATUS[ocorrencia.status]?.classeBg ?? "bg-[#586a80]"} px-[10px] py-[5px] rounded-[999px]`}>
                   <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[12px]">{METADADOS_STATUS[ocorrencia.status].label}</p>
                 </span>
@@ -107,7 +172,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, cat
                 {[
                   { label: "Categoria", value: categoriaNome },
                   { label: "Local", value: localOcorrencia(ocorrencia) },
-                  { label: "Registrado", value: tempoOcorrencia(ocorrencia) },
+                  { label: "Registrado", value: real ? new Date(ocorrencia.criadoEm).toLocaleDateString("pt-BR") : tempoOcorrencia(ocorrencia) },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between">
                     <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">{label}</p>
@@ -119,7 +184,7 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, cat
           </div>
 
           {/* Atualizações */}
-          <div className="detail-updates flex flex-col gap-[12px] w-full">
+          {!real && <div className="detail-updates flex flex-col gap-[12px] w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</p>
             {[
               { titulo: "Encaminhado para manutenção", tempo: "Há 2 dias", texto: "A ocorrência foi enviada para a equipe de infraestrutura urbana e está em análise para agendamento do reparo." },
@@ -133,17 +198,17 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, cat
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] leading-relaxed">{a.texto}</p>
               </div>
             ))}
-          </div>
+          </div>}
 
           {/* Ações */}
           <div className="detail-actions flex flex-col gap-[12px] w-full pb-[8px]">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Ações</p>
             <div className="flex gap-[12px] w-full">
               <button
-                onClick={() => !confirmadoPorMim && onConfirmar(ocorrencia.id)}
-                disabled={confirmadoPorMim}
+                onClick={() => !real && !confirmadoPorMim && onConfirmar(ocorrencia.id)}
+                disabled={real || confirmadoPorMim}
                 className={`flex-1 rounded-[16px] py-[14px] px-[8px] border-none outline-none cursor-pointer transition-all duration-150 active:scale-[0.98] flex flex-col items-center gap-[4px] ${
-                  confirmadoPorMim
+                  real ? "bg-[#075ce5] opacity-60 cursor-not-allowed" : confirmadoPorMim
                     ? "bg-[#e8f0fe] cursor-default"
                     : "bg-[#075ce5] hover:bg-[#0a47b8]"
                 }`}
@@ -164,6 +229,8 @@ export default function Detalhe({ activeTab, onNavigate, onBack, ocorrencia, cat
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Compartilhar</p>
               </button>
             </div>
+
+            {real && <p className="text-[#586a80] text-[12px]">A confirmação de ocorrências estará disponível em breve.</p>}
 
             {confirmadoPorMim && (
               <div className="bg-[#e8f0fe] rounded-[12px] px-[14px] py-[10px] w-full">

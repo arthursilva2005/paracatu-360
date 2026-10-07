@@ -12,11 +12,46 @@ const EXTENSOES: Record<string, string> = {
   "image/webp": "webp",
 };
 
-type CapaOcorrencia = { foto: FotoOcorrencia; url: string | null };
+export type FotoOcorrenciaLeitura = { foto: FotoOcorrencia; url: string | null };
+
+async function assinarFotos(fotos: FotoOcorrenciaLeitura[]): Promise<void> {
+  if (fotos.length === 0) return;
+  const { data, error } = await supabase.storage.from(BUCKET)
+    .createSignedUrls(fotos.map(item => item.foto.storagePath), VALIDADE_CAPA_SEGUNDOS);
+  if (error) throw error;
+
+  const urlsPorPath = new Map(
+    (data ?? []).filter(item => !item.error && item.signedUrl)
+      .map(item => [item.path, item.signedUrl]),
+  );
+  for (const item of fotos) {
+    item.url = urlsPorPath.get(item.foto.storagePath) ?? null;
+  }
+}
+
+export async function carregarFotosOcorrencia(id: string): Promise<FotoOcorrenciaLeitura[]> {
+  const fotos: FotoOcorrenciaLeitura[] = [];
+  try {
+    const { data, error } = await supabase.from("ocorrencia_fotos")
+      .select("id, storage_path, ordem")
+      .eq("ocorrencia_id", id)
+      .order("ordem", { ascending: true })
+      .limit(MAX_FOTOS);
+    if (error) throw error;
+    fotos.push(...(data ?? []).map(foto => ({
+      foto: { id: foto.id, storagePath: foto.storage_path, ordem: foto.ordem },
+      url: null,
+    })));
+    await assinarFotos(fotos);
+  } catch {
+    console.warn("Não foi possível carregar algumas fotos da ocorrência.");
+  }
+  return fotos;
+}
 
 /** Recebe um lote de IDs públicos; falhas nas capas não impedem a listagem. */
-export async function carregarCapasOcorrencias(ids: string[]): Promise<Map<string, CapaOcorrencia>> {
-  const capas = new Map<string, CapaOcorrencia>();
+export async function carregarCapasOcorrencias(ids: string[]): Promise<Map<string, FotoOcorrenciaLeitura>> {
+  const capas = new Map<string, FotoOcorrenciaLeitura>();
   if (ids.length === 0) return capas;
 
   try {
@@ -35,20 +70,7 @@ export async function carregarCapasOcorrencias(ids: string[]): Promise<Map<strin
         url: null,
       });
     }
-    if (fotos.length === 0) return capas;
-
-    const { data: assinadas, error: erroAssinatura } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrls(fotos.map(foto => foto.storage_path), VALIDADE_CAPA_SEGUNDOS);
-    if (erroAssinatura) throw erroAssinatura;
-
-    const urlsPorPath = new Map(
-      (assinadas ?? []).filter(item => !item.error && item.signedUrl)
-        .map(item => [item.path, item.signedUrl]),
-    );
-    for (const capa of capas.values()) {
-      capa.url = urlsPorPath.get(capa.foto.storagePath) ?? null;
-    }
+    await assinarFotos([...capas.values()]);
   } catch {
     console.warn("Não foi possível carregar algumas capas das ocorrências.");
   }

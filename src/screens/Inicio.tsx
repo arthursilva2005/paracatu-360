@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Ocorrencia, calcularRelevancia } from "@/data/ocorrencias";
+import { calcularRelevancia } from "@/data/ocorrencias";
 import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
@@ -12,7 +12,6 @@ type Props = EstadoCategorias & {
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
   onOpenDashboard: () => void;
-  onOcorrenciasCarregadas: (ocorrencias: Ocorrencia[]) => void;
   ordemInicial?: Ordem;
 };
 
@@ -23,7 +22,6 @@ export default function Inicio({
   onNavigate,
   onOpenDetalhe,
   onOpenDashboard,
-  onOcorrenciasCarregadas,
   ordemInicial = "relevancia",
   categorias,
   categoriasLoading,
@@ -45,17 +43,15 @@ export default function Inicio({
     void listarOcorrenciasPublicas().then(lista => {
       if (!ativo) return;
       setOcorrencias(lista);
-      onOcorrenciasCarregadas(lista);
     }).catch(() => {
       if (!ativo) return;
       setErro(true);
-      onOcorrenciasCarregadas([]);
     }).finally(() => {
       if (ativo) setCarregando(false);
     });
 
     return () => { ativo = false; };
-  }, [onOcorrenciasCarregadas, user?.id]);
+  }, [user?.id]);
 
   const filtradas = ocorrencias.filter(ocorrencia => {
     if (catFiltro === "") return true;

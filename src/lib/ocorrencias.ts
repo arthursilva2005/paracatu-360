@@ -1,8 +1,13 @@
 import type { Ocorrencia, StatusOcorrencia } from "@/data/ocorrencias";
 import { supabase } from "@/lib/supabase";
-import { carregarCapasOcorrencias } from "@/lib/fotosOcorrencias";
+import { carregarCapasOcorrencias, carregarFotosOcorrencia, type FotoOcorrenciaLeitura } from "@/lib/fotosOcorrencias";
 
 export type OcorrenciaHome = Ocorrencia & { fotoPrincipalUrl: string | null };
+export type DetalheOcorrencia = { ocorrencia: Ocorrencia; fotos: FotoOcorrenciaLeitura[] };
+
+export function ehUuidOcorrencia(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
 
 const COLUNAS_PUBLICAS = "id, categoria_id, titulo, descricao, status, endereco, bairro, latitude, longitude, ocorrencia_principal_id, created_at, updated_at, resolvida_at, arquivada_at";
 
@@ -67,6 +72,30 @@ async function contarConfirmacoesAtivas(ids: string[]): Promise<Map<string, numb
     if (!data || data.length < tamanhoPagina) break;
   }
   return contagens;
+}
+
+export async function buscarOcorrenciaPorId(id: string): Promise<DetalheOcorrencia | null> {
+  if (!ehUuidOcorrencia(id)) return null;
+  const { data, error } = await supabase.from("ocorrencias")
+    .select(COLUNAS_PUBLICAS)
+    .eq("id", id)
+    .maybeSingle<OcorrenciaInserida>();
+  if (error) throw error;
+  if (!data) return null;
+
+  // A RLS determina se este registro é visível para a sessão atual.
+  const [contagens, fotos] = await Promise.all([
+    contarConfirmacoesAtivas([data.id]),
+    carregarFotosOcorrencia(data.id),
+  ]);
+  return {
+    ocorrencia: {
+      ...mapearOcorrencia(data),
+      quantidadeConfirmacoes: contagens.get(data.id) ?? 0,
+      fotos: fotos.map(item => item.foto),
+    },
+    fotos,
+  };
 }
 
 export async function listarOcorrenciasPublicas(): Promise<OcorrenciaHome[]> {
