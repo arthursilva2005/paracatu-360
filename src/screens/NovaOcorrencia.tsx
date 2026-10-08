@@ -10,6 +10,7 @@ import {
   validarFotos,
 } from "@/lib/fotosOcorrencias";
 import Cabecalho from "@/components/Cabecalho";
+import SeletorLocalizacao, { type PontoLocalizacao } from "@/components/SeletorLocalizacao";
 import Navegacao, { TabName } from "@/components/Navegacao";
 
 type Props = EstadoCategorias & {
@@ -116,6 +117,15 @@ export default function NovaOcorrencia({
   const categoriaSelecionada = resolverCategoria(categoriaId, categorias);
   const categoria = categoriaSelecionada?.nome ?? "";
   const [descricao, setDescricao] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [ponto, setPonto] = useState<PontoLocalizacao | null>(null);
+  const [centroGps, setCentroGps] = useState<PontoLocalizacao | null>(null);
+  const [localizando, setLocalizando] = useState(false);
+  const [erroGps, setErroGps] = useState("");
+  const [erroPonto, setErroPonto] = useState("");
+  const [erroBairro, setErroBairro] = useState("");
+  const [erroEndereco, setErroEndereco] = useState("");
   const [idRegistrado, setIdRegistrado] = useState<string | null>(null);
   const sucesso = idRegistrado !== null;
   const [titulo, setTitulo] = useState("");
@@ -129,11 +139,14 @@ export default function NovaOcorrencia({
   const [tituloRegistrado, setTituloRegistrado] = useState("");
   const fotosRef = useRef<FotoSelecionada[]>([]);
   const envioEmAndamento = useRef(false);
+  const localizandoRef = useRef(false);
+  const pedidoGpsRef = useRef(0);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galeriaRef = useRef<HTMLInputElement>(null);
   const registrando = faseRegistro !== "idle";
 
   useEffect(() => () => {
+    pedidoGpsRef.current += 1;
     fotosRef.current.forEach(foto => URL.revokeObjectURL(foto.previewUrl));
     fotosRef.current = [];
   }, []);
@@ -144,6 +157,55 @@ export default function NovaOcorrencia({
       return categorias[0]?.id ?? "";
     });
   }, [categorias]);
+
+  function usarMinhaLocalizacao() {
+    if (localizandoRef.current || registrando || registroIncompleto) return;
+    if (!navigator.geolocation) {
+      setErroGps("Seu navegador não oferece localização. Escolha o ponto manualmente no mapa.");
+      return;
+    }
+
+    const pedido = ++pedidoGpsRef.current;
+    localizandoRef.current = true;
+    setLocalizando(true);
+    setErroGps("");
+
+    try {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          if (pedido !== pedidoGpsRef.current) return;
+          localizandoRef.current = false;
+          setLocalizando(false);
+          const { latitude, longitude } = position.coords;
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+            latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+            setErroGps("Não foi possível obter sua localização. Escolha o ponto manualmente no mapa.");
+            return;
+          }
+          const novoPonto = { latitude, longitude };
+          setPonto(novoPonto);
+          setCentroGps(novoPonto);
+          setErroPonto("");
+        },
+        error => {
+          if (pedido !== pedidoGpsRef.current) return;
+          localizandoRef.current = false;
+          setLocalizando(false);
+          const mensagem = error.code === 1
+            ? "A localização foi negada. Escolha o ponto manualmente no mapa."
+            : error.code === 3
+              ? "A localização demorou demais. Tente novamente ou escolha o ponto no mapa."
+              : "Não foi possível acessar sua localização. Escolha o ponto manualmente no mapa.";
+          setErroGps(mensagem);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      );
+    } catch {
+      localizandoRef.current = false;
+      setLocalizando(false);
+      setErroGps("Não foi possível acessar sua localização. Escolha o ponto manualmente no mapa.");
+    }
+  }
 
   function adicionarFotos(event: ChangeEvent<HTMLInputElement>) {
     const arquivos = Array.from(event.target.files ?? []);
@@ -192,7 +254,7 @@ export default function NovaOcorrencia({
   }
 
   async function handleRegistrar() {
-    if (sucesso || envioEmAndamento.current || registroIncompleto) return;
+    if (sucesso || envioEmAndamento.current || registroIncompleto || localizandoRef.current) return;
     if (!categoriaSelecionada || categoriasLoading || categoriasError) {
       setErroCategoria("Selecione uma categoria disponível antes de registrar.");
       return;
@@ -202,6 +264,13 @@ export default function NovaOcorrencia({
       setErroTitulo("Informe um título com 5 a 80 caracteres.");
       return;
     }
+    const bairroInformado = bairro.trim();
+    const enderecoInformado = endereco.trim();
+    setErroBairro(bairroInformado ? "" : "Informe o bairro da ocorrência.");
+    setErroEndereco(enderecoInformado ? "" : "Informe o endereço da ocorrência.");
+    setErroPonto(ponto ? "" : "Selecione o local da ocorrência no mapa.");
+    if (!bairroInformado || !enderecoInformado || !ponto) return;
+
     try {
       validarFotos(fotosSelecionadas.map(foto => foto.arquivo));
     } catch (error) {
@@ -211,6 +280,7 @@ export default function NovaOcorrencia({
     setErroTitulo("");
     setErroFotos("");
     setErroRegistro("");
+    pedidoGpsRef.current += 1;
     envioEmAndamento.current = true;
     setFaseRegistro("registrando");
 
@@ -219,11 +289,10 @@ export default function NovaOcorrencia({
         categoriaId,
         titulo: tituloValido,
         descricao: descricao || "Sem descrição.",
-        // Localização demonstrativa mantida até a etapa de GPS/mapa.
-        endereco: "Rua da Praça",
-        bairro: "Centro",
-        latitude: -17.221,
-        longitude: -46.871,
+        endereco: enderecoInformado,
+        bairro: bairroInformado,
+        latitude: ponto.latitude,
+        longitude: ponto.longitude,
       }, fotosSelecionadas.map(foto => foto.arquivo), () => setFaseRegistro("enviando"));
       fotosRef.current.forEach(foto => URL.revokeObjectURL(foto.previewUrl));
       fotosRef.current = [];
@@ -299,25 +368,64 @@ export default function NovaOcorrencia({
               )}
             </div>
 
-            {/* Local */}
+            {/* Localização real: GPS opcional, ponto obrigatório e endereço manual. */}
             <div className="new-location content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Onde aconteceu?</p>
-              <div className="bg-white content-stretch flex flex-col gap-[12px] items-start p-[16px] relative rounded-[16px] shrink-0 w-full border border-[#d7e3f0]">
+              <div className="bg-white content-stretch flex flex-col gap-[14px] items-start p-[16px] relative rounded-[16px] shrink-0 w-full border border-[#d7e3f0]">
                 <div className="content-stretch flex gap-[12px] items-center relative shrink-0 w-full">
                   <div className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[12px] shrink-0 size-[40px]">
                     <MapPin />
                   </div>
                   <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start leading-[1.45] min-w-px not-italic relative">
-                    <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[14px] w-full">Centro · Rua da Praça</p>
-                    <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Local aproximado sugerido pelo GPS</p>
+                    <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[14px] w-full">
+                      {ponto ? "Ponto selecionado no mapa" : "Nenhum ponto selecionado"}
+                    </p>
+                    <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">
+                      {ponto ? [ponto.latitude.toFixed(6), ponto.longitude.toFixed(6)].join(", ") : "Use o GPS ou escolha o local no mapa"}
+                    </p>
                   </div>
-                  <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-                    <path d="M7.5 15L12.5 10L7.5 5" stroke="#586A80" strokeLinecap="round" strokeWidth="2" />
-                  </svg>
                 </div>
-                <div className="bg-[#f3f6fa] content-stretch flex gap-[8px] items-center px-[12px] py-[10px] relative rounded-[12px] shrink-0 w-full cursor-pointer">
+
+                <button type="button" onClick={usarMinhaLocalizacao}
+                  disabled={localizando || registrando || registroIncompleto}
+                  className="bg-[#f3f6fa] rounded-[12px] px-[14px] py-[11px] w-full text-left text-[#075ce5] text-[13px] font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+                  {localizando ? "Localizando..." : "Usar minha localização"}
+                </button>
+                {erroGps && <p role="alert" className="text-[#dc2626] text-[12px] w-full">{erroGps}</p>}
+
+                <SeletorLocalizacao
+                  ponto={ponto}
+                  centralizarEm={centroGps}
+                  desabilitado={registrando || registroIncompleto || localizando}
+                  onChange={novoPonto => { setPonto(novoPonto); setErroPonto(""); setErroGps(""); }}
+                />
+                <div className="flex items-center gap-[8px] text-[#586a80] text-[12px] w-full">
                   <EditIcon />
-                  <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[1.45] min-w-px not-italic relative text-[#075ce5] text-[13px]">Ajustar local no mapa</p>
+                  <p>Toque no mapa ou arraste o ponto para ajustar o local.</p>
+                </div>
+                {erroPonto && <p role="alert" className="text-[#dc2626] text-[12px] w-full">{erroPonto}</p>}
+
+                <div className="flex flex-col gap-[6px] w-full">
+                  <label htmlFor="bairro-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Bairro</label>
+                  <input id="bairro-ocorrencia" type="text" value={bairro} required
+                    disabled={registrando || registroIncompleto}
+                    onChange={event => { setBairro(event.target.value); setErroBairro(""); }}
+                    aria-invalid={!!erroBairro}
+                    aria-describedby={erroBairro ? "erro-bairro" : undefined}
+                    placeholder="Informe o bairro"
+                    className="bg-white w-full min-w-0 rounded-[12px] px-[14px] py-[12px] border border-[#d7e3f0] text-[#10284a] text-[14px] outline-none focus:border-[#075ce5]" />
+                  {erroBairro && <p id="erro-bairro" role="alert" className="text-[#dc2626] text-[12px]">{erroBairro}</p>}
+                </div>
+                <div className="flex flex-col gap-[6px] w-full">
+                  <label htmlFor="endereco-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Endereço</label>
+                  <input id="endereco-ocorrencia" type="text" value={endereco} required
+                    disabled={registrando || registroIncompleto}
+                    onChange={event => { setEndereco(event.target.value); setErroEndereco(""); }}
+                    aria-invalid={!!erroEndereco}
+                    aria-describedby={erroEndereco ? "erro-endereco" : undefined}
+                    placeholder="Informe a rua ou referência"
+                    className="bg-white w-full min-w-0 rounded-[12px] px-[14px] py-[12px] border border-[#d7e3f0] text-[#10284a] text-[14px] outline-none focus:border-[#075ce5]" />
+                  {erroEndereco && <p id="erro-endereco" role="alert" className="text-[#dc2626] text-[12px]">{erroEndereco}</p>}
                 </div>
               </div>
             </div>
@@ -415,7 +523,7 @@ export default function NovaOcorrencia({
             <div className="new-submit content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full pb-[8px]">
               <button
                 onClick={handleRegistrar}
-                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError) || registrando || registroIncompleto}
+                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError) || localizando || registrando || registroIncompleto}
                 className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
               >
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">
