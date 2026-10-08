@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { buscarOcorrenciaPorId, ehUuidOcorrencia, type DetalheOcorrencia } from "@/lib/ocorrencias";
 import type { FotoOcorrenciaLeitura } from "@/lib/fotosOcorrencias";
 import { buscarMinhaConfirmacao, buscarEstadoConfirmacao, confirmarOcorrencia, desfazerConfirmacao, mensagemErroConfirmacao, sessaoConfirmacaoExpirada } from "@/lib/confirmacoes";
+import { buscarHistoricoOcorrencia, type HistoricoPublicoOcorrencia } from "@/lib/historicoOcorrencias";
 
 type Props = {
   activeTab: TabName;
@@ -204,6 +205,68 @@ function useConfirmacaoReal(ocorrencia: Ocorrencia, real: boolean) {
   return { confirmacaoId, quantidade, fase, mensagem, precisaEntrar, alterar };
 }
 
+type EstadoHistorico =
+  | { status: "carregando" }
+  | { status: "erro" }
+  | { status: "pronto"; eventos: HistoricoPublicoOcorrencia[] };
+
+function formatarDataHistorico(valor: string): string {
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return "Data indisponível";
+  const zona = { timeZone: "America/Sao_Paulo" };
+  const dia = data.toLocaleDateString("pt-BR", zona);
+  const hora = data.toLocaleTimeString("pt-BR", {
+    ...zona, hour: "2-digit", minute: "2-digit",
+  });
+  return dia + " às " + hora;
+}
+
+function HistoricoReal({ ocorrenciaId }: { ocorrenciaId: string }) {
+  const [estado, setEstado] = useState<EstadoHistorico>({ status: "carregando" });
+
+  useEffect(() => {
+    let ativo = true;
+    setEstado({ status: "carregando" });
+    void buscarHistoricoOcorrencia(ocorrenciaId).then(eventos => {
+      if (ativo) setEstado({ status: "pronto", eventos });
+    }).catch(() => {
+      if (ativo) setEstado({ status: "erro" });
+    });
+    return () => { ativo = false; };
+  }, [ocorrenciaId]);
+
+  return (
+    <div className="detail-updates flex flex-col gap-[12px] w-full" aria-busy={estado.status === "carregando"}>
+      <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</p>
+      {estado.status === "carregando" ? (
+        <p role="status" className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] text-[#586a80] text-[12px]">
+          Carregando atualizações...
+        </p>
+      ) : estado.status === "erro" ? (
+        <p role="alert" className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] text-[#586a80] text-[12px]">
+          Não foi possível carregar as atualizações agora.
+        </p>
+      ) : estado.eventos.length === 0 ? (
+        <p className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] text-[#586a80] text-[12px]">
+          Nenhuma atualização registrada.
+        </p>
+      ) : estado.eventos.map(evento => (
+        <div key={evento.id} className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[8px]">
+          <div className="flex items-start justify-between flex-wrap gap-[8px]">
+            <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px] flex-1">
+              {evento.statusAnterior === null && evento.statusNovo === "registrado"
+                ? "Ocorrência registrada" : METADADOS_STATUS[evento.statusNovo].label}
+            </p>
+            <time dateTime={evento.criadoEm} className="font-['Inter:Regular',sans-serif] font-normal text-[#9aafc4] text-[11px]">
+              {formatarDataHistorico(evento.criadoEm)}
+            </time>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, onConfirmar, confirmadoPorMim, real, fotos }: Props & {
   ocorrencia: Ocorrencia; real: boolean; fotos: FotoOcorrenciaLeitura[];
 }) {
@@ -323,6 +386,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
           </div>
 
           {/* Atualizações */}
+          {real && <HistoricoReal ocorrenciaId={ocorrencia.id} />}
           {!real && <div className="detail-updates flex flex-col gap-[12px] w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</p>
             {[
