@@ -177,14 +177,6 @@ export default function App() {
 
   const detalheId = detalheMatch?.params.id ?? "";
 
-  const commonProps = {
-    activeTab,
-    onNavigate: navigate,
-    onOpenDetalhe: openDetalhe,
-    ocorrencias,
-    ...categoriasState,
-  };
-
   return (
     <div className={`app-shell ${isLogin ? "app-shell--login" : ""}`}>
       {!isLogin && (
@@ -214,7 +206,7 @@ export default function App() {
           } />
           <Route path="/atividade" element={
             <RotaProtegida>
-              <Atividade {...commonProps} />
+              <Atividade activeTab={activeTab} onNavigate={navigate} onOpenDetalhe={openDetalhe} {...categoriasState} />
             </RotaProtegida>
           } />
           <Route path="/perfil" element={
