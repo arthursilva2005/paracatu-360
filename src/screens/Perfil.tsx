@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import svgPaths from "@/assets/svg-w4jnqeqhpf";
-import { Ocorrencia } from "@/data/ocorrencias";
+import { listarMinhasOcorrencias, type OcorrenciaHome } from "@/lib/ocorrencias";
 import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import Cabecalho from "@/components/Cabecalho";
@@ -12,8 +12,6 @@ type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
-  ocorrencias: Ocorrencia[];
-  confirmadas: string[];
 };
 
 function calcularIniciais(nome: string): string {
@@ -23,12 +21,42 @@ function calcularIniciais(nome: string): string {
   return `${partes[0].charAt(0)}${partes[partes.length - 1].charAt(0)}`.toUpperCase();
 }
 
-export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrencias, confirmadas, categorias, categoriasLoading }: Props) {
+export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categorias, categoriasLoading }: Props) {
   const navigate = useNavigate();
-  const { user, profile, profileError, signOut } = useAuth();
+  const { user, profile, profileError, loading: perfilLoading, signOut } = useAuth();
   const [saindo, setSaindo] = useState(false);
   const [erroLogout, setErroLogout] = useState("");
-  const totalConfirmacoes = ocorrencias.reduce((acc, o) => acc + (confirmadas.includes(o.id) ? 1 : 0), 0);
+  const [lista, setLista] = useState<{
+    usuarioId: string | null;
+    ocorrencias: OcorrenciaHome[];
+    carregando: boolean;
+    erro: boolean;
+  }>({ usuarioId: null, ocorrencias: [], carregando: true, erro: false });
+
+  useEffect(() => {
+    if (!user) return;
+    let ativo = true;
+    setLista({ usuarioId: user.id, ocorrencias: [], carregando: true, erro: false });
+
+    void listarMinhasOcorrencias().then(ocorrencias => {
+      if (ativo) setLista({ usuarioId: user.id, ocorrencias, carregando: false, erro: false });
+    }).catch(error => {
+      console.error("Não foi possível carregar as ocorrências do perfil.", error);
+      if (ativo) setLista({ usuarioId: user.id, ocorrencias: [], carregando: false, erro: true });
+    });
+
+    return () => { ativo = false; };
+  }, [user?.id]);
+
+  const listaAtual = lista.usuarioId === user?.id;
+  const carregando = perfilLoading || !listaAtual || lista.carregando;
+  const erroOcorrencias = listaAtual && lista.erro;
+  const ocorrencias = listaAtual && !lista.erro ? lista.ocorrencias : [];
+  const emAberto = ocorrencias.filter(o =>
+    o.status === "registrado" || o.status === "em_analise" ||
+    o.status === "encaminhado" || o.status === "em_andamento"
+  ).length;
+  const resolvidas = ocorrencias.filter(o => o.status === "resolvido").length;
   const iniciais = profile ? calcularIniciais(profile.nome) : "";
 
   async function handleLogout() {
@@ -68,16 +96,24 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrenci
               </div>
               <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[4px] items-start leading-[1.45] min-w-px not-italic relative">
                 <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[16px] w-full">
-                  {profile?.nome ?? "Dados do perfil indisponíveis"}
+                  {perfilLoading ? "Carregando perfil..." : profile?.nome ?? "Dados do perfil indisponíveis"}
                 </p>
                 {user?.email && (
                   <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[13px] w-full">{user.email}</p>
                 )}
-                {profile ? (
-                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[13px] w-full">{ocorrencias.length} ocorrências · {totalConfirmacoes} confirmadas por mim</p>
-                ) : (
+                {perfilLoading ? (
+                  <p role="status" className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[13px] w-full">Carregando perfil...</p>
+                ) : !profile ? (
                   <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[13px] w-full">
                     {profileError ?? "Não foi possível carregar os dados do perfil."}
+                  </p>
+                ) : carregando ? (
+                  <p role="status" className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[13px] w-full">Carregando estatísticas...</p>
+                ) : erroOcorrencias ? (
+                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[13px] w-full">Estatísticas indisponíveis.</p>
+                ) : (
+                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[13px] w-full">
+                    {ocorrencias.length} ocorrências · {emAberto} em aberto · {resolvidas} resolvidas
                   </p>
                 )}
               </div>
@@ -147,14 +183,27 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, ocorrenci
           <div className="profile-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <div className="[word-break:break-word] content-stretch flex font-['Inter:Bold',sans-serif] font-bold items-center justify-between leading-[1.45] not-italic relative shrink-0 w-full">
               <p className="flex-[1_0_0] min-w-px relative text-[#10284a] text-[18px]">Minhas ocorrências</p>
-              <p className="relative shrink-0 text-[#075ce5] text-[13px] whitespace-nowrap">Ver todas</p>
             </div>
-            {ocorrencias.map(o => (
+            {carregando ? (
+              <p role="status" className="bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px] w-full">Carregando suas ocorrências, fotos e confirmações...</p>
+            ) : erroOcorrencias ? (
+              <p role="alert" className="bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px] w-full">Não foi possível carregar suas ocorrências agora.</p>
+            ) : ocorrencias.length === 0 ? (
+              <div className="bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[12px] w-full">
+                <p className="font-['Inter:Regular',sans-serif] text-[#586a80] text-[14px] text-center">Você ainda não registrou nenhuma ocorrência.</p>
+                <button type="button" onClick={() => onNavigate("nova")}
+                  className="bg-[#075ce5] rounded-[12px] px-[16px] py-[10px] text-white text-[13px] font-bold cursor-pointer">
+                  Registrar problema
+                </button>
+              </div>
+            ) : ocorrencias.map(o => (
               <OcorrenciaCard
                 key={o.id}
                 ocorrencia={o}
                 categorias={categorias}
                 categoriasLoading={categoriasLoading}
+                exibirFoto
+                fotoPrincipalUrl={o.fotoPrincipalUrl}
                 onClick={() => onOpenDetalhe(o.id)}
               />
             ))}

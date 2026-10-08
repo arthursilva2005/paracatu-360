@@ -218,7 +218,7 @@ export default function App() {
           } />
           <Route path="/perfil" element={
             <RotaProtegida>
-              <Perfil {...commonProps} confirmadas={confirmadas} />
+              <Perfil activeTab={activeTab} onNavigate={navigate} onOpenDetalhe={openDetalhe} {...categoriasState} />
             </RotaProtegida>
           } />
           <Route path="/ocorrencias/:id" element={

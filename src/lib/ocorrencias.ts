@@ -136,6 +136,31 @@ export async function listarOcorrenciasPublicas(): Promise<OcorrenciaHome[]> {
   return resultado;
 }
 
+export async function listarMinhasOcorrencias(): Promise<OcorrenciaHome[]> {
+  // A RPC usa auth.uid() e não retorna autor_id ao cliente.
+  const { data, error } = await supabase.rpc("minhas_ocorrencias");
+  if (error) throw error;
+  if (!Array.isArray(data)) throw new Error("Resposta inesperada ao carregar suas ocorrências.");
+  const ocorrencias = data as OcorrenciaInserida[];
+  if (ocorrencias.length === 0) return [];
+
+  const ids = ocorrencias.map(ocorrencia => ocorrencia.id);
+  const [contagens, capas] = await Promise.all([
+    contarConfirmacoesAtivas(ids),
+    carregarCapasOcorrencias(ids),
+  ]);
+
+  return ocorrencias.map(ocorrencia => {
+    const capa = capas.get(ocorrencia.id);
+    return {
+      ...mapearOcorrencia(ocorrencia),
+      quantidadeConfirmacoes: contagens.get(ocorrencia.id) ?? 0,
+      fotos: capa ? [capa.foto] : [],
+      fotoPrincipalUrl: capa?.url ?? null,
+    };
+  });
+}
+
 export async function criarOcorrencia(
   dados: DadosCriacaoOcorrencia,
   autorId: string,
