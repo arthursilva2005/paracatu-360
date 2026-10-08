@@ -9,10 +9,11 @@ type Props = {
   onClick?: () => void;
   showRelevancia?: boolean;
   exibirFoto?: boolean;
+  exibirDataReal?: boolean;
   fotoPrincipalUrl?: string | null;
 };
 
-export default function OcorrenciaCard({ ocorrencia, categorias, categoriasLoading, onClick, showRelevancia = true, exibirFoto = false, fotoPrincipalUrl }: Props) {
+export default function OcorrenciaCard({ ocorrencia, categorias, categoriasLoading, onClick, showRelevancia = true, exibirFoto = false, exibirDataReal = false, fotoPrincipalUrl }: Props) {
   const [urlComErro, setUrlComErro] = useState<string | null>(null);
   const { status, titulo, quantidadeConfirmacoes: confirmacoes } = ocorrencia;
   const categoria = resolverCategoria(ocorrencia.categoriaId, categorias);
@@ -20,7 +21,7 @@ export default function OcorrenciaCard({ ocorrencia, categorias, categoriasLoadi
     ?? (categoriasLoading ? "Carregando categoria" : "Categoria indisponível");
   const local = localOcorrencia(ocorrencia);
   const dataCriacao = new Date(ocorrencia.criadoEm);
-  const tempo = exibirFoto
+  const tempo = exibirFoto || exibirDataReal
     ? (Number.isNaN(dataCriacao.getTime()) ? "Data indisponível" : dataCriacao.toLocaleDateString("pt-BR"))
     : tempoOcorrencia(ocorrencia);
   const relevancia = calcularRelevancia(confirmacoes);

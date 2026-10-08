@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { calcularTiles, CENTRO_PARACATU, desprojetar, deslocamentoHorizontal, projetar, TAMANHO_TILE, type PixelMapa, type PontoMapa } from "@/lib/projecaoMapa";
 
-export type PontoLocalizacao = { latitude: number; longitude: number };
+export type PontoLocalizacao = PontoMapa;
 
 type Props = {
   ponto: PontoLocalizacao | null;
@@ -9,7 +10,7 @@ type Props = {
   onChange: (ponto: PontoLocalizacao) => void;
 };
 
-type Pixel = { x: number; y: number };
+type Pixel = PixelMapa;
 type Gesto = {
   tipo: "mapa" | "marcador";
   x: number;
@@ -18,36 +19,13 @@ type Gesto = {
   moveu: boolean;
 };
 
-const TAMANHO_TILE = 256;
-const LATITUDE_MAXIMA = 85.05112878;
-// Centro histórico de Paracatu: apenas enquadramento inicial, nunca ponto da ocorrência.
-const CENTRO_INICIAL: PontoLocalizacao = { latitude: -17.224106, longitude: -46.874352 };
-
-function projetar(ponto: PontoLocalizacao, zoom: number): Pixel {
-  const mundo = TAMANHO_TILE * 2 ** zoom;
-  const latitude = Math.max(-LATITUDE_MAXIMA, Math.min(LATITUDE_MAXIMA, ponto.latitude));
-  const radianos = latitude * Math.PI / 180;
-  return {
-    x: (ponto.longitude + 180) / 360 * mundo,
-    y: (1 - Math.asinh(Math.tan(radianos)) / Math.PI) / 2 * mundo,
-  };
-}
-
-function desprojetar(pixel: Pixel, zoom: number): PontoLocalizacao {
-  const mundo = TAMANHO_TILE * 2 ** zoom;
-  const longitude = ((pixel.x / mundo * 360) % 360 + 360) % 360 - 180;
-  const y = Math.max(0, Math.min(mundo, pixel.y));
-  const latitude = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / mundo))) * 180 / Math.PI;
-  return { latitude, longitude };
-}
-
 export default function SeletorLocalizacao({
   ponto, centralizarEm, desabilitado, onChange,
 }: Props) {
   const mapaRef = useRef<HTMLDivElement>(null);
   const gestoRef = useRef<Gesto | null>(null);
   const [tamanho, setTamanho] = useState({ largura: 0, altura: 0 });
-  const [centro, setCentro] = useState<PontoLocalizacao>(CENTRO_INICIAL);
+  const [centro, setCentro] = useState<PontoLocalizacao>(CENTRO_PARACATU);
   const [zoom, setZoom] = useState(15);
   const [erroTiles, setErroTiles] = useState(false);
 
@@ -77,28 +55,10 @@ export default function SeletorLocalizacao({
 
   const centroPx = projetar(centro, zoom);
   const mundo = TAMANHO_TILE * 2 ** zoom;
-  const tiles: { x: number; y: number; esquerda: number; topo: number }[] = [];
-  if (tamanho.largura && tamanho.altura) {
-    const inicioX = Math.floor((centroPx.x - tamanho.largura / 2) / TAMANHO_TILE);
-    const fimX = Math.floor((centroPx.x + tamanho.largura / 2) / TAMANHO_TILE);
-    const inicioY = Math.max(0, Math.floor((centroPx.y - tamanho.altura / 2) / TAMANHO_TILE));
-    const fimY = Math.min(2 ** zoom - 1, Math.floor((centroPx.y + tamanho.altura / 2) / TAMANHO_TILE));
-    for (let y = inicioY; y <= fimY; y++) {
-      for (let x = inicioX; x <= fimX; x++) {
-        tiles.push({
-          x: ((x % (2 ** zoom)) + 2 ** zoom) % (2 ** zoom),
-          y,
-          esquerda: x * TAMANHO_TILE - centroPx.x + tamanho.largura / 2,
-          topo: y * TAMANHO_TILE - centroPx.y + tamanho.altura / 2,
-        });
-      }
-    }
-  }
+  const tiles = calcularTiles(centroPx, zoom, tamanho.largura, tamanho.altura);
 
   const marcador = ponto ? projetar(ponto, zoom) : null;
-  const deslocamentoX = marcador
-    ? ((marcador.x - centroPx.x + mundo / 2) % mundo + mundo) % mundo - mundo / 2
-    : 0;
+  const deslocamentoX = marcador ? deslocamentoHorizontal(marcador.x, centroPx.x, mundo) : 0;
 
   function pixelDoEvento(event: PointerEvent<HTMLDivElement>): Pixel {
     const limites = event.currentTarget.getBoundingClientRect();

@@ -202,7 +202,8 @@ export default function App() {
             onOpenDetalhe={openDetalhe}
             {...categoriasState} onOpenDashboard={openDashboard}
             ordemInicial={navigationState?.registroConcluido ? "recente" : "relevancia"} />} />
-          <Route path="/mapa" element={<Mapa {...commonProps} />} />
+          <Route path="/mapa" element={<Mapa activeTab={activeTab} onNavigate={navigate}
+            onOpenDetalhe={openDetalhe} {...categoriasState} />} />
           <Route path="/ocorrencias/nova" element={
             <RotaProtegida>
               <NovaOcorrencia key={location.key} activeTab={activeTab} onNavigate={navigate}

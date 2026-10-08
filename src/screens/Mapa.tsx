@@ -1,157 +1,134 @@
-import svgPaths from "@/assets/svg-fgppstdvre";
-import { Ocorrencia } from "@/data/ocorrencias";
-import { EstadoCategorias } from "@/hooks/useCategorias";
+import { useEffect, useState } from "react";
+import type { OcorrenciaHome } from "@/lib/ocorrencias";
+import { listarOcorrenciasPublicas } from "@/lib/ocorrencias";
+import type { EstadoCategorias } from "@/hooks/useCategorias";
+import { useAuth } from "@/context/AuthContext";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
+import MapaOcorrencias, { type OcorrenciaNoMapa } from "@/components/MapaOcorrencias";
 import Cabecalho from "@/components/Cabecalho";
-import Navegacao, { TabName } from "@/components/Navegacao";
+import Navegacao, { type TabName } from "@/components/Navegacao";
 
 type Props = EstadoCategorias & {
   activeTab: TabName;
   onNavigate: (tab: TabName) => void;
   onOpenDetalhe: (id: string) => void;
-  ocorrencias: Ocorrencia[];
 };
 
-function CategoriaAtiva({ label }: { label: string }) {
-  return (
-    <div className="bg-[#075ce5] content-stretch flex items-start px-[12px] py-[8px] relative rounded-[999px] shrink-0">
-      <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[13px] text-white whitespace-nowrap">{label}</p>
-    </div>
-  );
-}
-
-function Categoria({ label }: { label: string }) {
-  return (
-    <div className="bg-white content-stretch flex items-start px-[12px] py-[8px] relative rounded-[999px] shrink-0">
-      <div aria-hidden className="absolute border border-[#d7e3f0] border-solid inset-0 pointer-events-none rounded-[999px]" />
-      <p className="[word-break:break-word] font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[13px] whitespace-nowrap">{label}</p>
-    </div>
-  );
-}
-
-function MapPlaceholder({ count }: { count: number }) {
-  return (
-    <div className="map-preview h-[280px] relative rounded-[20px] shrink-0 w-full bg-[#d7e3f0] overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#e8f0fb] to-[#c5d8f0]" />
-      <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 390 280" preserveAspectRatio="xMidYMid slice">
-        <line x1="0" y1="70" x2="390" y2="70" stroke="#075ce5" strokeWidth="2"/>
-        <line x1="0" y1="140" x2="390" y2="140" stroke="#075ce5" strokeWidth="2"/>
-        <line x1="0" y1="210" x2="390" y2="210" stroke="#075ce5" strokeWidth="1"/>
-        <line x1="80" y1="0" x2="80" y2="280" stroke="#075ce5" strokeWidth="2"/>
-        <line x1="180" y1="0" x2="180" y2="280" stroke="#075ce5" strokeWidth="1"/>
-        <line x1="270" y1="0" x2="270" y2="280" stroke="#075ce5" strokeWidth="2"/>
-        <line x1="350" y1="0" x2="350" y2="280" stroke="#075ce5" strokeWidth="1"/>
-      </svg>
-      <div className="absolute left-[72px] top-[64px] bg-[#dc2626] drop-shadow-[0px_4px_5px_rgba(0,0,0,0.2)] flex flex-col items-center justify-center rounded-[16px] size-[32px]">
-        <div className="relative size-[16px]">
-          <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 16 16">
-            <path d={svgPaths.p8b99100} stroke="white" strokeLinecap="round" strokeWidth="2" />
-          </svg>
-        </div>
-      </div>
-      <div className="absolute left-[248px] top-[118px] bg-[#d97706] drop-shadow-[0px_4px_5px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center rounded-[16px] size-[32px]">
-        <div className="relative size-[16px]">
-          <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 16 16">
-            <path d={svgPaths.p8b99100} stroke="white" strokeLinecap="round" strokeWidth="2" />
-          </svg>
-        </div>
-      </div>
-      <div className="absolute left-[154px] top-[194px] bg-[#075ce5] drop-shadow-[0px_4px_5px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center rounded-[16px] size-[32px]">
-        <div className="relative size-[16px]">
-          <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 16 16">
-            <path d={svgPaths.p8b99100} stroke="white" strokeLinecap="round" strokeWidth="2" />
-          </svg>
-        </div>
-      </div>
-      <div className="absolute left-[88px] top-[208px] bg-[#075ce5] drop-shadow-[0px_4px_5px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center rounded-[16px] size-[32px]">
-        <div className="relative size-[16px]">
-          <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 16 16">
-            <path d={svgPaths.p8b99100} stroke="white" strokeLinecap="round" strokeWidth="2" />
-          </svg>
-        </div>
-      </div>
-      {/* Legenda com contagem real */}
-      <div className="absolute bg-[rgba(255,255,255,0.92)] flex gap-[8px] items-center left-[16px] px-[10px] py-[8px] rounded-[999px] top-[16px]">
-        <div aria-hidden className="absolute border border-[#d7e3f0] border-solid inset-0 pointer-events-none rounded-[999px]" />
-        <div className="bg-[#075ce5] relative rounded-[4px] shrink-0 size-[8px]" />
-        <p className="[word-break:break-word] font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[12px] whitespace-nowrap">{count} ocorrências próximas</p>
-      </div>
-      {/* Legenda relevância */}
-      <div className="absolute bottom-[12px] right-[12px] bg-[rgba(255,255,255,0.92)] flex gap-[12px] items-center px-[10px] py-[7px] rounded-[12px]">
-        <div className="flex items-center gap-[4px]">
-          <div className="w-[8px] h-[8px] rounded-full bg-[#dc2626]" />
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[10px]">Alta</p>
-        </div>
-        <div className="flex items-center gap-[4px]">
-          <div className="w-[8px] h-[8px] rounded-full bg-[#d97706]" />
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[10px]">Média</p>
-        </div>
-        <div className="flex items-center gap-[4px]">
-          <div className="w-[8px] h-[8px] rounded-full bg-[#075ce5]" />
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[10px]">Baixa</p>
-        </div>
-      </div>
-      <div aria-hidden className="absolute border border-[#d7e3f0] border-solid inset-0 pointer-events-none rounded-[20px]" />
-    </div>
-  );
+function possuiCoordenadasValidas(ocorrencia: OcorrenciaHome): ocorrencia is OcorrenciaNoMapa {
+  const { latitude, longitude } = ocorrencia;
+  return latitude !== null && longitude !== null &&
+    Number.isFinite(latitude) && Number.isFinite(longitude) &&
+    latitude >= -90 && latitude <= 90 &&
+    longitude >= -180 && longitude <= 180;
 }
 
 export default function Mapa({
   activeTab,
   onNavigate,
   onOpenDetalhe,
-  ocorrencias,
   categorias,
   categoriasLoading,
   categoriasError,
 }: Props) {
-  const ordenadas = [...ocorrencias].sort((a, b) => b.quantidadeConfirmacoes - a.quantidadeConfirmacoes);
+  const { user } = useAuth();
+  const [ocorrencias, setOcorrencias] = useState<OcorrenciaHome[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(false);
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+
+  useEffect(() => {
+    let ativo = true;
+    setCarregando(true);
+    setErro(false);
+    setOcorrencias([]);
+
+    void listarOcorrenciasPublicas({ incluirCapas: false }).then(lista => {
+      if (ativo) setOcorrencias(lista);
+    }).catch(() => {
+      if (ativo) setErro(true);
+    }).finally(() => {
+      if (ativo) setCarregando(false);
+    });
+
+    return () => { ativo = false; };
+  }, [user?.id]);
+
+  const localizadas = ocorrencias.filter(possuiCoordenadasValidas);
+  const filtradas = categoriaFiltro
+    ? localizadas.filter(ocorrencia => ocorrencia.categoriaId === categoriaFiltro)
+    : localizadas;
+  const ordenadas = [...filtradas].sort((a, b) =>
+    b.quantidadeConfirmacoes - a.quantidadeConfirmacoes ||
+    new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
+  );
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
       <Cabecalho />
       <div className="screen-scroll flex-1 overflow-y-auto w-full">
         <div className="screen-content layout-mapa content-stretch flex flex-col gap-[16px] items-start p-[22px] relative w-full">
-          <MapPlaceholder count={ocorrencias.length} />
+          <MapaOcorrencias
+            key={categoriaFiltro}
+            ocorrencias={filtradas}
+            categorias={categorias}
+            categoriasLoading={categoriasLoading}
+            carregando={carregando}
+            erro={erro}
+            onOpenDetalhe={onOpenDetalhe}
+          />
 
           <div className="map-filters content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Filtros</p>
+            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[18px] w-full">Filtros</p>
             <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
-              <CategoriaAtiva label="Todas" />
-              {categorias.map(cat => <Categoria key={cat.id} label={cat.nome} />)}
+              <button type="button" onClick={() => setCategoriaFiltro("")} aria-pressed={categoriaFiltro === ""}
+                className={"relative rounded-[999px] px-[12px] py-[8px] text-[13px] font-semibold cursor-pointer " +
+                  (categoriaFiltro === "" ? "bg-[#075ce5] text-white" : "bg-white text-[#10284a] border border-[#d7e3f0]")}>
+                Todas
+              </button>
+              {categorias.map(categoria => (
+                <button key={categoria.id} type="button" onClick={() => setCategoriaFiltro(categoria.id)}
+                  aria-pressed={categoriaFiltro === categoria.id}
+                  className={"relative rounded-[999px] px-[12px] py-[8px] text-[13px] font-semibold cursor-pointer " +
+                    (categoriaFiltro === categoria.id ? "bg-[#075ce5] text-white" : "bg-white text-[#10284a] border border-[#d7e3f0]")}>
+                  {categoria.nome}
+                </button>
+              ))}
             </div>
             {categoriasLoading && (
-              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
+              <p className="text-[#586a80] text-[12px]">Carregando categorias...</p>
             )}
             {!categoriasLoading && categoriasError && (
-              <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{categoriasError}</p>
+              <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>
             )}
             {!categoriasLoading && !categoriasError && categorias.length === 0 && (
-              <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
+              <p className="text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
             )}
           </div>
 
           <div className="map-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ocorrências próximas</p>
-            {ordenadas.map(o => (
-              <OcorrenciaCard
-                key={o.id}
-                ocorrencia={o}
-                categorias={categorias}
-                categoriasLoading={categoriasLoading}
-                onClick={() => onOpenDetalhe(o.id)}
-              />
+            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[18px] w-full">Ocorrências no mapa</p>
+            {carregando ? (
+              <p role="status" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Carregando ocorrências...</p>
+            ) : erro ? (
+              <p role="alert" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências no mapa agora.</p>
+            ) : ordenadas.length === 0 ? (
+              <p className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">
+                {categoriaFiltro ? "Nenhuma ocorrência nesta categoria com localização disponível." :
+                  "Nenhuma ocorrência com localização disponível."}
+              </p>
+            ) : ordenadas.map(ocorrencia => (
+              <OcorrenciaCard key={ocorrencia.id} ocorrencia={ocorrencia}
+                categorias={categorias} categoriasLoading={categoriasLoading} exibirDataReal
+                onClick={() => onOpenDetalhe(ocorrencia.id)} />
             ))}
           </div>
 
-          <div
-            className="map-action bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90"
-            onClick={() => onNavigate("nova")}
-          >
-            <div className="content-stretch flex flex-col items-start p-[14px] relative size-full">
-              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] text-center w-full">Registrar problema</p>
-            </div>
-          </div>
+          <button type="button" className="map-action bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90"
+            onClick={() => onNavigate("nova")}>
+            <span className="block p-[14px] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[14px] text-center">
+              Registrar problema
+            </span>
+          </button>
         </div>
       </div>
       <Navegacao activeTab={activeTab} onNavigate={onNavigate} />

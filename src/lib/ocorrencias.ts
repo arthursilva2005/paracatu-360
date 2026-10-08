@@ -98,7 +98,7 @@ export async function buscarOcorrenciaPorId(id: string): Promise<DetalheOcorrenc
   };
 }
 
-export async function listarOcorrenciasPublicas(): Promise<OcorrenciaHome[]> {
+export async function listarOcorrenciasPublicas(options: { incluirCapas?: boolean } = {}): Promise<OcorrenciaHome[]> {
   const resultado: OcorrenciaHome[] = [];
   const tamanhoLote = 100;
 
@@ -118,10 +118,10 @@ export async function listarOcorrenciasPublicas(): Promise<OcorrenciaHome[]> {
     const ids = data.map(ocorrencia => ocorrencia.id);
     const [contagens, capas] = await Promise.all([
       contarConfirmacoesAtivas(ids),
-      carregarCapasOcorrencias(ids),
+      options.incluirCapas === false ? Promise.resolve(null) : carregarCapasOcorrencias(ids),
     ]);
     resultado.push(...data.map(ocorrencia => {
-      const capa = capas.get(ocorrencia.id);
+      const capa = capas?.get(ocorrencia.id);
       return {
         ...mapearOcorrencia(ocorrencia),
         // Zero apenas após consulta bem-sucedida sem confirmações ativas.
