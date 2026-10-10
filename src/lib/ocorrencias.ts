@@ -98,16 +98,17 @@ export async function buscarOcorrenciaPorId(id: string): Promise<DetalheOcorrenc
   };
 }
 
-export async function listarOcorrenciasPublicas(options: { incluirCapas?: boolean } = {}): Promise<OcorrenciaHome[]> {
+async function listarOcorrencias(options: { incluirCapas?: boolean; incluirNaoPublicas?: boolean } = {}): Promise<OcorrenciaHome[]> {
   const resultado: OcorrenciaHome[] = [];
   const tamanhoLote = 100;
 
   for (let inicio = 0; ; inicio += tamanhoLote) {
-    const { data, error } = await supabase
-      .from("ocorrencias")
-      .select(COLUNAS_PUBLICAS)
-      // Mantém a Home pública mesmo quando a sessão pode ler registros privados.
-      .not("status", "in", "(rejeitado,arquivado)")
+    let consulta = supabase.from("ocorrencias").select(COLUNAS_PUBLICAS);
+    // A Home continua excluindo estados não públicos mesmo quando há sessão de equipe.
+    if (!options.incluirNaoPublicas) {
+      consulta = consulta.not("status", "in", "(rejeitado,arquivado)");
+    }
+    const { data, error } = await consulta
       .order("created_at", { ascending: false })
       .order("id", { ascending: true })
       .range(inicio, inicio + tamanhoLote - 1)
@@ -134,6 +135,15 @@ export async function listarOcorrenciasPublicas(options: { incluirCapas?: boolea
   }
 
   return resultado;
+}
+
+export function listarOcorrenciasPublicas(options: { incluirCapas?: boolean } = {}): Promise<OcorrenciaHome[]> {
+  return listarOcorrencias(options);
+}
+
+export function listarOcorrenciasEquipe(): Promise<OcorrenciaHome[]> {
+  // RLS autoriza a equipe a ler inclusive rejeitadas e arquivadas.
+  return listarOcorrencias({ incluirNaoPublicas: true });
 }
 
 export async function listarMinhasOcorrencias(): Promise<OcorrenciaHome[]> {

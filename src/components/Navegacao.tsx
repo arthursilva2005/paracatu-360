@@ -1,4 +1,6 @@
-export type TabName = "inicio" | "mapa" | "nova" | "atividade" | "perfil";
+import { useAuth } from "@/context/AuthContext";
+
+export type TabName = "inicio" | "mapa" | "nova" | "atividade" | "perfil" | "moderacao";
 
 type Props = {
   activeTab: TabName;
@@ -66,6 +68,8 @@ function Tab({ label, tab, active, onNavigate, icon }: TabProps) {
 }
 
 export default function Navegacao({ activeTab, onNavigate }: Props) {
+  const { profile, loading } = useAuth();
+  const equipe = !loading && (profile?.papel === "moderador" || profile?.papel === "administrador");
   return (
     <div className="app-navigation bg-white relative shrink-0 w-full border-t border-[#e8eef5]" style={{ height: 64 }}>
       <div className="flex items-stretch h-full px-[4px] relative">
@@ -89,6 +93,16 @@ export default function Navegacao({ activeTab, onNavigate }: Props) {
 
         <Tab label="Atividade" tab="atividade" active={activeTab === "atividade"} onNavigate={onNavigate} icon={<IconBell active={activeTab === "atividade"} />} />
         <Tab label="Perfil" tab="perfil" active={activeTab === "perfil"} onNavigate={onNavigate} icon={<IconUser active={activeTab === "perfil"} />} />
+        {equipe && <Tab label="Moderação" tab="moderacao" active={activeTab === "moderacao"}
+          onNavigate={onNavigate} icon={
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3 4 6v5c0 5 3.4 8.3 8 10 4.6-1.7 8-5 8-10V6l-8-3Z"
+                stroke={activeTab === "moderacao" ? "#075ce5" : "#9aafc4"}
+                strokeWidth="1.8" strokeLinejoin="round" />
+              <path d="m9 12 2 2 4-4" stroke={activeTab === "moderacao" ? "#075ce5" : "#9aafc4"}
+                strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          } />}
       </div>
     </div>
   );

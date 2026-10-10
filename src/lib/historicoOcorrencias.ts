@@ -65,3 +65,22 @@ export async function buscarHistoricoOcorrencia(ocorrenciaId: string): Promise<H
   if (error) throw error;
   return (data ?? []).map(mapearLinhaHistorico);
 }
+
+export type HistoricoAdministrativoOcorrencia = HistoricoPublicoOcorrencia & {
+  observacao: string | null; // Justificativa pública, nunca nota interna.
+};
+
+export async function buscarHistoricoAdministrativo(ocorrenciaId: string): Promise<HistoricoAdministrativoOcorrencia[]> {
+  if (!ehUuidOcorrencia(ocorrenciaId)) throw new Error("Identificador de ocorrência inválido.");
+
+  const { data, error } = await supabase
+    .from("historico_ocorrencias")
+    .select("id, ocorrencia_id, status_anterior, status_novo, observacao, created_at")
+    .eq("ocorrencia_id", ocorrenciaId)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
+    .returns<(LinhaHistorico & { observacao: string | null })[]>();
+
+  if (error) throw error;
+  return (data ?? []).map(linha => ({ ...mapearLinhaHistorico(linha), observacao: linha.observacao }));
+}

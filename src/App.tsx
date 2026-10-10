@@ -20,6 +20,7 @@ import Atividade from "@/screens/Atividade";
 import Perfil from "@/screens/Perfil";
 import Detalhe from "@/screens/Detalhe";
 import Dashboard from "@/screens/Dashboard";
+import Moderacao from "@/screens/Moderacao";
 
 const tabPaths: Record<TabName, string> = {
   inicio: "/",
@@ -27,9 +28,10 @@ const tabPaths: Record<TabName, string> = {
   nova: "/ocorrencias/nova",
   atividade: "/atividade",
   perfil: "/perfil",
+  moderacao: "/moderacao",
 };
 
-const rotasProtegidas = new Set(["/ocorrencias/nova", "/atividade", "/perfil"]);
+const rotasProtegidas = new Set(["/ocorrencias/nova", "/atividade", "/perfil", "/moderacao"]);
 
 function rotaOrigemSegura(state: unknown): string {
   if (!state || typeof state !== "object" || !("from" in state)) return "/";
@@ -40,7 +42,10 @@ function rotaOrigemSegura(state: unknown): string {
 
   const pathname = from.split(/[?#]/, 1)[0];
   const detalhe = pathname.match(/^\/ocorrencias\/([^/]+)$/);
-  return rotasProtegidas.has(pathname) || (detalhe && ehUuidOcorrencia(detalhe[1])) ? from : "/";
+  const detalheModeracao = pathname.match(/^\/moderacao\/([^/]+)$/);
+  return rotasProtegidas.has(pathname) ||
+    (detalhe && ehUuidOcorrencia(detalhe[1])) ||
+    (detalheModeracao && ehUuidOcorrencia(detalheModeracao[1])) ? from : "/";
 }
 
 function RotaProtegida({ children }: { children: ReactNode }) {
@@ -56,6 +61,18 @@ function RotaProtegida({ children }: { children: ReactNode }) {
     return <Navigate to="/entrar" replace state={{ from }} />;
   }
 
+  return children;
+}
+
+function RotaEquipe({ children }: { children: ReactNode }) {
+  const { session, profile, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <div className="app-screen bg-[#f3f6fa]" aria-busy="true" />;
+  if (!session) return <Navigate to="/entrar" replace state={{ from: location.pathname }} />;
+  if (profile?.papel !== "moderador" && profile?.papel !== "administrador") {
+    return <Navigate to="/" replace />;
+  }
   return children;
 }
 
@@ -81,6 +98,7 @@ export default function App() {
   const categoriasState = useCategorias();
   const isLogin = useMatch("/entrar") !== null;
   const detalheMatch = useMatch("/ocorrencias/:id");
+  const moderacaoMatch = useMatch("/moderacao/:id");
   const [{ ocorrencias, confirmadas }, setEstado] = useState<{
     ocorrencias: Ocorrencia[];
     confirmadas: string[];
@@ -88,6 +106,7 @@ export default function App() {
   const navigationState = location.state as { from?: string; activeTab?: TabName; registroConcluido?: boolean } | null;
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const activeTab: TabName =
+    pathname.startsWith("/moderacao/") ? "moderacao" :
     (Object.keys(tabPaths) as TabName[]).find(tab => tabPaths[tab] === pathname) ??
     (navigationState?.activeTab && Object.prototype.hasOwnProperty.call(tabPaths, navigationState.activeTab)
       ? navigationState.activeTab
@@ -226,6 +245,21 @@ export default function App() {
               onConfirmar={confirmarOcorrencia}
               {...categoriasState}
             />
+          } />
+          <Route path="/moderacao" element={
+            <RotaEquipe>
+              <Moderacao activeTab={activeTab} onNavigate={navigate}
+                onOpenDetalhe={id => navigateTo(`/moderacao/${encodeURIComponent(id)}`)}
+                {...categoriasState} />
+            </RotaEquipe>
+          } />
+          <Route path="/moderacao/:id" element={
+            <RotaEquipe>
+              <Moderacao key={moderacaoMatch?.params.id} id={moderacaoMatch?.params.id}
+                activeTab={activeTab} onNavigate={navigate}
+                onOpenDetalhe={id => navigateTo(`/moderacao/${encodeURIComponent(id)}`)}
+                {...categoriasState} />
+            </RotaEquipe>
           } />
           <Route path="/indicadores" element={
             <Dashboard
