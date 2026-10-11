@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import Cabecalho from "@/components/Cabecalho";
 import GaleriaOcorrencia from "@/components/GaleriaOcorrencia";
 import Navegacao, { type TabName } from "@/components/Navegacao";
@@ -9,7 +9,7 @@ import { calcularRelevancia, labelRelevancia, METADADOS_STATUS, type StatusOcorr
 import type { EstadoCategorias } from "@/hooks/useCategorias";
 import { resolverCategoria } from "@/hooks/useCategorias";
 import { buscarHistoricoAdministrativo, type HistoricoAdministrativoOcorrencia } from "@/lib/historicoOcorrencias";
-import { alterarStatusOcorrencia, exigeJustificativa, mensagemErroModeracao, proximosStatus } from "@/lib/moderacao";
+import { alterarStatusOcorrencia, buscarPrincipaisDuplicidade, buscarTituloPrincipal, CANDIDATOS_POR_PAGINA, exigeJustificativa, marcarOcorrenciaDuplicada, mensagemErroModeracao, proximosStatus, type CandidatoPrincipal } from "@/lib/moderacao";
 import { buscarOcorrenciaPorId, ehUuidOcorrencia, listarOcorrenciasEquipe, type DetalheOcorrencia, type OcorrenciaHome } from "@/lib/ocorrencias";
 
 const STATUS: StatusOcorrencia[] = [
@@ -17,6 +17,7 @@ const STATUS: StatusOcorrencia[] = [
   "resolvido", "rejeitado", "duplicado", "arquivado",
 ];
 const POR_PAGINA = 20;
+const STATUS_ORIGEM_DUPLICIDADE: StatusOcorrencia[] = ["registrado", "em_analise", "encaminhado", "em_andamento"];
 type Ordem = "recente" | "relevancia" | "antiga";
 type Props = EstadoCategorias & {
   id?: string;
@@ -124,8 +125,184 @@ function ListaAdministrativa({ categorias, categoriasLoading, categoriasError, o
   </>;
 }
 
+type PainelDuplicidadeProps = Pick<Props, "categorias" | "categoriasLoading" | "categoriasError"> & {
+  ocorrencia: DetalheOcorrencia["ocorrencia"];
+  onFechar: () => void;
+  onConcluido: () => Promise<void>;
+  onConflito: () => Promise<void>;
+};
+
+function PainelDuplicidade({ ocorrencia, categorias, categoriasLoading, categoriasError,
+  onFechar, onConcluido, onConflito }: PainelDuplicidadeProps) {
+  const [termo, setTermo] = useState("");
+  const [buscaAplicada, setBuscaAplicada] = useState("");
+  const [categoriaId, setCategoriaId] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [revisao, setRevisao] = useState(0);
+  const [candidatos, setCandidatos] = useState<CandidatoPrincipal[]>([]);
+  const [total, setTotal] = useState(0);
+  const [carregando, setCarregando] = useState(true);
+  const [erroBusca, setErroBusca] = useState("");
+  const [selecionada, setSelecionada] = useState<CandidatoPrincipal | null>(null);
+  const [justificativa, setJustificativa] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [erroAcao, setErroAcao] = useState("");
+  const operando = useRef(false);
+
+  useEffect(() => {
+    let ativo = true;
+    setCarregando(true);
+    setErroBusca("");
+    void buscarPrincipaisDuplicidade(ocorrencia.id, buscaAplicada, categoriaId, pagina)
+      .then(resultado => {
+        if (!ativo) return;
+        const ultimaPagina = Math.max(1, Math.ceil(resultado.total / CANDIDATOS_POR_PAGINA));
+        if (pagina > ultimaPagina) {
+          setPagina(ultimaPagina);
+          return;
+        }
+        setCandidatos(resultado.candidatos);
+        setTotal(resultado.total);
+      })
+      .catch(error => {
+        if (!ativo) return;
+        setCandidatos([]);
+        setTotal(0);
+        setErroBusca(error instanceof Error && error.message === "Use letras ou números para buscar."
+          ? error.message : "Não foi possível buscar ocorrências principais agora.");
+      })
+      .finally(() => { if (ativo) setCarregando(false); });
+    return () => { ativo = false; };
+  }, [ocorrencia.id, buscaAplicada, categoriaId, pagina, revisao]);
+
+  function aplicarBusca() {
+    setBuscaAplicada(termo.trim());
+    setPagina(1);
+    setRevisao(valor => valor + 1);
+  }
+
+  async function confirmar() {
+    const texto = justificativa.trim();
+    if (!selecionada || !texto || operando.current) return;
+    if (texto.length > 500) {
+      setErroAcao("A justificativa pública deve ter no máximo 500 caracteres.");
+      return;
+    }
+    operando.current = true;
+    setSalvando(true);
+    setErroAcao("");
+    try {
+      await marcarOcorrenciaDuplicada(ocorrencia.id, ocorrencia.status, selecionada.id, texto);
+      await onConcluido();
+    } catch (error) {
+      const codigo = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+      if (codigo === "P3604") {
+        await onConflito();
+      } else {
+        setErroAcao(mensagemErroModeracao(error));
+        if (["P3610", "P3612", "P3613"].includes(codigo)) {
+          setSelecionada(null);
+          setRevisao(valor => valor + 1);
+        }
+      }
+    } finally {
+      operando.current = false;
+      setSalvando(false);
+    }
+  }
+
+  const campoClasse = "w-full min-w-0 rounded-[12px] border border-[#d7e3f0] bg-white px-[12px] py-[11px] text-[13px] text-[#10284a]";
+  const paginas = Math.ceil(total / CANDIDATOS_POR_PAGINA);
+  return <section className="min-w-0 rounded-[16px] border border-[#d7e3f0] bg-[#f8fbff] p-[16px] flex flex-col gap-[14px]">
+    <div className="flex flex-wrap items-start justify-between gap-[10px]">
+      <div>
+        <h2 className="text-[#10284a] text-[18px] font-bold">Marcar como duplicada</h2>
+        <p className="text-[#586a80] text-[12px]">Escolha uma ocorrência principal e justifique a decisão.</p>
+      </div>
+      <button type="button" disabled={salvando} onClick={onFechar}
+        className="rounded-[10px] border border-[#d7e3f0] bg-white px-[12px] py-[9px] text-[#075ce5] text-[12px] font-semibold disabled:opacity-50 cursor-pointer">
+        Cancelar
+      </button>
+    </div>
+
+    <form className="flex flex-col sm:flex-row items-end gap-[8px] min-w-0" onSubmit={event => { event.preventDefault(); aplicarBusca(); }}>
+      <label className="flex-1 w-full min-w-0 text-[#586a80] text-[12px] flex flex-col gap-[5px]">Buscar por título ou bairro
+        <input className={campoClasse} value={termo} disabled={salvando}
+          onChange={event => setTermo(event.target.value)} placeholder="Título ou bairro" />
+      </label>
+      <button type="submit" disabled={salvando}
+        className="w-full sm:w-auto rounded-[12px] bg-[#075ce5] px-[16px] py-[11px] text-white text-[13px] font-semibold disabled:opacity-50 cursor-pointer">
+        Buscar
+      </button>
+    </form>
+    <label className="text-[#586a80] text-[12px] flex flex-col gap-[5px]">Categoria
+      <select className={campoClasse} value={categoriaId} disabled={salvando}
+        onChange={event => { setCategoriaId(event.target.value); setPagina(1); }}>
+        <option value="">Todas</option>
+        {categorias.map(item => <option key={item.id} value={item.id}>{item.nome}</option>)}
+      </select>
+    </label>
+    {categoriasLoading && <p role="status" className="text-[#586a80] text-[12px]">Carregando categorias...</p>}
+    {categoriasError && <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>}
+
+    <div className="min-w-0 flex flex-col gap-[8px]">
+      <h3 className="text-[#10284a] text-[14px] font-semibold">Ocorrências candidatas</h3>
+      {carregando ? <p role="status" className="text-[#586a80] text-[13px]">Buscando ocorrências...</p>
+        : erroBusca ? <p role="alert" className="text-[#586a80] text-[13px]">{erroBusca}</p>
+        : candidatos.length === 0 ? <p className="text-[#586a80] text-[13px]">Nenhuma ocorrência principal encontrada.</p>
+        : <div className="flex flex-col gap-[8px] min-w-0">
+          {candidatos.map(item => <div key={item.id}
+            className={`min-w-0 rounded-[12px] border p-[11px] bg-white ${selecionada?.id === item.id ? "border-[#075ce5]" : "border-[#d7e3f0]"}`}>
+            <p className="text-[#10284a] text-[13px] font-semibold [overflow-wrap:anywhere]">{item.titulo}</p>
+            <p className="text-[#586a80] text-[12px] [overflow-wrap:anywhere]">
+              {resolverCategoria(item.categoriaId, categorias)?.nome ?? (categoriasLoading ? "Carregando categoria..." : "Categoria indisponível")}
+              {" · "}{METADADOS_STATUS[item.status].label}
+            </p>
+            <p className="text-[#586a80] text-[12px] [overflow-wrap:anywhere]">{item.bairro} · {item.endereco}</p>
+            <p className="text-[#586a80] text-[12px]">{new Date(item.criadoEm).toLocaleDateString("pt-BR")}</p>
+            <div className="flex flex-wrap gap-[12px] items-center mt-[7px]">
+              <button type="button" disabled={salvando} aria-pressed={selecionada?.id === item.id}
+                onClick={() => { setSelecionada(item); setErroAcao(""); }}
+                className="rounded-[10px] bg-[#e8f0fe] px-[12px] py-[9px] text-[#075ce5] text-[12px] font-semibold disabled:opacity-50 cursor-pointer">
+                {selecionada?.id === item.id ? "Selecionada" : "Selecionar principal"}
+              </button>
+              <Link to={`/moderacao/${encodeURIComponent(item.id)}`} target="_blank" rel="noopener noreferrer"
+                className="text-[#075ce5] text-[12px] font-semibold">Ver ocorrência</Link>
+            </div>
+          </div>)}
+        </div>}
+      {!carregando && !erroBusca && paginas > 1 && <nav aria-label="Páginas de ocorrências candidatas" className="flex flex-wrap items-center justify-center gap-[10px]">
+        <button type="button" disabled={pagina === 1 || salvando} onClick={() => setPagina(valor => valor - 1)}
+          className="rounded-[10px] bg-white px-[12px] py-[9px] text-[#075ce5] text-[12px] disabled:opacity-50 cursor-pointer">Anterior</button>
+        <span className="text-[#586a80] text-[12px]">{pagina} de {paginas}</span>
+        <button type="button" disabled={pagina >= paginas || salvando} onClick={() => setPagina(valor => valor + 1)}
+          className="rounded-[10px] bg-white px-[12px] py-[9px] text-[#075ce5] text-[12px] disabled:opacity-50 cursor-pointer">Próxima</button>
+      </nav>}
+    </div>
+
+    {selecionada && <div className="min-w-0 rounded-[12px] bg-[#e8f0fe] p-[12px] flex flex-col gap-[5px] [overflow-wrap:anywhere]">
+      <h3 className="text-[#10284a] text-[13px] font-bold">Confirme a decisão</h3>
+      <p className="text-[#10284a] text-[12px]">Ocorrência atual: <strong>{ocorrencia.titulo}</strong></p>
+      <p className="text-[#10284a] text-[12px]">Será marcada como duplicada de: <strong>{selecionada.titulo}</strong></p>
+      <Link to={`/moderacao/${encodeURIComponent(selecionada.id)}`} target="_blank" rel="noopener noreferrer"
+        className="text-[#075ce5] text-[12px] font-semibold">Ver ocorrência</Link>
+    </div>}
+    <label className="text-[#586a80] text-[13px] flex flex-col gap-[6px]">Justificativa pública (obrigatória)
+      <textarea className={`${campoClasse} min-h-[100px] resize-y`} value={justificativa}
+        maxLength={500} disabled={salvando} onChange={event => setJustificativa(event.target.value)} />
+    </label>
+    <p className="text-[#586a80] text-[12px]">Esta justificativa será pública. {justificativa.length}/500 caracteres.</p>
+    {selecionada && <p className="text-[#10284a] text-[12px] [overflow-wrap:anywhere]">Justificativa: {justificativa.trim() || "Ainda não informada."}</p>}
+    <button type="button" disabled={!selecionada || !justificativa.trim() || salvando} onClick={() => void confirmar()}
+      className="self-start w-full sm:w-auto rounded-[12px] bg-[#075ce5] px-[18px] py-[12px] text-white text-[13px] font-semibold disabled:opacity-50 cursor-pointer">
+      {salvando ? "Confirmando..." : "Confirmar duplicidade"}
+    </button>
+    {erroAcao && <p role="alert" className="text-[#586a80] text-[13px]">{erroAcao}</p>}
+  </section>;
+}
+
 type DetalheProps = Props & { id: string; onVoltar: () => void };
-function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading }: DetalheProps) {
+function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading, categoriasError }: DetalheProps) {
   const { profile } = useAuth();
   const [dados, setDados] = useState<DetalheOcorrencia | null>(null);
   const [historico, setHistorico] = useState<HistoricoAdministrativoOcorrencia[]>([]);
@@ -137,6 +314,8 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading }: 
   const [justificativa, setJustificativa] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState("");
+  const [painelDuplicidade, setPainelDuplicidade] = useState(false);
+  const [principalTitulo, setPrincipalTitulo] = useState<string | null>(null);
   const operando = useRef(false);
 
   const recarregar = useCallback(async () => {
@@ -166,10 +345,24 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading }: 
   const ocorrencia = dados?.ocorrencia;
   const opcoes = ocorrencia && profile ? proximosStatus(ocorrencia.status, profile.papel) : [];
   const obrigatoria = ocorrencia && novoStatus ? exigeJustificativa(ocorrencia.status, novoStatus) : false;
+  const podeMarcarDuplicidade = !!ocorrencia && !!profile &&
+    (profile.papel === "moderador" || profile.papel === "administrador") &&
+    STATUS_ORIGEM_DUPLICIDADE.includes(ocorrencia.status);
   const campoClasse = "w-full min-w-0 rounded-[12px] border border-[#d7e3f0] bg-white px-[12px] py-[11px] text-[13px] text-[#10284a]";
 
+  useEffect(() => {
+    const principalId = dados?.ocorrencia.ocorrenciaPrincipalId;
+    if (!principalId) { setPrincipalTitulo(null); return; }
+    let ativo = true;
+    setPrincipalTitulo(null);
+    void buscarTituloPrincipal(principalId).then(titulo => {
+      if (ativo) setPrincipalTitulo(titulo);
+    }).catch(() => { if (ativo) setPrincipalTitulo(null); });
+    return () => { ativo = false; };
+  }, [dados?.ocorrencia.ocorrenciaPrincipalId]);
+
   async function alterarStatus() {
-    if (!ocorrencia || !novoStatus || operando.current) return;
+    if (!ocorrencia || !novoStatus || operando.current || painelDuplicidade) return;
     const texto = justificativa.trim();
     if (obrigatoria && !texto) {
       setMensagem("Informe uma justificativa pública para esta alteração.");
@@ -220,13 +413,42 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading }: 
               <div><dt className="text-[#586a80]">Localização</dt><dd className="text-[#10284a] font-semibold">{ocorrencia.latitude != null && ocorrencia.longitude != null ? `${ocorrencia.latitude}, ${ocorrencia.longitude}` : "Não informada"}</dd></div>
               <div><dt className="text-[#586a80]">Registrado em</dt><dd className="text-[#10284a] font-semibold">{new Date(ocorrencia.criadoEm).toLocaleString("pt-BR")}</dd></div>
             </dl>
+            {ocorrencia.status === "duplicado" && ocorrencia.ocorrenciaPrincipalId &&
+              <div className="border-t border-[#e8eef5] pt-[12px] flex flex-col gap-[4px] min-w-0">
+                <p className="text-[#586a80] text-[12px]">Ocorrência principal</p>
+                <Link to={`/moderacao/${encodeURIComponent(ocorrencia.ocorrenciaPrincipalId)}`}
+                  className="text-[#075ce5] text-[13px] font-semibold [overflow-wrap:anywhere]">
+                  {principalTitulo ?? "Ver ocorrência principal"}
+                </Link>
+              </div>}
           </section>
           <div className="min-w-0 flex flex-col gap-[16px]">
+            {podeMarcarDuplicidade && !painelDuplicidade &&
+              <section className="min-w-0 bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[9px]">
+                <h2 className="text-[#10284a] text-[18px] font-bold">Duplicidade</h2>
+                <button type="button" disabled={salvando} onClick={() => { setPainelDuplicidade(true); setMensagem(""); }}
+                  className="self-start rounded-[12px] bg-[#075ce5] px-[18px] py-[12px] text-white text-[13px] font-semibold disabled:opacity-50 cursor-pointer">
+                  Marcar como duplicada
+                </button>
+              </section>}
+            {podeMarcarDuplicidade && painelDuplicidade &&
+              <PainelDuplicidade ocorrencia={ocorrencia} categorias={categorias} categoriasLoading={categoriasLoading}
+                categoriasError={categoriasError} onFechar={() => setPainelDuplicidade(false)}
+                onConcluido={async () => {
+                  await recarregar();
+                  setPainelDuplicidade(false);
+                  setMensagem("Ocorrência marcada como duplicada. A justificativa pública foi registrada no histórico.");
+                }}
+                onConflito={async () => {
+                  await recarregar();
+                  setPainelDuplicidade(false);
+                  setMensagem("Esta ocorrência foi atualizada por outra pessoa. Recarregamos os dados.");
+                }} />}
             <section className="min-w-0 bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[12px]">
               <h2 className="text-[#10284a] text-[18px] font-bold">Alterar status</h2>
               {opcoes.length ? <>
                 <label className="text-[#586a80] text-[13px] flex flex-col gap-[6px]">Novo status
-                  <select className={campoClasse} value={novoStatus} disabled={salvando}
+                  <select className={campoClasse} value={novoStatus} disabled={salvando || painelDuplicidade}
                     onChange={e => { setNovoStatus(e.target.value as StatusOcorrencia | ""); setMensagem(""); }}>
                     <option value="">Selecione</option>
                     {opcoes.map(item => <option key={item} value={item}>{METADADOS_STATUS[item].label}</option>)}
@@ -234,10 +456,10 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading }: 
                 </label>
                 <label className="text-[#586a80] text-[13px] flex flex-col gap-[6px]">Justificativa pública {obrigatoria ? "(obrigatória)" : "(opcional)"}
                   <textarea className={`${campoClasse} min-h-[100px] resize-y`} value={justificativa}
-                    maxLength={500} disabled={salvando} onChange={e => setJustificativa(e.target.value)} />
+                    maxLength={500} disabled={salvando || painelDuplicidade} onChange={e => setJustificativa(e.target.value)} />
                 </label>
                 <p className="text-[#586a80] text-[12px]">Esta justificativa será pública. {justificativa.length}/500 caracteres.</p>
-                <button type="button" disabled={!novoStatus || salvando || (obrigatoria && !justificativa.trim())}
+                <button type="button" disabled={!novoStatus || salvando || painelDuplicidade || (obrigatoria && !justificativa.trim())}
                   onClick={() => void alterarStatus()}
                   className="self-start rounded-[12px] bg-[#075ce5] px-[18px] py-[12px] text-white text-[13px] font-semibold disabled:opacity-50 cursor-pointer">
                   {salvando ? "Atualizando..." : "Confirmar alteração"}
