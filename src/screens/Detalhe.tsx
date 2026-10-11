@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, tempoOcorrencia } from "@/data/ocorrencias";
 import { CategoriaOcorrencia, resolverCategoria } from "@/hooks/useCategorias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import GaleriaOcorrencia from "@/components/GaleriaOcorrencia";
 import { useAuth } from "@/context/AuthContext";
-import { buscarOcorrenciaPorId, ehUuidOcorrencia, type DetalheOcorrencia } from "@/lib/ocorrencias";
+import { buscarOcorrenciaPorId, buscarResumoOcorrencia, ehUuidOcorrencia, type DetalheOcorrencia, type ResumoOcorrencia } from "@/lib/ocorrencias";
 import type { FotoOcorrenciaLeitura } from "@/lib/fotosOcorrencias";
 import { buscarMinhaConfirmacao, buscarEstadoConfirmacao, confirmarOcorrencia, desfazerConfirmacao, mensagemErroConfirmacao, sessaoConfirmacaoExpirada } from "@/lib/confirmacoes";
 import { buscarHistoricoOcorrencia, type HistoricoPublicoOcorrencia } from "@/lib/historicoOcorrencias";
@@ -267,6 +267,58 @@ function HistoricoReal({ ocorrenciaId }: { ocorrenciaId: string }) {
   );
 }
 
+type EstadoPrincipal =
+  | { status: "carregando" }
+  | { status: "erro" }
+  | { status: "indisponivel" }
+  | { status: "pronto"; resumo: ResumoOcorrencia };
+
+function AvisoDuplicidade({ principalId, categorias, categoriasLoading }: {
+  principalId: string | null;
+  categorias: CategoriaOcorrencia[];
+  categoriasLoading: boolean;
+}) {
+  const [estado, setEstado] = useState<EstadoPrincipal>({ status: "carregando" });
+
+  useEffect(() => {
+    if (!principalId) return;
+    let ativo = true;
+    setEstado({ status: "carregando" });
+    void buscarResumoOcorrencia(principalId).then(resumo => {
+      if (ativo) setEstado(resumo ? { status: "pronto", resumo } : { status: "indisponivel" });
+    }).catch(() => {
+      if (ativo) setEstado({ status: "erro" });
+    });
+    return () => { ativo = false; };
+  }, [principalId]);
+
+  return <aside aria-label="Ocorrência duplicada"
+    className="w-full min-w-0 rounded-[16px] border border-[#d7e3f0] bg-[#e8f0fe] p-[16px] flex flex-col gap-[8px] [overflow-wrap:anywhere]">
+    <h2 className="text-[#10284a] text-[16px] font-bold">Esta ocorrência foi marcada como duplicada.</h2>
+    <p className="text-[#586a80] text-[13px]">Ela se refere a um problema já registrado anteriormente.</p>
+    {principalId && (estado.status === "carregando"
+      ? <p role="status" className="text-[#586a80] text-[12px]">Carregando ocorrência principal...</p>
+      : estado.status === "erro"
+        ? <p role="alert" className="text-[#586a80] text-[12px]">Não foi possível carregar a ocorrência principal agora.</p>
+        : estado.status === "indisponivel"
+          ? <p className="text-[#586a80] text-[12px]">Ocorrência principal indisponível.</p>
+          : <div className="min-w-0 rounded-[12px] bg-white p-[12px] flex flex-col gap-[5px]">
+            <p className="text-[#10284a] text-[13px] font-semibold">{estado.resumo.titulo}</p>
+            <p className="text-[#586a80] text-[12px]">
+              {resolverCategoria(estado.resumo.categoriaId, categorias)?.nome
+                ?? (categoriasLoading ? "Carregando categoria..." : "Categoria indisponível")}
+              {" · "}{METADADOS_STATUS[estado.resumo.status].label}
+            </p>
+            <p className="text-[#586a80] text-[12px]">{estado.resumo.bairro} · {estado.resumo.endereco}</p>
+            <p className="text-[#586a80] text-[12px]">Registrada em {new Date(estado.resumo.criadoEm).toLocaleDateString("pt-BR")}</p>
+            <Link to={`/ocorrencias/${encodeURIComponent(estado.resumo.id)}`}
+              className="self-start mt-[4px] rounded-[10px] bg-[#075ce5] px-[14px] py-[10px] text-white text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5]">
+              Ver ocorrência principal
+            </Link>
+          </div>)}
+  </aside>;
+}
+
 function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, onConfirmar, confirmadoPorMim, real, fotos }: Props & {
   ocorrencia: Ocorrencia; real: boolean; fotos: FotoOcorrenciaLeitura[];
 }) {
@@ -320,6 +372,10 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
               {localOcorrencia(ocorrencia)}
             </p>
           </div>
+
+          {real && ocorrencia.status === "duplicado" &&
+            <AvisoDuplicidade principalId={ocorrencia.ocorrenciaPrincipalId}
+              categorias={categorias} categoriasLoading={categoriasLoading} />}
 
           {/* Card resumo */}
           <div className="detail-summary bg-white rounded-[16px] w-full border border-[#e8eef5]">

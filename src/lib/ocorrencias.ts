@@ -4,6 +4,8 @@ import { carregarCapasOcorrencias, carregarFotosOcorrencia, type FotoOcorrenciaL
 
 export type OcorrenciaHome = Ocorrencia & { fotoPrincipalUrl: string | null };
 export type DetalheOcorrencia = { ocorrencia: Ocorrencia; fotos: FotoOcorrenciaLeitura[] };
+export type ResumoOcorrencia = Pick<Ocorrencia,
+  "id" | "categoriaId" | "titulo" | "status" | "bairro" | "endereco" | "criadoEm">;
 
 export function ehUuidOcorrencia(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -50,6 +52,28 @@ function mapearOcorrencia(data: OcorrenciaInserida): Omit<Ocorrencia, "quantidad
     resolvidoEm: data.resolvida_at,
     arquivadoEm: data.arquivada_at,
     ocorrenciaPrincipalId: data.ocorrencia_principal_id,
+  };
+}
+
+export async function buscarResumoOcorrencia(id: string): Promise<ResumoOcorrencia | null> {
+  if (!ehUuidOcorrencia(id)) return null;
+
+  const { data, error } = await supabase.from("ocorrencias")
+    .select("id, categoria_id, titulo, status, bairro, endereco, created_at")
+    .eq("id", id)
+    .maybeSingle<Pick<OcorrenciaInserida,
+      "id" | "categoria_id" | "titulo" | "status" | "bairro" | "endereco" | "created_at">>();
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    categoriaId: data.categoria_id,
+    titulo: data.titulo,
+    status: data.status,
+    bairro: data.bairro,
+    endereco: data.endereco,
+    criadoEm: data.created_at,
   };
 }
 
