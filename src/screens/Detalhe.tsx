@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, tempoOcorrencia } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, tempoOcorrencia, type StatusOcorrencia } from "@/data/ocorrencias";
 import { CategoriaOcorrencia, resolverCategoria } from "@/hooks/useCategorias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
@@ -10,6 +10,7 @@ import { buscarOcorrenciaPorId, buscarResumoOcorrencia, ehUuidOcorrencia, type D
 import type { FotoOcorrenciaLeitura } from "@/lib/fotosOcorrencias";
 import { buscarMinhaConfirmacao, buscarEstadoConfirmacao, confirmarOcorrencia, desfazerConfirmacao, mensagemErroConfirmacao, sessaoConfirmacaoExpirada } from "@/lib/confirmacoes";
 import { buscarHistoricoOcorrencia, type HistoricoPublicoOcorrencia } from "@/lib/historicoOcorrencias";
+import { buscarMinhaSinalizacaoAtiva, contarSinalizacoes, definirSinalizacao, desfazerSinalizacao, mensagemErroSinalizacao, sessaoSinalizacaoExpirada, type ContagensSinalizacoes, type MinhaSinalizacao, type TipoSinalizacao } from "@/lib/sinalizacoes";
 
 type Props = {
   activeTab: TabName;
@@ -267,6 +268,212 @@ function HistoricoReal({ ocorrenciaId }: { ocorrenciaId: string }) {
   );
 }
 
+const OPCOES_SINALIZACAO: { tipo: TipoSinalizacao; label: string }[] = [
+  { tipo: "atendimento_iniciado", label: "Atendimento começou" },
+  { tipo: "problema_resolvido", label: "Problema resolvido" },
+  { tipo: "continua_igual", label: "Continua igual" },
+  { tipo: "piorou", label: "Piorou" },
+];
+
+type EstadoMinhaSinalizacao =
+  | { status: "carregando" }
+  | { status: "erro"; sessaoExpirada: boolean }
+  | { status: "pronto"; valor: MinhaSinalizacao | null };
+type EstadoTotaisSinalizacoes =
+  | { status: "carregando" | "erro" | "indisponivel" }
+  | { status: "pronto"; valor: ContagensSinalizacoes };
+
+function SinalizacoesReal({ ocorrenciaId, status }: { ocorrenciaId: string; status: StatusOcorrencia }) {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const usuarioId = user?.id ?? null;
+  const [minha, setMinha] = useState<EstadoMinhaSinalizacao>({ status: "carregando" });
+  const [totais, setTotais] = useState<EstadoTotaisSinalizacoes>({ status: "carregando" });
+  const [acao, setAcao] = useState<"definindo" | "removendo" | null>(null);
+  const [aviso, setAviso] = useState<{ texto: string; erro: boolean } | null>(null);
+  const [precisaEntrar, setPrecisaEntrar] = useState(false);
+  const geracao = useRef(0);
+  const leituraMinha = useRef(0);
+  const leituraTotais = useRef(0);
+  const operando = useRef(false);
+  const aceitaNova = status !== "rejeitado" && status !== "arquivado";
+
+  async function atualizarMinha(versao: number) {
+    const leitura = ++leituraMinha.current;
+    if (!usuarioId) {
+      setMinha({ status: "pronto", valor: null });
+      return;
+    }
+    setMinha({ status: "carregando" });
+    try {
+      const valor = await buscarMinhaSinalizacaoAtiva(ocorrenciaId);
+      if (geracao.current === versao && leituraMinha.current === leitura) {
+        setMinha({ status: "pronto", valor });
+      }
+    } catch (error) {
+      if (geracao.current === versao && leituraMinha.current === leitura) {
+        setMinha({ status: "erro", sessaoExpirada: sessaoSinalizacaoExpirada(error) });
+      }
+    }
+  }
+
+  async function atualizarTotais(versao: number) {
+    const leitura = ++leituraTotais.current;
+    setTotais({ status: "carregando" });
+    try {
+      const valor = await contarSinalizacoes(ocorrenciaId);
+      if (geracao.current === versao && leituraTotais.current === leitura) {
+        setTotais(valor === null ? { status: "indisponivel" } : { status: "pronto", valor });
+      }
+    } catch {
+      if (geracao.current === versao && leituraTotais.current === leitura) setTotais({ status: "erro" });
+    }
+  }
+
+  useEffect(() => {
+    const versao = ++geracao.current;
+    void atualizarMinha(versao);
+    void atualizarTotais(versao);
+    const atualizarAoRetornar = () => {
+      if (document.visibilityState !== "visible" || operando.current) return;
+      void atualizarMinha(versao);
+      void atualizarTotais(versao);
+    };
+    window.addEventListener("focus", atualizarAoRetornar);
+    document.addEventListener("visibilitychange", atualizarAoRetornar);
+    return () => {
+      ++geracao.current;
+      window.removeEventListener("focus", atualizarAoRetornar);
+      document.removeEventListener("visibilitychange", atualizarAoRetornar);
+    };
+  }, [ocorrenciaId, usuarioId]);
+
+  async function entrarNovamente() {
+    if (operando.current) return;
+    operando.current = true;
+    try {
+      const { error } = await signOut();
+      if (error) throw error;
+      navigate("/entrar", { state: { from: `/ocorrencias/${ocorrenciaId}` } });
+    } catch {
+      setAviso({ texto: "Não foi possível renovar o acesso. Tente entrar novamente.", erro: true });
+    } finally {
+      operando.current = false;
+    }
+  }
+
+  async function alterar(tipo?: TipoSinalizacao) {
+    if (operando.current) return;
+    if (!usuarioId) {
+      navigate("/entrar", { state: { from: `/ocorrencias/${ocorrenciaId}` } });
+      return;
+    }
+    if (minha.status !== "pronto" || (tipo && !aceitaNova) ||
+      (tipo && minha.valor?.tipo === tipo) || (!tipo && !minha.valor)) return;
+
+    const versao = geracao.current;
+    operando.current = true;
+    setAcao(tipo ? "definindo" : "removendo");
+    setAviso(null);
+    let falha: unknown;
+    try {
+      if (tipo) await definirSinalizacao(ocorrenciaId, tipo, minha.valor?.id ?? null);
+      else if (minha.valor) await desfazerSinalizacao(ocorrenciaId, minha.valor.id);
+    } catch (error) {
+      falha = error;
+    }
+
+    // A resposta da RPC pode chegar apos uma mudanca em outra aba. O estado
+    // exibido sempre vem de uma nova leitura, inclusive quando houve erro.
+    if (geracao.current === versao) {
+      await Promise.all([atualizarMinha(versao), atualizarTotais(versao)]);
+      if (geracao.current === versao) {
+        setPrecisaEntrar(sessaoSinalizacaoExpirada(falha));
+        setAviso(falha
+          ? { texto: mensagemErroSinalizacao(falha), erro: true }
+          : tipo ? null : { texto: "Sua sinalização foi removida.", erro: false });
+      }
+    }
+    if (geracao.current === versao) setAcao(null);
+    operando.current = false;
+  }
+
+  const selecionado = minha.status === "pronto" ? minha.valor?.tipo : null;
+  const ocupado = acao !== null;
+
+  return (
+    <section className="w-full min-w-0 flex flex-col gap-[12px]" aria-labelledby="sinalizacoes-titulo">
+      <div className="flex flex-col gap-[4px]">
+        <h2 id="sinalizacoes-titulo" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">
+          Como está este problema agora?
+        </h2>
+        <p className="text-[#586a80] text-[12px]">Compartilhe como você percebe a situação atualmente.</p>
+      </div>
+      <div className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] w-full min-w-0 flex flex-col gap-[12px]">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-[8px] w-full min-w-0" aria-busy={ocupado}>
+          {OPCOES_SINALIZACAO.map(opcao => {
+            const ativa = selecionado === opcao.tipo;
+            const bloqueada = ocupado || !aceitaNova || precisaEntrar || (Boolean(usuarioId) && minha.status !== "pronto");
+            return (
+              <button key={opcao.tipo} type="button" aria-pressed={ativa}
+                disabled={bloqueada}
+                onClick={() => void alterar(opcao.tipo)}
+                className={`min-w-0 rounded-[12px] border px-[12px] py-[12px] text-left text-[13px] font-semibold [overflow-wrap:anywhere] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5] ${ativa
+                  ? "border-[#075ce5] bg-[#e8f0fe] text-[#075ce5]"
+                  : "border-[#d7e3f0] bg-white text-[#10284a] hover:bg-[#f3f6fa]"}
+                  disabled:cursor-not-allowed disabled:opacity-60`}
+              >
+                {opcao.label}
+                {ativa && <span className="block font-normal text-[11px] mt-[3px]">✓ Você marcou esta opção</span>}
+              </button>
+            );
+          })}
+        </div>
+        {!aceitaNova && <p className="text-[#586a80] text-[12px]">
+          Esta ocorrência não aceita novas sinalizações.
+        </p>}
+        {usuarioId && minha.status === "carregando" &&
+          <p role="status" className="text-[#586a80] text-[12px]">Consultando sua sinalização...</p>}
+        {usuarioId && minha.status === "erro" &&
+          <div className="flex flex-wrap items-center gap-[8px]">
+            <p role="alert" className="text-[#586a80] text-[12px]">Não foi possível consultar sua sinalização.</p>
+            <button type="button" onClick={() => minha.sessaoExpirada
+              ? void entrarNovamente() : void atualizarMinha(geracao.current)}
+              className="text-[#075ce5] text-[12px] font-semibold cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2">
+              {minha.sessaoExpirada ? "Entrar novamente" : "Tentar novamente"}
+            </button>
+          </div>}
+        {usuarioId && minha.status === "pronto" && precisaEntrar &&
+          <button type="button" onClick={() => void entrarNovamente()}
+            className="self-start text-[#075ce5] text-[12px] font-semibold cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2">
+            Entrar novamente
+          </button>}
+        {usuarioId && minha.status === "pronto" && minha.valor &&
+          <button type="button" disabled={ocupado || precisaEntrar}
+            onClick={() => void alterar()}
+            className="self-start text-[#075ce5] text-[12px] font-semibold cursor-pointer disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2">
+            {acao === "removendo" ? "Removendo sinalização..." : "Remover minha sinalização"}
+          </button>}
+        {acao === "definindo" && <p role="status" className="text-[#586a80] text-[12px]">Enviando sinalização...</p>}
+        {aviso && <p role={aviso.erro ? "alert" : "status"} className="text-[#586a80] text-[12px]">{aviso.texto}</p>}
+        <div className="border-t border-[#e8eef5] pt-[12px] flex flex-col gap-[8px]" aria-busy={totais.status === "carregando"}>
+          {totais.status === "carregando" ?
+            <p role="status" className="text-[#586a80] text-[12px]">Carregando sinalizações da comunidade...</p>
+            : totais.status === "pronto" ? OPCOES_SINALIZACAO.map(opcao => (
+              <div key={opcao.tipo} className="flex items-center justify-between gap-[12px] min-w-0 text-[12px]">
+                <span className="text-[#586a80] min-w-0">{opcao.label}</span>
+                <strong className="text-[#10284a] shrink-0">{totais.valor[opcao.tipo]}</strong>
+              </div>
+            )) : <p role={totais.status === "erro" ? "alert" : "status"} className="text-[#586a80] text-[12px]">
+              {totais.status === "erro" ? "Não foi possível carregar as sinalizações da comunidade agora."
+                : "Sinalizações da comunidade indisponíveis."}
+            </p>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 type EstadoPrincipal =
   | { status: "carregando" }
   | { status: "erro" }
@@ -440,6 +647,8 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
               </div>
             </div>
           </div>
+
+          {real && <SinalizacoesReal ocorrenciaId={ocorrencia.id} status={ocorrencia.status} />}
 
           {/* Atualizações */}
           {real && <HistoricoReal ocorrenciaId={ocorrencia.id} />}
