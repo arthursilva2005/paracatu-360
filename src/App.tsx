@@ -266,8 +266,6 @@ export default function App() {
               activeTab={activeTab}
               onNavigate={navigate}
               onBack={goBack}
-              onOpenDetalhe={openDetalhe}
-              ocorrencias={ocorrencias}
               {...categoriasState}
             />
           } />
