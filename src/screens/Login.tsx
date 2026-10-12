@@ -249,7 +249,7 @@ export default function Login() {
 
       {/* Rodapé */}
       <div className="w-full px-[28px] pb-[28px] pt-[8px]">
-        <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[10px] text-center">PROTÓTIPO · DADOS DE DEMONSTRAÇÃO</p>
+        <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[10px] text-center">PARACATU 360 · PARTICIPAÇÃO CIDADÃ</p>
       </div>
     </div>
   );

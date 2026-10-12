@@ -1,168 +1,64 @@
 # Paracatu 360
 
-O Paracatu 360 é uma plataforma de participação cidadã voltada ao registro e acompanhamento de problemas urbanos em Paracatu-MG. A proposta é facilitar a comunicação de situações relacionadas à infraestrutura, trânsito e vias, limpeza urbana, meio ambiente, água e saneamento, reunindo essas informações de forma organizada, visual e acessível.
-Atualmente, o projeto encontra-se na fase de protótipo/MVP web, utilizada para validar a experiência do usuário, os fluxos da aplicação e as principais regras de negócio.
+Plataforma web de participação cidadã para registrar e acompanhar problemas urbanos em Paracatu, Minas Gerais. O projeto está em fase de MVP e ainda passa por validação antes da apresentação final.
 
 ## Estado atual
 
-O projeto está em fase de protótipo frontend. Os dados são mockados e as novas ocorrências ficam em memória durante a sessão. A navegação usa React Router e as telas preservam layouts para desktop e mobile.
+O frontend usa React 19, TypeScript, Vite 8, React Router 7 e Tailwind CSS 4. O Supabase fornece PostgreSQL, autenticação, regras de acesso (RLS) e Storage privado para as fotos.
 
-## Tecnologias
+Já são reais: cadastro e login, sessão persistente, recuperação de senha, categorias ativas, registro de ocorrências com localização escolhida no mapa e endereço/bairro informados pelo usuário, upload de uma a três fotos, listagem e detalhe, confirmações, sinalizações comunitárias, histórico de status, perfil, atividade, mapa, indicadores e moderação por papéis. O status oficial é controlado pelas regras do banco.
 
-- React 19 e React DOM 19
-- TypeScript 5.7
-- Vite 8
-- React Router 7
-- Tailwind CSS 4
-- Oxfmt para formatação
-- npm como gerenciador local, com `package-lock.json`
+Os cinco registros de exemplo com IDs de `1` a `5` continuam disponíveis apenas no detalhe legado para compatibilidade. Eles não abastecem as listagens reais da Home, Mapa, Perfil, Atividade ou Indicadores. Notificações e configurações ainda não possuem fluxo próprio. O cadastro por e-mail e a recuperação dependem da configuração de entrega de e-mails no Supabase.
 
-## Rotas
+## Executar localmente
 
-| Rota | Tela |
-| --- | --- |
-| `/entrar` | Login do protótipo |
-| `/` | Início, filtros e lista de ocorrências |
-| `/mapa` | Mapa demonstrativo e ocorrências |
-| `/ocorrencias/nova` | Formulário de nova ocorrência |
-| `/ocorrencias/:id` | Detalhes da ocorrência pelo ID |
-| `/atividade` | Atividade e ocorrências recentes |
-| `/perfil` | Perfil mockado e ocorrências relacionadas |
-| `/indicadores` | Dashboard 360 |
+Use Node.js 22.12 ou superior, até a versão 24, e npm. Copie os nomes abaixo para um arquivo local `.env.local` e preencha com os dados públicos do projeto Supabase:
 
-IDs inexistentes em `/ocorrencias/:id` retornam para a Home de forma segura.
+```dotenv
+VITE_SUPABASE_URL=<url-do-projeto>
+VITE_SUPABASE_PUBLISHABLE_KEY=<chave-publicavel>
+```
 
-## Como executar
+Esses valores são incorporados ao frontend durante o build. Nunca use a chave `service_role` ou uma chave secreta em variável com prefixo `VITE_`. O arquivo `.env.local` é ignorado pelo Git.
 
 ```sh
 npm install
 npm run dev
-```
-
-O servidor de desenvolvimento usa a porta 8443. Para gerar a versão de produção:
-
-```sh
+npx tsc --noEmit
 npm run build
 ```
 
-Verificação TypeScript:
+O servidor local usa a porta 8443 por padrão. O build gera `dist/`.
 
-```sh
-npx tsc --noEmit
-```
+## Rotas
 
-## Funcionalidades atuais
+| Públicas | Acesso |
+| --- | --- |
+| `/`, `/mapa`, `/indicadores`, `/ocorrencias/:id` | Consulta |
+| `/entrar`, `/recuperar-senha`, `/redefinir-senha` | Autenticação e recuperação |
 
-- navegação por rotas, com suporte ao histórico do navegador;
-- início com ordenação por relevância e filtros pelas categorias atuais;
-- cadastro de ocorrência em memória;
-- título digitado com validação de 5 a 80 caracteres;
-- descrição limitada a 300 caracteres;
-- estado de sucesso após o cadastro, com ações para ver a ocorrência ou voltar ao início;
-- detalhe de ocorrência por ID;
-- confirmação de uma ocorrência uma vez por sessão;
-- cálculo de relevância a partir da quantidade de confirmações;
-- mapa, atividade, perfil e indicadores usando os dados mockados atuais;
-- navegação lateral no desktop e inferior no mobile.
+| Protegidas | Acesso |
+| --- | --- |
+| `/ocorrencias/nova`, `/atividade`, `/perfil` | Usuário autenticado |
+| `/moderacao`, `/moderacao/:id` | Moderador ou administrador |
 
-## O que ainda é mock ou futuro
+O aplicativo usa `BrowserRouter`. Na Vercel, `vercel.json` reescreve os caminhos da aplicação para `index.html` para permitir acesso direto e recarga das rotas. RLS e permissões do Supabase continuam sendo a proteção dos dados.
 
-- não há Supabase, backend, persistência ou autenticação real;
-- localização, GPS e mapa são demonstrativos;
-- fotos e vídeos não são enviados; o cadastro usa `fotos: []`;
-- sinalizações da comunidade, histórico de status, permissões e moderação ainda são apenas contratos de dados;
-- datas exibidas nos mocks usam textos ilustrativos; os objetos já possuem timestamps ISO para evolução futura;
-- categorias oficiais dinâmicas coexistem temporariamente com os nomes legados exibidos pela interface para preservar o visual e os filtros atuais.
+## Preview Deployment
 
-## Modelo resumido de Ocorrência
+A branch de trabalho atual é `feature/supabase`; `desenvolvimento` é a branch de integração e `main` fica reservada para produção aprovada. Não há URL de deploy definida neste repositório.
 
-O contrato principal está em `src/data/ocorrencias.ts`:
+Na Vercel, configure o projeto como Vite, Node.js 24.x e as duas variáveis `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` nos ambientes que forem utilizados. O repositório fixa `npm ci` para instalação e `npm run build` para gerar `dist/`, porque o lockfile npm convive com o lockfile pnpm preservado para a integração Figma Make.
 
-```ts
-interface Ocorrencia {
-  id: string;
-  autorId: string;
-  categoriaId: string;
-  titulo: string;
-  descricao: string;
-  status: StatusOcorrencia;
-  endereco: string;
-  bairro: string;
-  latitude: number;
-  longitude: number;
-  fotos: FotoOcorrencia[];
-  criadoEm: string;
-  atualizadoEm: string;
-  resolvidoEm: string | null;
-  arquivadoEm: string | null;
-  ocorrenciaPrincipalId: string | null;
-  quantidadeConfirmacoes: number;
-}
-```
+Após obter a URL de Preview, adicione ao Supabase Auth apenas os retornos necessários para esse endereço, especialmente `/redefinir-senha`. O cadastro atual usa a Site URL configurada no Supabase quando não informa um redirecionamento próprio.
 
-Os IDs são strings para manter compatibilidade com os mocks atuais e futuros UUIDs. Status usam códigos internos, como `registrado`, `em_analise`, `encaminhado`, `em_andamento` e `resolvido`, enquanto textos e cores da interface vêm de metadados centralizados. A relevância é derivada: 0–14 confirmações representam baixa, 15–29 média e 30 ou mais alta.
+## Próximas etapas
 
-### Status das ocorrências
-
-O fluxo principal previsto é:
-
-`Registrado → Em análise → Encaminhado → Em andamento → Resolvido`
-
-Também estão previstos os estados especiais:
-
-- `Rejeitado`: ocorrência inválida, inadequada ou fora do escopo;
-- `Duplicado`: problema já representado por outra ocorrência;
-- `Arquivado`: ocorrência retirada dos fluxos ativos sem exclusão definitiva.
-
-Os estados especiais estão preparados no modelo, mas os fluxos de moderação ainda não estão implementados.
-
-### Categorias
-
-O catálogo de domínio preparado para a evolução do projeto contém:
-
-- Trânsito e Vias
-- Infraestrutura
-- Limpeza Urbana
-- Meio Ambiente
-- Água e Saneamento
-- Outros
-
-A interface atual ainda mantém temporariamente categorias legadas do protótipo para preservar os mocks, filtros e comportamento visual existentes. A migração completa da interface para o catálogo oficial será realizada em uma etapa posterior.
-
-## Roadmap
-
-### Base atual
-
-- Interface web responsiva
-- Navegação com React Router
-- Modelo de Ocorrência estruturado
-- Cadastro e consulta de ocorrências em memória
-- Confirmações e cálculo de relevância no frontend
-
-### Próximas etapas
-
-1. Integração com Supabase
-2. Autenticação e perfis de usuários
-3. Persistência das ocorrências
-4. Upload de uma a três fotos
-5. GPS e mapa com localização real
-6. Confirmações persistentes
-7. Histórico e sinalizações da comunidade
-8. Moderação e gestão de categorias/status
-9. Indicadores alimentados por dados reais
-
-### Futuro
-
-- PWA
-- Aplicativo mobile
-- Notificações
-- Possíveis integrações com a gestão pública
+- Validar os fluxos reais, as rotas diretas e a responsividade no Preview.
+- Configurar entrega de e-mail adequada antes de abrir o cadastro ao público.
+- Revisar textos, registros legados e acabamento visual para a apresentação.
+- Fazer auditoria de segurança e melhorias de desempenho antes do lançamento final.
 
 ## Equipe
 
-- Arthur
-- Bruno
-- Samuel
-- Hugo
-- Rodrigo
-- Vinicius
+Arthur, Bruno, Samuel, Hugo, Rodrigo e Vinicius.

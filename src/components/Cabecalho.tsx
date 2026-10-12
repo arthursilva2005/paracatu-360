@@ -10,7 +10,7 @@ export default function Cabecalho() {
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[10px]">Paracatu, Minas Gerais</p>
         </div>
         <div className="ml-auto">
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[9px] text-right">PROTÓTIPO</p>
+          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[9px] text-right">CIDADANIA</p>
         </div>
       </div>
     </div>

@@ -110,7 +110,7 @@ export default function RedefinirSenha() {
         </form>}
       </div>
       <div className="w-full px-[28px] pb-[28px] pt-[8px]">
-        <p className="text-[#586a80] text-[10px] text-center">PROTÓTIPO · DADOS DE DEMONSTRAÇÃO</p>
+        <p className="text-[#586a80] text-[10px] text-center">PARACATU 360 · PARTICIPAÇÃO CIDADÃ</p>
       </div>
     </div>
   );

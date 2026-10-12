@@ -79,7 +79,7 @@ export default function RecuperarSenha() {
         <Link to="/entrar" className="text-[#075ce5] text-[13px] font-semibold text-center">Voltar para entrar</Link>
       </form>
       <div className="w-full px-[28px] pb-[28px] pt-[8px]">
-        <p className="text-[#586a80] text-[10px] text-center">PROTÓTIPO · DADOS DE DEMONSTRAÇÃO</p>
+        <p className="text-[#586a80] text-[10px] text-center">PARACATU 360 · PARTICIPAÇÃO CIDADÃ</p>
       </div>
     </div>
   );
