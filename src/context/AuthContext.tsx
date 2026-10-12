@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -33,6 +34,8 @@ type AuthContextValue = {
   profile: Profile | null;
   profileError: string | null;
   loading: boolean;
+  passwordRecovery: boolean;
+  concluirRecuperacaoSenha: () => void;
   signIn: (email: string, password: string) => Promise<ResultadoAuth>;
   signUp: (nome: string, email: string, password: string) => Promise<ResultadoCadastro>;
   signOut: () => Promise<ResultadoAuth>;
@@ -53,6 +56,24 @@ const perfilInicial: ProfileState = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const RECOVERY_USER_KEY = "paracatu360:recovery-user";
+
+function lerUsuarioRecuperacao(): string | null {
+  try {
+    return window.sessionStorage.getItem(RECOVERY_USER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function guardarUsuarioRecuperacao(userId: string | null): void {
+  try {
+    if (userId) window.sessionStorage.setItem(RECOVERY_USER_KEY, userId);
+    else window.sessionStorage.removeItem(RECOVERY_USER_KEY);
+  } catch {
+    // O formulário ainda funciona na aba atual se o armazenamento estiver indisponível.
+  }
+}
 
 function papelValido(papel: unknown): papel is PapelUsuario {
   return papel === "cidadao" || papel === "moderador" || papel === "administrador";
@@ -62,7 +83,15 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [profileState, setProfileState] = useState<ProfileState>(perfilInicial);
+  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(lerUsuarioRecuperacao);
+  const recoveryUserIdRef = useRef(recoveryUserId);
   const user = session?.user ?? null;
+
+  function definirUsuarioRecuperacao(userId: string | null) {
+    recoveryUserIdRef.current = userId;
+    setRecoveryUserId(userId);
+    guardarUsuarioRecuperacao(userId);
+  }
 
   useEffect(() => {
     let ativo = true;
@@ -74,8 +103,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           console.error("Não foi possível restaurar a sessão do Supabase.", error);
           setSession(null);
+          definirUsuarioRecuperacao(null);
         } else {
           setSession(data.session);
+          if (!data.session) definirUsuarioRecuperacao(null);
         }
 
         setSessionLoading(false);
@@ -85,16 +116,24 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
         console.error("Não foi possível restaurar a sessão do Supabase.", error);
         setSession(null);
+        definirUsuarioRecuperacao(null);
         setSessionLoading(false);
       });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!ativo) return;
 
       setSession(nextSession);
       setSessionLoading(false);
+
+      if (event === "PASSWORD_RECOVERY" && nextSession?.user) {
+        definirUsuarioRecuperacao(nextSession.user.id);
+      } else if (!nextSession ||
+        (recoveryUserIdRef.current && nextSession.user.id !== recoveryUserIdRef.current)) {
+        definirUsuarioRecuperacao(null);
+      }
 
       if (!nextSession?.user) {
         setProfileState(perfilInicial);
@@ -178,6 +217,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string): Promise<ResultadoAuth> {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) definirUsuarioRecuperacao(null);
     return { error };
   }
 
@@ -192,12 +232,18 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
+    if (!error) definirUsuarioRecuperacao(null);
     return { error, session: data.session };
   }
 
   async function signOut(): Promise<ResultadoAuth> {
     const { error } = await supabase.auth.signOut();
+    if (!error) definirUsuarioRecuperacao(null);
     return { error };
+  }
+
+  function concluirRecuperacaoSenha(): void {
+    definirUsuarioRecuperacao(null);
   }
 
   const loading = sessionLoading
@@ -209,10 +255,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     profile: profileState.profile,
     profileError: profileState.error,
     loading,
+    passwordRecovery: Boolean(session && recoveryUserId === session.user.id),
+    concluirRecuperacaoSenha,
     signIn,
     signUp,
     signOut,
-  }), [loading, profileState.error, profileState.profile, session, user]);
+  }), [loading, profileState.error, profileState.profile, recoveryUserId, session, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

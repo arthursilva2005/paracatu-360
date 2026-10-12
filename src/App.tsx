@@ -13,6 +13,8 @@ import {
 import { criarOcorrencia, ehUuidOcorrencia, type DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
 import { supabase } from "@/lib/supabase";
 import Login from "@/screens/Login";
+import RecuperarSenha from "@/screens/RecuperarSenha";
+import RedefinirSenha from "@/screens/RedefinirSenha";
 import Inicio from "@/screens/Inicio";
 import Mapa from "@/screens/Mapa";
 import NovaOcorrencia from "@/screens/NovaOcorrencia";
@@ -96,7 +98,7 @@ export default function App() {
   const location = useLocation();
   const { user } = useAuth();
   const categoriasState = useCategorias();
-  const isLogin = useMatch("/entrar") !== null;
+  const isAuthScreen = ["/entrar", "/recuperar-senha", "/redefinir-senha"].includes(location.pathname);
   const detalheMatch = useMatch("/ocorrencias/:id");
   const moderacaoMatch = useMatch("/moderacao/:id");
   const [{ ocorrencias, confirmadas }, setEstado] = useState<{
@@ -197,8 +199,8 @@ export default function App() {
   const detalheId = detalheMatch?.params.id ?? "";
 
   return (
-    <div className={`app-shell ${isLogin ? "app-shell--login" : ""}`}>
-      {!isLogin && (
+    <div className={`app-shell ${isAuthScreen ? "app-shell--login" : ""}`}>
+      {!isAuthScreen && (
         <aside className="desktop-navigation">
           <p className="desktop-brand">Paracatu360</p>
           <p className="desktop-city">Paracatu, Minas Gerais</p>
@@ -209,6 +211,8 @@ export default function App() {
 
         <Routes>
           <Route path="/entrar" element={<RotaLogin />} />
+          <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
           <Route path="/" element={<Inicio activeTab={activeTab} onNavigate={navigate}
             onOpenDetalhe={openDetalhe}
             {...categoriasState} onOpenDashboard={openDashboard}

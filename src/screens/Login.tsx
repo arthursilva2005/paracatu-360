@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router";
 import logo from "@/assets/logoptu360.jpg";
 import { useAuth } from "@/context/AuthContext";
 
@@ -196,7 +197,7 @@ export default function Login() {
           )}
 
           {modo === "login" && (
-            <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[13px] text-right cursor-pointer">Esqueci minha senha</p>
+            <Link to="/recuperar-senha" className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[13px] text-right">Esqueci minha senha</Link>
           )}
           {mensagem && (
             <p role="status" className="font-['Inter:Regular',sans-serif] font-normal text-[#18794e] text-[13px] text-center">
