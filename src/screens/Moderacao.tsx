@@ -399,7 +399,7 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading, ca
           <p className="text-[#075ce5] text-[11px] font-semibold uppercase">Relato original · somente leitura</p>
           <h1 className="text-[#10284a] text-[24px] font-bold [overflow-wrap:anywhere]">{ocorrencia.titulo}</h1>
         </header>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[16px] w-full min-w-0 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[16px] w-full min-w-0 items-start">
           <section className="min-w-0 bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[12px]">
             <GaleriaOcorrencia fotos={dados?.fotos ?? []} titulo={ocorrencia.titulo} />
             <p className="text-[#10284a] text-[14px] leading-relaxed [overflow-wrap:anywhere]">{ocorrencia.descricao}</p>

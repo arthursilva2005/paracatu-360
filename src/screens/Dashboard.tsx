@@ -158,6 +158,7 @@ export default function Dashboard({
             />
           </div>
 
+          <div className="dashboard-analysis">
           {/* Distribuição por categoria */}
           <div className="dashboard-categories bg-white rounded-[16px] p-[16px] flex flex-col gap-[14px] border border-[#e8eef5]">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Ocorrências por categoria</p>
@@ -243,6 +244,7 @@ export default function Dashboard({
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[12px] w-[16px] text-right">{count}</p>
               </div>
             ))}
+          </div>
           </div>
 
           {/* Ocorrências mais recentes */}

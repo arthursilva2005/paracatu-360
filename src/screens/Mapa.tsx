@@ -67,6 +67,7 @@ export default function Mapa({
       <Cabecalho />
       <div className="screen-scroll flex-1 overflow-y-auto w-full">
         <div className="screen-content layout-mapa content-stretch flex flex-col gap-[16px] items-start p-[22px] relative w-full">
+          <div className="map-left-column">
           <MapaOcorrencias
             key={categoriaFiltro}
             ocorrencias={filtradas}
@@ -105,30 +106,33 @@ export default function Mapa({
             )}
           </div>
 
-          <div className="map-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[18px] w-full">Ocorrências no mapa</p>
-            {carregando ? (
-              <p role="status" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Carregando ocorrências...</p>
-            ) : erro ? (
-              <p role="alert" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências no mapa agora.</p>
-            ) : ordenadas.length === 0 ? (
-              <p className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">
-                {categoriaFiltro ? "Nenhuma ocorrência nesta categoria com localização disponível." :
-                  "Nenhuma ocorrência com localização disponível."}
-              </p>
-            ) : ordenadas.map(ocorrencia => (
-              <OcorrenciaCard key={ocorrencia.id} ocorrencia={ocorrencia}
-                categorias={categorias} categoriasLoading={categoriasLoading} exibirDataReal
-                onClick={() => onOpenDetalhe(ocorrencia.id)} />
-            ))}
-          </div>
-
           <button type="button" className="map-action bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90"
             onClick={() => onNavigate("nova")}>
             <span className="block p-[14px] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[14px] text-center">
               Registrar problema
             </span>
           </button>
+          </div>
+
+          <div className="map-right-column">
+            <div className="map-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[18px] w-full">Ocorrências no mapa</p>
+              {carregando ? (
+                <p role="status" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Carregando ocorrências...</p>
+              ) : erro ? (
+                <p role="alert" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências no mapa agora.</p>
+              ) : ordenadas.length === 0 ? (
+                <p className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">
+                  {categoriaFiltro ? "Nenhuma ocorrência nesta categoria com localização disponível." :
+                    "Nenhuma ocorrência com localização disponível."}
+                </p>
+              ) : ordenadas.map(ocorrencia => (
+                <OcorrenciaCard key={ocorrencia.id} ocorrencia={ocorrencia}
+                  categorias={categorias} categoriasLoading={categoriasLoading} exibirDataReal
+                  onClick={() => onOpenDetalhe(ocorrencia.id)} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       <Navegacao activeTab={activeTab} onNavigate={onNavigate} />

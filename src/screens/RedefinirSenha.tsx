@@ -1,8 +1,9 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Link, useLocation } from "react-router";
-import logo from "@/assets/logoptu360.jpg";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+
+const logo = `${import.meta.env.BASE_URL}logoptu360.jpg`;
 
 export default function RedefinirSenha() {
   const { session, loading, passwordRecovery, concluirRecuperacaoSenha } = useAuth();

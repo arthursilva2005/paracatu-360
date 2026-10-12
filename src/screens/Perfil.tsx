@@ -87,6 +87,7 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
       <div className="screen-scroll flex-1 overflow-y-auto w-full">
         <div className="screen-content layout-perfil content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
 
+          <div className="profile-sidebar">
           {/* Perfil do usuário */}
           <div className="profile-user content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Perfil</p>
@@ -179,6 +180,18 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
             </div>
           </div>
 
+          {/* Precisa de ajuda */}
+          <div className="profile-help content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Precisa de ajuda?</p>
+            <p className="[word-break:break-word] font-['Inter:Regular',sans-serif] font-normal leading-[1.45] not-italic relative shrink-0 text-[#586a80] text-[13px] w-full">Acesse o centro de ajuda ou entre em contato com a equipe.</p>
+            <div className="bg-[#075ce5] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90">
+              <div className="content-stretch flex flex-col items-start p-[14px] relative size-full">
+                <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[14px] text-center text-white w-full">Centro de ajuda</p>
+              </div>
+            </div>
+          </div>
+          </div>
+
           {/* Minhas ocorrências */}
           <div className="profile-list content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
             <div className="[word-break:break-word] content-stretch flex font-['Inter:Bold',sans-serif] font-bold items-center justify-between leading-[1.45] not-italic relative shrink-0 w-full">
@@ -207,17 +220,6 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
                 onClick={() => onOpenDetalhe(o.id)}
               />
             ))}
-          </div>
-
-          {/* Precisa de ajuda */}
-          <div className="profile-help content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Precisa de ajuda?</p>
-            <p className="[word-break:break-word] font-['Inter:Regular',sans-serif] font-normal leading-[1.45] not-italic relative shrink-0 text-[#586a80] text-[13px] w-full">Acesse o centro de ajuda ou entre em contato com a equipe.</p>
-            <div className="bg-[#075ce5] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90">
-              <div className="content-stretch flex flex-col items-start p-[14px] relative size-full">
-                <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[14px] text-center text-white w-full">Centro de ajuda</p>
-              </div>
-            </div>
           </div>
 
         </div>

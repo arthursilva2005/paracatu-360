@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import logo from "@/assets/logoptu360.jpg";
 import { supabase } from "@/lib/supabase";
 
+const logo = `${import.meta.env.BASE_URL}logoptu360.jpg`;
 const mensagemNeutra = "Se existir uma conta com este e-mail, enviaremos as instruções para redefinir sua senha.";
 
 export default function RecuperarSenha() {

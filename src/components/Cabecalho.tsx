@@ -1,4 +1,4 @@
-import logo from "@/assets/logoptu360.jpg";
+const logo = `${import.meta.env.BASE_URL}logoptu360.jpg`;
 
 export default function Cabecalho() {
   return (

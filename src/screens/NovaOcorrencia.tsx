@@ -333,6 +333,7 @@ export default function NovaOcorrencia({
               <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[14px] w-full">Descreva o problema, adicione fotos e escolha o local para abrir o registro.</p>
             </div>
 
+            <div className="new-report-fields">
             {/* Categoria — interativa */}
             <div className="new-category content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Qual é a categoria?</p>
@@ -366,68 +367,6 @@ export default function NovaOcorrencia({
               {erroCategoria && (
                 <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px]">{erroCategoria}</p>
               )}
-            </div>
-
-            {/* Localização real: GPS opcional, ponto obrigatório e endereço manual. */}
-            <div className="new-location content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Onde aconteceu?</p>
-              <div className="bg-white content-stretch flex flex-col gap-[14px] items-start p-[16px] relative rounded-[16px] shrink-0 w-full border border-[#d7e3f0]">
-                <div className="content-stretch flex gap-[12px] items-center relative shrink-0 w-full">
-                  <div className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[12px] shrink-0 size-[40px]">
-                    <MapPin />
-                  </div>
-                  <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start leading-[1.45] min-w-px not-italic relative">
-                    <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[14px] w-full">
-                      {ponto ? "Ponto selecionado no mapa" : "Nenhum ponto selecionado"}
-                    </p>
-                    <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">
-                      {ponto ? [ponto.latitude.toFixed(6), ponto.longitude.toFixed(6)].join(", ") : "Use o GPS ou escolha o local no mapa"}
-                    </p>
-                  </div>
-                </div>
-
-                <button type="button" onClick={usarMinhaLocalizacao}
-                  disabled={localizando || registrando || registroIncompleto}
-                  className="bg-[#f3f6fa] rounded-[12px] px-[14px] py-[11px] w-full text-left text-[#075ce5] text-[13px] font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
-                  {localizando ? "Localizando..." : "Usar minha localização"}
-                </button>
-                {erroGps && <p role="alert" className="text-[#dc2626] text-[12px] w-full">{erroGps}</p>}
-
-                <SeletorLocalizacao
-                  ponto={ponto}
-                  centralizarEm={centroGps}
-                  desabilitado={registrando || registroIncompleto || localizando}
-                  onChange={novoPonto => { setPonto(novoPonto); setErroPonto(""); setErroGps(""); }}
-                />
-                <div className="flex items-center gap-[8px] text-[#586a80] text-[12px] w-full">
-                  <EditIcon />
-                  <p>Toque no mapa ou arraste o ponto para ajustar o local.</p>
-                </div>
-                {erroPonto && <p role="alert" className="text-[#dc2626] text-[12px] w-full">{erroPonto}</p>}
-
-                <div className="flex flex-col gap-[6px] w-full">
-                  <label htmlFor="bairro-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Bairro</label>
-                  <input id="bairro-ocorrencia" type="text" value={bairro} required
-                    disabled={registrando || registroIncompleto}
-                    onChange={event => { setBairro(event.target.value); setErroBairro(""); }}
-                    aria-invalid={!!erroBairro}
-                    aria-describedby={erroBairro ? "erro-bairro" : undefined}
-                    placeholder="Informe o bairro"
-                    className="bg-white w-full min-w-0 rounded-[12px] px-[14px] py-[12px] border border-[#d7e3f0] text-[#10284a] text-[14px] outline-none focus:border-[#075ce5]" />
-                  {erroBairro && <p id="erro-bairro" role="alert" className="text-[#dc2626] text-[12px]">{erroBairro}</p>}
-                </div>
-                <div className="flex flex-col gap-[6px] w-full">
-                  <label htmlFor="endereco-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Endereço</label>
-                  <input id="endereco-ocorrencia" type="text" value={endereco} required
-                    disabled={registrando || registroIncompleto}
-                    onChange={event => { setEndereco(event.target.value); setErroEndereco(""); }}
-                    aria-invalid={!!erroEndereco}
-                    aria-describedby={erroEndereco ? "erro-endereco" : undefined}
-                    placeholder="Informe a rua ou referência"
-                    className="bg-white w-full min-w-0 rounded-[12px] px-[14px] py-[12px] border border-[#d7e3f0] text-[#10284a] text-[14px] outline-none focus:border-[#075ce5]" />
-                  {erroEndereco && <p id="erro-endereco" role="alert" className="text-[#dc2626] text-[12px]">{erroEndereco}</p>}
-                </div>
-              </div>
             </div>
 
             {/* Descrição — textarea real */}
@@ -538,6 +477,72 @@ export default function NovaOcorrencia({
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] text-center w-full">
                 Ao registrar, você receberá atualizações sobre o andamento do caso.
               </p>
+            </div>
+
+            </div>
+
+            <div className="new-location-column">
+              {/* Localização real: GPS opcional, ponto obrigatório e endereço manual. */}
+              <div className="new-location content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+                <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Onde aconteceu?</p>
+                <div className="bg-white content-stretch flex flex-col gap-[14px] items-start p-[16px] relative rounded-[16px] shrink-0 w-full border border-[#d7e3f0]">
+                  <div className="content-stretch flex gap-[12px] items-center relative shrink-0 w-full">
+                    <div className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[12px] shrink-0 size-[40px]">
+                      <MapPin />
+                    </div>
+                    <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start leading-[1.45] min-w-px not-italic relative">
+                      <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[14px] w-full">
+                        {ponto ? "Ponto selecionado no mapa" : "Nenhum ponto selecionado"}
+                      </p>
+                      <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">
+                        {ponto ? [ponto.latitude.toFixed(6), ponto.longitude.toFixed(6)].join(", ") : "Use o GPS ou escolha o local no mapa"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button type="button" onClick={usarMinhaLocalizacao}
+                    disabled={localizando || registrando || registroIncompleto}
+                    className="bg-[#f3f6fa] rounded-[12px] px-[14px] py-[11px] w-full text-left text-[#075ce5] text-[13px] font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+                    {localizando ? "Localizando..." : "Usar minha localização"}
+                  </button>
+                  {erroGps && <p role="alert" className="text-[#dc2626] text-[12px] w-full">{erroGps}</p>}
+
+                  <SeletorLocalizacao
+                    ponto={ponto}
+                    centralizarEm={centroGps}
+                    desabilitado={registrando || registroIncompleto || localizando}
+                    onChange={novoPonto => { setPonto(novoPonto); setErroPonto(""); setErroGps(""); }}
+                  />
+                  <div className="flex items-center gap-[8px] text-[#586a80] text-[12px] w-full">
+                    <EditIcon />
+                    <p>Toque no mapa ou arraste o ponto para ajustar o local.</p>
+                  </div>
+                  {erroPonto && <p role="alert" className="text-[#dc2626] text-[12px] w-full">{erroPonto}</p>}
+
+                  <div className="flex flex-col gap-[6px] w-full">
+                    <label htmlFor="bairro-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Bairro</label>
+                    <input id="bairro-ocorrencia" type="text" value={bairro} required
+                      disabled={registrando || registroIncompleto}
+                      onChange={event => { setBairro(event.target.value); setErroBairro(""); }}
+                      aria-invalid={!!erroBairro}
+                      aria-describedby={erroBairro ? "erro-bairro" : undefined}
+                      placeholder="Informe o bairro"
+                      className="bg-white w-full min-w-0 rounded-[12px] px-[14px] py-[12px] border border-[#d7e3f0] text-[#10284a] text-[14px] outline-none focus:border-[#075ce5]" />
+                    {erroBairro && <p id="erro-bairro" role="alert" className="text-[#dc2626] text-[12px]">{erroBairro}</p>}
+                  </div>
+                  <div className="flex flex-col gap-[6px] w-full">
+                    <label htmlFor="endereco-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Endereço</label>
+                    <input id="endereco-ocorrencia" type="text" value={endereco} required
+                      disabled={registrando || registroIncompleto}
+                      onChange={event => { setEndereco(event.target.value); setErroEndereco(""); }}
+                      aria-invalid={!!erroEndereco}
+                      aria-describedby={erroEndereco ? "erro-endereco" : undefined}
+                      placeholder="Informe a rua ou referência"
+                      className="bg-white w-full min-w-0 rounded-[12px] px-[14px] py-[12px] border border-[#d7e3f0] text-[#10284a] text-[14px] outline-none focus:border-[#075ce5]" />
+                    {erroEndereco && <p id="erro-endereco" role="alert" className="text-[#dc2626] text-[12px]">{erroEndereco}</p>}
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>

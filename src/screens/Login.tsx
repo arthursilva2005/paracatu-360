@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import logo from "@/assets/logoptu360.jpg";
 import { useAuth } from "@/context/AuthContext";
+
+const logo = `${import.meta.env.BASE_URL}logoptu360.jpg`;
 
 function mensagemErroLogin(error: { message: string; status?: number } | null): string {
   if (!error) return "";
@@ -109,7 +110,7 @@ export default function Login() {
           alt="Paracatu360"
           className="w-[200px] object-contain drop-shadow-lg"
         />
-        <p className="font-['Inter:Regular',sans-serif] font-normal text-white/80 text-[12px] mt-[12px] tracking-widest uppercase text-center">
+        <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] mt-[12px] tracking-widest uppercase text-center">
           Cidade Conectada, Resultados Reais.
         </p>
       </div>
