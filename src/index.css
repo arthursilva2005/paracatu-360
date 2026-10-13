@@ -105,8 +105,10 @@ body,
   .app-shell { display: grid; grid-template-columns: 216px minmax(0, 1fr); }
   .app-shell--login { display: block; }
   .desktop-navigation { display: block; background: white; border-right: 1px solid #e8eef5; padding: 28px 16px; overflow-y: auto; }
-  .desktop-brand { color: #075ce5; font: 700 22px Inter, sans-serif; }
-  .desktop-city { color: #586a80; font: 400 11px Inter, sans-serif; margin-top: 6px; margin-bottom: 32px; }
+  .desktop-identity { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+  .desktop-logo { width: 44px; height: 44px; object-fit: contain; flex: none; border-radius: 8px; }
+  .desktop-brand { color: #075ce5; font: 700 17px Inter, sans-serif; white-space: nowrap; }
+  .desktop-city { color: #586a80; font: 400 11px Inter, sans-serif; margin-top: 3px; white-space: nowrap; }
   .app-screen > .app-navigation { display: none; }
   .desktop-navigation .app-navigation { height: auto !important; padding: 0; border: 0; }
   .desktop-navigation .app-navigation > div { flex-direction: column; height: auto; padding: 0; gap: 8px; }

@@ -202,8 +202,13 @@ export default function App() {
     <div className={`app-shell ${isAuthScreen ? "app-shell--login" : ""}`}>
       {!isAuthScreen && (
         <aside className="desktop-navigation">
-          <p className="desktop-brand">Paracatu360</p>
-          <p className="desktop-city">Paracatu, Minas Gerais</p>
+          <div className="desktop-identity">
+            <img src={`${import.meta.env.BASE_URL}logoptu360.jpg`} alt="" className="desktop-logo" />
+            <div>
+              <p className="desktop-brand">Paracatu 360</p>
+              <p className="desktop-city">Paracatu, Minas Gerais</p>
+            </div>
+          </div>
           <Navegacao activeTab={activeTab} onNavigate={navigate} />
         </aside>
       )}
