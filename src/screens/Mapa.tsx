@@ -4,6 +4,7 @@ import { listarOcorrenciasPublicas } from "@/lib/ocorrencias";
 import type { EstadoCategorias } from "@/hooks/useCategorias";
 import { useAuth } from "@/context/AuthContext";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
+import FiltroCategorias from "@/components/FiltroCategorias";
 import MapaOcorrencias, { type OcorrenciaNoMapa } from "@/components/MapaOcorrencias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { type TabName } from "@/components/Navegacao";
@@ -79,21 +80,17 @@ export default function Mapa({
           />
 
           <div className="map-filters content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[18px] w-full">Filtros</p>
-            <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
-              <button type="button" onClick={() => setCategoriaFiltro("")} aria-pressed={categoriaFiltro === ""}
-                className={"relative rounded-[999px] px-[12px] py-[8px] text-[13px] font-semibold cursor-pointer " +
-                  (categoriaFiltro === "" ? "bg-[#075ce5] text-white" : "bg-white text-[#10284a] border border-[#d7e3f0]")}>
-                Todas
-              </button>
-              {categorias.map(categoria => (
-                <button key={categoria.id} type="button" onClick={() => setCategoriaFiltro(categoria.id)}
-                  aria-pressed={categoriaFiltro === categoria.id}
-                  className={"relative rounded-[999px] px-[12px] py-[8px] text-[13px] font-semibold cursor-pointer " +
-                    (categoriaFiltro === categoria.id ? "bg-[#075ce5] text-white" : "bg-white text-[#10284a] border border-[#d7e3f0]")}>
-                  {categoria.nome}
-                </button>
-              ))}
+            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[18px] w-full lg:hidden">Filtros</p>
+            <div className="w-full lg:hidden">
+              <FiltroCategorias categorias={categorias} selecionada={categoriaFiltro} onSelecionar={setCategoriaFiltro} />
+            </div>
+            <div className="hidden lg:flex flex-col gap-[6px] w-full">
+              <label htmlFor="mapa-categoria" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Categoria</label>
+              <select id="mapa-categoria" value={categoriaFiltro} onChange={event => setCategoriaFiltro(event.target.value)}
+                className="w-full rounded-[12px] border border-[#d7e3f0] bg-white px-[12px] py-[11px] text-[#10284a] text-[13px] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5]">
+                <option value="">Todas</option>
+                {categorias.map(categoria => <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>)}
+              </select>
             </div>
             {categoriasLoading && (
               <p className="text-[#586a80] text-[12px]">Carregando categorias...</p>

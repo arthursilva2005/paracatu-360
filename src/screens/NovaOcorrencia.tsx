@@ -153,8 +153,8 @@ export default function NovaOcorrencia({
 
   useEffect(() => {
     setCategoriaId(categoriaAtual => {
-      if (categorias.some(cat => cat.id === categoriaAtual)) return categoriaAtual;
-      return categorias[0]?.id ?? "";
+      if (!categoriaAtual || categorias.some(cat => cat.id === categoriaAtual)) return categoriaAtual;
+      return "";
     });
   }, [categorias]);
 
@@ -256,7 +256,7 @@ export default function NovaOcorrencia({
   async function handleRegistrar() {
     if (sucesso || envioEmAndamento.current || registroIncompleto || localizandoRef.current) return;
     if (!categoriaSelecionada || categoriasLoading || categoriasError) {
-      setErroCategoria("Selecione uma categoria disponível antes de registrar.");
+      setErroCategoria("Selecione a categoria do problema.");
       return;
     }
     const tituloValido = titulo.trim();
@@ -334,27 +334,22 @@ export default function NovaOcorrencia({
             </div>
 
             <div className="new-report-fields">
-            {/* Categoria — interativa */}
-            <div className="new-category content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Qual é a categoria?</p>
-              <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
-                {categorias.map(cat => (
-                  <button
-                    key={cat.id}
-                    disabled={registrando || registroIncompleto}
-                    onClick={() => { setCategoriaId(cat.id); setErroCategoria(""); }}
-                    className={`px-[12px] py-[8px] rounded-[999px] border-none outline-none cursor-pointer transition-all ${
-                      categoriaId === cat.id
-                        ? "bg-[#075ce5]"
-                        : "bg-white border border-[#d7e3f0]"
-                    }`}
-                  >
-                    <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] whitespace-nowrap ${categoriaId === cat.id ? "text-white" : "text-[#10284a]"}`}>
-                      {cat.nome}
-                    </p>
-                  </button>
-                ))}
-              </div>
+            {/* Categoria */}
+            <div className="new-category content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+              <label htmlFor="nova-categoria" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Categoria do problema</label>
+              <select
+                id="nova-categoria"
+                value={categoriaId}
+                onChange={event => { setCategoriaId(event.target.value); setErroCategoria(""); }}
+                disabled={categoriasLoading || Boolean(categoriasError) || registrando || registroIncompleto}
+                required
+                aria-invalid={!!erroCategoria}
+                aria-describedby={erroCategoria ? "erro-categoria" : undefined}
+                className="w-full min-w-0 rounded-[12px] border border-[#d7e3f0] bg-white px-[12px] py-[11px] text-[#10284a] text-[13px] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="" disabled>Selecione uma categoria</option>
+                {categorias.map(cat => <option key={cat.id} value={cat.id}>{cat.nome}</option>)}
+              </select>
               {categoriasLoading && (
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
               )}
@@ -365,7 +360,7 @@ export default function NovaOcorrencia({
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
               )}
               {erroCategoria && (
-                <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px]">{erroCategoria}</p>
+                <p id="erro-categoria" role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px]">{erroCategoria}</p>
               )}
             </div>
 
@@ -462,7 +457,7 @@ export default function NovaOcorrencia({
             <div className="new-submit content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full pb-[8px]">
               <button
                 onClick={handleRegistrar}
-                disabled={categoriasLoading || !categoriaSelecionada || Boolean(categoriasError) || localizando || registrando || registroIncompleto}
+                disabled={categoriasLoading || Boolean(categoriasError) || localizando || registrando || registroIncompleto}
                 className="bg-[#ffcc36] hover:bg-[#f0bb20] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
               >
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px] text-center">

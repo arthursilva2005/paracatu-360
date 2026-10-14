@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { calcularRelevancia } from "@/data/ocorrencias";
 import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
+import FiltroCategorias from "@/components/FiltroCategorias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
@@ -100,7 +101,7 @@ export default function Inicio({
                   </svg>
                 </div>
                 <div className="text-left">
-                  <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[14px]">Dashboard 360</p>
+                  <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[14px]">Indicadores da cidade</p>
                   <p className="font-['Inter:Regular',sans-serif] font-normal text-white/60 text-[11px]">
                     {carregando ? "Carregando ocorrências..." : erro ? "Ocorrências indisponíveis" :
                       `${ocorrencias.length} ocorrências · ${totalAlta} de alta relevância`}
@@ -115,49 +116,26 @@ export default function Inicio({
 
           {/* Categorias + ordenação */}
           <div className="home-filters flex flex-col gap-[12px] w-full">
-            <div className="flex items-center justify-between w-full">
-              <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Pela cidade</p>
-              <div className="flex gap-[6px]">
+            <div className="home-filter-heading flex flex-wrap items-center justify-between gap-x-[12px] gap-y-[8px] w-full">
+              <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Ocorrências na cidade</p>
+              <div className="home-sort flex items-center gap-[4px]">
+                <span className="home-sort-label">Ordenar por</span>
                 {(["relevancia", "recente"] as Ordem[]).map(o => (
                   <button
                     key={o}
+                    type="button"
+                    aria-pressed={ordem === o}
                     onClick={() => setOrdem(o)}
-                    className={`px-[10px] py-[5px] rounded-[999px] text-[11px] font-['Inter:Semi_Bold',sans-serif] font-semibold border-none outline-none cursor-pointer transition-colors ${
-                      ordem === o ? "bg-[#075ce5] text-white" : "bg-white text-[#586a80] border border-[#d7e3f0]"
-                    }`}
+                    className="sort-chip"
                   >
-                    {o === "relevancia" ? "Relevância" : "Recente"}
+                    {o === "relevancia" ? "Mais confirmadas" : "Mais recentes"}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Pills de categoria */}
-            <div className="flex flex-wrap gap-[8px]">
-              <button
-                onClick={() => setCatFiltro("")}
-                className={`px-[12px] py-[7px] rounded-[999px] border-none outline-none cursor-pointer transition-colors ${
-                  catFiltro === "" ? "bg-[#075ce5]" : "bg-white border border-[#d7e3f0]"
-                }`}
-              >
-                <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] ${catFiltro === "" ? "text-white" : "text-[#10284a]"}`}>
-                  Todas
-                </p>
-              </button>
-              {categorias.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCatFiltro(cat.id)}
-                  className={`px-[12px] py-[7px] rounded-[999px] border-none outline-none cursor-pointer transition-colors ${
-                    catFiltro === cat.id ? "bg-[#075ce5]" : "bg-white border border-[#d7e3f0]"
-                  }`}
-                >
-                  <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] ${catFiltro === cat.id ? "text-white" : "text-[#10284a]"}`}>
-                    {cat.nome}
-                  </p>
-                </button>
-              ))}
-            </div>
+            <FiltroCategorias categorias={categorias} selecionada={catFiltro} onSelecionar={setCatFiltro} />
             {categoriasLoading && (
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
             )}

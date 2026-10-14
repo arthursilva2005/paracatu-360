@@ -23,7 +23,7 @@ const PERIODOS: { valor: Periodo; label: string }[] = [
   { valor: "hoje", label: "Hoje" },
   { valor: "7dias", label: "7 dias" },
   { valor: "30dias", label: "30 dias" },
-  { valor: "todos", label: "Todos" },
+  { valor: "todos", label: "Todo o período" },
 ];
 
 const formatadorDia = new Intl.DateTimeFormat("pt-BR", {
@@ -185,19 +185,16 @@ export default function Atividade({
             <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Acompanhe atualizações e histórico das ocorrências.</p>
           </div>
 
-          <div className="activity-period content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[13px] w-full">Filtre por período</p>
-            <div className="content-start flex flex-wrap gap-[8px] items-start relative shrink-0 w-full">
+          <div className="activity-period content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[13px] w-full">Período</p>
+            <div className="filter-chips" role="group" aria-label="Filtrar por período">
               {PERIODOS.map(opcao => (
                 <button
                   key={opcao.valor}
                   type="button"
                   aria-pressed={periodo === opcao.valor}
                   onClick={() => setPeriodo(opcao.valor)}
-                  className={"px-[12px] py-[8px] rounded-[999px] text-[13px] leading-[1.45] cursor-pointer " +
-                    (periodo === opcao.valor
-                      ? "bg-[#075ce5] text-white font-['Inter:Bold',sans-serif] font-bold"
-                      : "bg-white text-[#10284a] border border-[#d7e3f0] font-['Inter:Semi_Bold',sans-serif] font-semibold")}
+                  className="filter-chip"
                 >
                   {opcao.label}
                 </button>
@@ -226,7 +223,7 @@ export default function Atividade({
 
               <div className="activity-history content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
                 <div className="[word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
-                  <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[18px] w-full">Histórico por relevância</p>
+                  <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[18px] w-full">Ocorrências mais confirmadas</p>
                   <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Uma ocorrência por card, ordenada pelas confirmações atuais.</p>
                 </div>
                 {porRelevancia.map(item => (
