@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { calcularRelevancia } from "@/data/ocorrencias";
+import { useEffect, useMemo, useState } from "react";
 import { EstadoCategorias } from "@/hooks/useCategorias";
 import OcorrenciaCard from "@/components/OcorrenciaCard";
 import FiltroCategorias from "@/components/FiltroCategorias";
@@ -7,6 +6,7 @@ import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
 import { listarOcorrenciasPublicas, type OcorrenciaHome } from "@/lib/ocorrencias";
+import { calcularIndicadoresDashboard } from "@/lib/indicadores";
 
 type Props = EstadoCategorias & {
   activeTab: TabName;
@@ -64,7 +64,10 @@ export default function Inicio({
       : new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
   );
 
-  const totalAlta = ocorrencias.filter(o => calcularRelevancia(o.quantidadeConfirmacoes) === "alta").length;
+  const indicadores = useMemo(
+    () => calcularIndicadoresDashboard(ocorrencias, categorias),
+    [ocorrencias, categorias],
+  );
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
@@ -92,8 +95,8 @@ export default function Inicio({
             onClick={onOpenDashboard}
             className="home-dashboard w-full bg-[#10284a] rounded-[16px] border-none outline-none cursor-pointer active:opacity-90 transition-opacity overflow-hidden"
           >
-            <div className="flex items-center justify-between px-[18px] py-[14px]">
-              <div className="flex items-center gap-[12px]">
+            <div className="flex items-center justify-between px-[18px] py-[14px] lg:block lg:px-[20px] lg:py-[18px]">
+              <div className="flex items-center gap-[12px] lg:flex-col lg:items-start lg:gap-[12px]">
                 <div className="w-[36px] h-[36px] rounded-[10px] bg-[#ffcc36] flex items-center justify-center shrink-0">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                     <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
@@ -102,15 +105,48 @@ export default function Inicio({
                 </div>
                 <div className="text-left">
                   <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[14px]">Indicadores da cidade</p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal text-white/60 text-[11px]">
+                  <p className="font-['Inter:Regular',sans-serif] font-normal text-white/60 text-[11px] lg:hidden">
                     {carregando ? "Carregando ocorrências..." : erro ? "Ocorrências indisponíveis" :
-                      `${ocorrencias.length} ocorrências · ${totalAlta} de alta relevância`}
+                      `${ocorrencias.length} ocorrências · ${indicadores.altaRelevancia} de alta relevância`}
                   </p>
                 </div>
               </div>
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+              <svg className="lg:hidden" width="18" height="18" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M9 18l6-6-6-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
+              <div className="hidden lg:block text-left mt-[16px]">
+                {carregando ? (
+                  <p className="text-white/70 text-[12px]">Carregando indicadores...</p>
+                ) : erro ? (
+                  <p className="text-white/70 text-[12px]">Indicadores indisponíveis</p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-[8px] w-full">
+                    <div className="min-w-0 rounded-[10px] bg-white/10 px-[8px] py-[9px]">
+                      <p className="text-white text-[20px] font-bold leading-none">{indicadores.total}</p>
+                      <p className="text-white/80 text-[11px] leading-tight mt-[5px]">Ocorrências</p>
+                    </div>
+                    <div className="min-w-0 rounded-[10px] bg-white/10 px-[8px] py-[9px]">
+                      <p className="text-white text-[20px] font-bold leading-none">{indicadores.emAberto}</p>
+                      <p className="text-white/80 text-[11px] leading-tight mt-[5px]">Em aberto</p>
+                    </div>
+                    <div className="min-w-0 rounded-[10px] bg-white/10 px-[8px] py-[9px]">
+                      <p className="text-white text-[20px] font-bold leading-none">{indicadores.resolvidas}</p>
+                      <p className="text-white/80 text-[11px] leading-tight mt-[5px]">Resolvidas</p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-wrap items-center justify-between gap-x-[8px] gap-y-[4px] mt-[14px]">
+                  {!carregando && !erro && (
+                    <p className="text-white/65 text-[11px]">{indicadores.altaRelevancia} de alta relevância</p>
+                  )}
+                  <span className="inline-flex items-center gap-[4px] text-white text-[12px] font-semibold">
+                    Ver indicadores completos
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                </div>
+              </div>
             </div>
           </button>
 

@@ -84,8 +84,6 @@ body,
   .layout-inicio, .layout-atividade, .layout-detalhe, .layout-dashboard,
   .layout-perfil, .layout-novaocorrencia { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .layout-inicio > .home-filters, .layout-inicio > .home-list { grid-column: 1 / -1; }
-  .layout-inicio > .home-dashboard { align-self: stretch; }
-  .layout-inicio > .home-dashboard > div { height: 100%; }
   .layout-inicio > .home-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .layout-atividade > .activity-intro, .layout-atividade > .activity-period, .layout-atividade > .activity-action { grid-column: 1 / -1; }
   .layout-detalhe > .detail-title { grid-column: 1 / -1; }
@@ -137,9 +135,8 @@ body,
   .layout-inicio { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
   .layout-inicio > .home-hero > div { padding: 32px; max-width: 620px; }
   .layout-inicio > .home-hero button { max-width: 320px; }
-  .layout-inicio > .home-dashboard > div > div { flex-direction: column; align-items: flex-start; gap: 20px; }
   .layout-mapa { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .85fr); align-items: start; }
-  .layout-mapa > .map-left-column { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+  .layout-mapa > .map-left-column { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
   .layout-mapa > .map-right-column { display: block; min-width: 0; }
   .layout-mapa .map-filters { order: 0; }
   .layout-mapa .map-real { order: 1; height: clamp(400px, 60dvh, 760px); }
@@ -162,6 +159,10 @@ body,
   .login-layout > :last-child { grid-column: 2; padding: 0 0 24px; }
 }
 
+@media (min-width: 1024px) and (min-height: 720px) {
+  .layout-mapa > .map-left-column { position: sticky; top: 16px; }
+}
+
 @media (max-width: 359px) {
   .occurrence-card > div > :first-child { flex-wrap: wrap; gap: 6px; }
   .home-filter-heading { row-gap: 6px; }
@@ -179,10 +180,9 @@ body,
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-content: start;
-    align-items: stretch;
+    align-items: start;
   }
   .layout-perfil > .profile-list > :not(.occurrence-card) { grid-column: 1 / -1; }
-  .layout-perfil > .profile-list > .occurrence-card { height: 100%; }
 }
 .dashboard-kpis-primary > *, .dashboard-kpis-secondary > * { min-width: 0; }
 .detail-summary > div > :last-child > div { gap: 8px; }
