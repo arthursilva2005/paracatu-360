@@ -160,6 +160,7 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
             <div className="[word-break:break-word] content-stretch flex font-['Inter:Bold',sans-serif] font-bold items-center justify-between leading-[1.45] not-italic relative shrink-0 w-full">
               <p className="flex-[1_0_0] min-w-px relative text-[#10284a] text-[18px]">Minhas ocorrências</p>
             </div>
+            <p className="text-[#586a80] text-[12px] w-full">Veja os problemas que você registrou.</p>
             {carregando ? (
               <p role="status" className="bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px] w-full">Carregando suas ocorrências, fotos e confirmações...</p>
             ) : erroOcorrencias ? (

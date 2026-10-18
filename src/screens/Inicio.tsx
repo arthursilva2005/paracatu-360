@@ -33,6 +33,7 @@ export default function Inicio({
   const [ocorrencias, setOcorrencias] = useState<OcorrenciaHome[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function Inicio({
     });
 
     return () => { ativo = false; };
-  }, [user?.id]);
+  }, [user?.id, tentativa]);
 
   const filtradas = ocorrencias.filter(ocorrencia => {
     if (catFiltro === "") return true;
@@ -188,7 +189,13 @@ export default function Inicio({
             {carregando ? (
               <p role="status" className="col-span-full bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px]">Carregando ocorrências...</p>
             ) : erro ? (
-              <p role="alert" className="col-span-full bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências agora.</p>
+              <div role="alert" className="col-span-full bg-white rounded-[16px] p-[24px] flex flex-col items-start gap-[12px]">
+                <p className="text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências agora.</p>
+                <button type="button" onClick={() => setTentativa(atual => atual + 1)}
+                  className="rounded-[12px] bg-[#075ce5] px-[16px] py-[10px] text-white text-[13px] font-semibold cursor-pointer">
+                  Tentar novamente
+                </button>
+              </div>
             ) : ordenadas.length === 0 ? (
               <div className="col-span-full bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">

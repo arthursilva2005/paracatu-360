@@ -35,6 +35,7 @@ export default function Mapa({
   const [ocorrencias, setOcorrencias] = useState<OcorrenciaHome[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function Mapa({
     });
 
     return () => { ativo = false; };
-  }, [user?.id]);
+  }, [user?.id, tentativa]);
 
   const localizadas = ocorrencias.filter(possuiCoordenadasValidas);
   const filtradas = categoriaFiltro
@@ -69,6 +70,7 @@ export default function Mapa({
       <div className="screen-scroll flex-1 overflow-y-auto w-full">
         <div className="screen-content layout-mapa content-stretch flex flex-col gap-[16px] items-start p-[22px] relative w-full">
           <div className="map-left-column">
+          <p className="map-hint w-full text-[#586a80] text-[12px]">Selecione um ponto no mapa para ver a ocorrência.</p>
           <MapaOcorrencias
             key={categoriaFiltro}
             ocorrencias={filtradas}
@@ -103,7 +105,7 @@ export default function Mapa({
             )}
           </div>
 
-          <button type="button" className="map-action bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90"
+          <button type="button" className="map-action hidden lg:block bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90"
             onClick={() => onNavigate("nova")}>
             <span className="block p-[14px] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[14px] text-center">
               Registrar problema
@@ -117,7 +119,13 @@ export default function Mapa({
               {carregando ? (
                 <p role="status" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Carregando ocorrências...</p>
               ) : erro ? (
-                <p role="alert" className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências no mapa agora.</p>
+                <div role="alert" className="w-full rounded-[16px] bg-white p-[20px] flex flex-col items-start gap-[12px]">
+                  <p className="text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências no mapa agora.</p>
+                  <button type="button" onClick={() => setTentativa(atual => atual + 1)}
+                    className="rounded-[12px] bg-[#075ce5] px-[16px] py-[10px] text-white text-[13px] font-semibold cursor-pointer">
+                    Tentar novamente
+                  </button>
+                </div>
               ) : ordenadas.length === 0 ? (
                 <p className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">
                   {categoriaFiltro ? "Nenhuma ocorrência nesta categoria com localização disponível." :

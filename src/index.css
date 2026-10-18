@@ -70,7 +70,7 @@ input::placeholder, textarea::placeholder { color: #586a80; opacity: 1; }
 .layout-novaocorrencia .new-description { order: 3; }
 .layout-novaocorrencia .new-photos { order: 4; }
 .layout-novaocorrencia .new-submit { order: 5; }
-.layout-mapa .map-real { order: 1; }
+.layout-mapa .map-hint, .layout-mapa .map-real { order: 1; }
 .layout-mapa .map-filters { order: 2; }
 .layout-mapa .map-list { order: 3; }
 .layout-mapa .map-action { order: 4; }

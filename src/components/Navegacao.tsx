@@ -83,11 +83,12 @@ export default function Navegacao({ activeTab, onNavigate }: Props) {
           onClick={() => onNavigate("nova")}
           className="flex flex-col items-center justify-center flex-1 h-full border-none outline-none bg-transparent cursor-pointer"
         >
-          <div className={`w-[48px] h-[48px] rounded-full flex items-center justify-center shadow-md transition-all ${activeTab === "nova" ? "bg-[#0a47b8]" : "bg-[#075ce5]"} active:scale-95`}>
+          <div className={`w-[44px] h-[44px] rounded-full flex items-center justify-center shadow-md transition-all ${activeTab === "nova" ? "bg-[#0a47b8]" : "bg-[#075ce5]"} active:scale-95`}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
             </svg>
           </div>
+          <span aria-hidden="true" className="lg:hidden mt-[1px] text-[#075ce5] text-[11px] font-semibold leading-none">Registrar</span>
           <span className="desktop-new-label">Registrar problema</span>
         </button>
 
