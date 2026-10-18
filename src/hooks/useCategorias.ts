@@ -15,6 +15,7 @@ export type EstadoCategorias = {
   categorias: CategoriaOcorrencia[];
   categoriasLoading: boolean;
   categoriasError: string | null;
+  recarregarCategorias: () => void;
 };
 
 /** Compatibilidade temporária entre códigos oficiais com "_" e slugs legados com "-". */
@@ -37,9 +38,12 @@ export default function useCategorias(): EstadoCategorias {
   const [categorias, setCategorias] = useState<CategoriaOcorrencia[]>([]);
   const [categoriasLoading, setCategoriasLoading] = useState(true);
   const [categoriasError, setCategoriasError] = useState<string | null>(null);
+  const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
     let ativo = true;
+    setCategoriasLoading(true);
+    setCategoriasError(null);
 
     void (async () => {
       try {
@@ -82,7 +86,8 @@ export default function useCategorias(): EstadoCategorias {
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [tentativa]);
 
-  return { categorias, categoriasLoading, categoriasError };
+  return { categorias, categoriasLoading, categoriasError,
+    recarregarCategorias: () => setTentativa(atual => atual + 1) };
 }

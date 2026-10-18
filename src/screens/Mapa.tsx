@@ -30,6 +30,7 @@ export default function Mapa({
   categorias,
   categoriasLoading,
   categoriasError,
+  recarregarCategorias,
 }: Props) {
   const { user } = useAuth();
   const [ocorrencias, setOcorrencias] = useState<OcorrenciaHome[]>([]);
@@ -98,7 +99,10 @@ export default function Mapa({
               <p className="text-[#586a80] text-[12px]">Carregando categorias...</p>
             )}
             {!categoriasLoading && categoriasError && (
-              <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>
+              <div className="flex flex-wrap items-center gap-[8px]">
+                <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>
+                <button type="button" onClick={recarregarCategorias} className="rounded-[10px] border border-[#075ce5] bg-white px-[12px] py-[8px] text-[#075ce5] text-[12px] font-semibold cursor-pointer">Tentar novamente</button>
+              </div>
             )}
             {!categoriasLoading && !categoriasError && categorias.length === 0 && (
               <p className="text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>

@@ -133,7 +133,7 @@ export default function Atividade({
 }: Props) {
   const { user } = useAuth();
   const usuarioId = user?.id ?? null;
-  const [periodo, setPeriodo] = useState<Periodo>("hoje");
+  const [periodo, setPeriodo] = useState<Periodo>("7dias");
   const [estado, setEstado] = useState<{
     usuarioId: string | null;
     itens: AtividadeOficial[];
@@ -208,7 +208,9 @@ export default function Atividade({
             <p role="alert" className="col-span-full text-[#10284a] text-[14px]">Não foi possível carregar as atualizações agora.</p>
           ) : filtradas.length === 0 ? (
             <p role="status" className="col-span-full text-[#586a80] text-[14px]">
-              {periodo === "hoje" ? "Não houve atualizações hoje." : "Nenhuma atualização encontrada neste período."} Experimente outro período.
+              {periodo === "hoje" ? "Não houve atualizações hoje." :
+                periodo === "7dias" ? "Nenhuma atualização encontrada nos últimos 7 dias." :
+                  "Nenhuma atualização encontrada neste período."} Experimente outro período.
             </p>
           ) : (
             <>

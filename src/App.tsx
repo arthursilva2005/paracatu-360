@@ -226,7 +226,7 @@ export default function App() {
             onOpenDetalhe={openDetalhe} {...categoriasState} />} />
           <Route path="/ocorrencias/nova" element={
             <RotaProtegida>
-              <NovaOcorrencia key={location.key} activeTab={activeTab} onNavigate={navigate}
+              <NovaOcorrencia activeTab={activeTab} onNavigate={navigate}
                 onRegistrar={registrarNovaOcorrencia} onOpenDetalhe={openDetalhe}
                 onVoltarInicio={() => navigateTo("/", { state: { registroConcluido: true } })}
                 {...categoriasState} />

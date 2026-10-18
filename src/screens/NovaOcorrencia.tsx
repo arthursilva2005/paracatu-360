@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useBlocker } from "react-router";
 import svgPaths from "@/assets/svg-4r6l0jr5e2";
 import { EstadoCategorias, resolverCategoria } from "@/hooks/useCategorias";
 import type { DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
@@ -122,6 +123,7 @@ export default function NovaOcorrencia({
   categorias,
   categoriasLoading,
   categoriasError,
+  recarregarCategorias,
 }: Props) {
   const [categoriaId, setCategoriaId] = useState("");
   const categoriaSelecionada = resolverCategoria(categoriaId, categorias);
@@ -159,7 +161,52 @@ export default function NovaOcorrencia({
   const enderecoRef = useRef<HTMLInputElement>(null);
   const tituloRef = useRef<HTMLInputElement>(null);
   const fotoBotaoRef = useRef<HTMLButtonElement>(null);
+  const avisoSaidaRef = useRef<HTMLDialogElement>(null);
+  const focoAntesDoAvisoRef = useRef<HTMLElement | null>(null);
   const registrando = faseRegistro !== "idle";
+  const formularioAlterado = !sucesso && Boolean(
+    categoriaId || ponto || bairro.trim() || endereco.trim() || titulo.trim() ||
+    descricao.trim() || fotosSelecionadas.length,
+  );
+  const bloqueioSaida = useBlocker(({ currentLocation, nextLocation }) =>
+    formularioAlterado && (currentLocation.pathname !== nextLocation.pathname ||
+      currentLocation.search !== nextLocation.search || currentLocation.hash !== nextLocation.hash),
+  );
+
+  useEffect(() => {
+    const aviso = avisoSaidaRef.current;
+    if (!aviso) return;
+    if (bloqueioSaida.state !== "blocked") {
+      if (aviso.open) aviso.close();
+      return;
+    }
+    focoAntesDoAvisoRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement : null;
+    if (!aviso.open) aviso.showModal();
+    const rolante = aviso.closest(".app-screen")?.querySelector<HTMLElement>(".screen-scroll");
+    const overflowAnterior = rolante?.style.overflowY;
+    if (rolante) rolante.style.overflowY = "hidden";
+    return () => {
+      if (rolante) rolante.style.overflowY = overflowAnterior ?? "";
+    };
+  }, [bloqueioSaida.state]);
+
+  function continuarPreenchendo() {
+    if (bloqueioSaida.state !== "blocked") return;
+    avisoSaidaRef.current?.close();
+    bloqueioSaida.reset();
+    focoAntesDoAvisoRef.current?.focus();
+  }
+
+  useEffect(() => {
+    if (!formularioAlterado) return;
+    const avisarSaida = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", avisarSaida);
+    return () => window.removeEventListener("beforeunload", avisarSaida);
+  }, [formularioAlterado]);
 
   useEffect(() => () => {
     pedidoGpsRef.current += 1;
@@ -391,7 +438,13 @@ export default function NovaOcorrencia({
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Carregando categorias...</p>
               )}
               {!categoriasLoading && categoriasError && (
-                <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{categoriasError}</p>
+                <div className="flex flex-wrap items-center gap-[8px]">
+                  <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{categoriasError}</p>
+                  <button type="button" onClick={recarregarCategorias}
+                    className="rounded-[10px] border border-[#075ce5] bg-white px-[12px] py-[8px] text-[#075ce5] text-[12px] font-semibold cursor-pointer">
+                    Tentar novamente
+                  </button>
+                </div>
               )}
               {!categoriasLoading && !categoriasError && categorias.length === 0 && (
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">Nenhuma categoria disponível no momento.</p>
@@ -587,6 +640,22 @@ export default function NovaOcorrencia({
         )}
       </div>
       {!sucesso && <Navegacao activeTab={activeTab} onNavigate={onNavigate} />}
+      <dialog ref={avisoSaidaRef} role="dialog" aria-modal="true" aria-labelledby="aviso-saida-titulo"
+        onCancel={event => { event.preventDefault(); continuarPreenchendo(); }}
+        className="fixed left-1/2 top-1/2 m-0 w-[calc(100%-32px)] max-w-[420px] max-h-[calc(100dvh-32px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[16px] border border-[#d7e3f0] bg-white p-[22px] text-[#10284a] shadow-xl backdrop:bg-[#10284a]/50">
+        <h2 id="aviso-saida-titulo" className="text-[18px] font-bold">Sair do registro?</h2>
+        <p className="mt-[10px] text-[14px] text-[#586a80]">Você tem informações não salvas. Deseja sair mesmo assim?</p>
+        <div className="mt-[20px] flex flex-col gap-[10px] sm:flex-row-reverse">
+          <button type="button" onClick={() => { if (bloqueioSaida.state === "blocked") bloqueioSaida.proceed(); }}
+            className="rounded-[12px] bg-[#075ce5] px-[14px] py-[12px] text-white text-[14px] font-semibold cursor-pointer">
+            Sair sem salvar
+          </button>
+          <button type="button" autoFocus onClick={continuarPreenchendo}
+            className="rounded-[12px] border border-[#d7e3f0] bg-white px-[14px] py-[12px] text-[#10284a] text-[14px] font-semibold cursor-pointer">
+            Continuar preenchendo
+          </button>
+        </div>
+      </dialog>
     </div>
   );
 }

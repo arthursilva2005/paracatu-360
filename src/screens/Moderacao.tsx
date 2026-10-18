@@ -42,7 +42,7 @@ export default function Moderacao(props: Props) {
   );
 }
 
-function ListaAdministrativa({ categorias, categoriasLoading, categoriasError, onOpenDetalhe }: Props) {
+function ListaAdministrativa({ categorias, categoriasLoading, categoriasError, recarregarCategorias, onOpenDetalhe }: Props) {
   const [lista, setLista] = useState<OcorrenciaHome[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
@@ -104,7 +104,10 @@ function ListaAdministrativa({ categorias, categoriasLoading, categoriasError, o
       </label>
     </div>
     {categoriasLoading && <p role="status" className="text-[#586a80] text-[12px]">Carregando categorias...</p>}
-    {categoriasError && <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>}
+    {categoriasError && <div className="flex flex-wrap items-center gap-[8px]">
+      <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>
+      <button type="button" onClick={recarregarCategorias} className="rounded-[10px] border border-[#075ce5] bg-white px-[12px] py-[8px] text-[#075ce5] text-[12px] font-semibold cursor-pointer">Tentar novamente</button>
+    </div>}
     {carregando ? <p role="status" className="rounded-[16px] bg-white p-[20px] text-[#586a80]">Carregando ocorrências...</p>
       : erro ? <p role="alert" className="rounded-[16px] bg-white p-[20px] text-[#586a80]">Não foi possível carregar as ocorrências para moderação.</p>
       : visiveis.length === 0 ? <p className="rounded-[16px] bg-white p-[20px] text-[#586a80]">Nenhuma ocorrência encontrada para estes filtros.</p>
@@ -125,14 +128,14 @@ function ListaAdministrativa({ categorias, categoriasLoading, categoriasError, o
   </>;
 }
 
-type PainelDuplicidadeProps = Pick<Props, "categorias" | "categoriasLoading" | "categoriasError"> & {
+type PainelDuplicidadeProps = Pick<Props, "categorias" | "categoriasLoading" | "categoriasError" | "recarregarCategorias"> & {
   ocorrencia: DetalheOcorrencia["ocorrencia"];
   onFechar: () => void;
   onConcluido: () => Promise<void>;
   onConflito: () => Promise<void>;
 };
 
-function PainelDuplicidade({ ocorrencia, categorias, categoriasLoading, categoriasError,
+function PainelDuplicidade({ ocorrencia, categorias, categoriasLoading, categoriasError, recarregarCategorias,
   onFechar, onConcluido, onConflito }: PainelDuplicidadeProps) {
   const [termo, setTermo] = useState("");
   const [buscaAplicada, setBuscaAplicada] = useState("");
@@ -243,7 +246,10 @@ function PainelDuplicidade({ ocorrencia, categorias, categoriasLoading, categori
       </select>
     </label>
     {categoriasLoading && <p role="status" className="text-[#586a80] text-[12px]">Carregando categorias...</p>}
-    {categoriasError && <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>}
+    {categoriasError && <div className="flex flex-wrap items-center gap-[8px]">
+      <p role="alert" className="text-[#586a80] text-[12px]">{categoriasError}</p>
+      <button type="button" onClick={recarregarCategorias} className="rounded-[10px] border border-[#075ce5] bg-white px-[12px] py-[8px] text-[#075ce5] text-[12px] font-semibold cursor-pointer">Tentar novamente</button>
+    </div>}
 
     <div className="min-w-0 flex flex-col gap-[8px]">
       <h3 className="text-[#10284a] text-[14px] font-semibold">Ocorrências candidatas</h3>
@@ -302,7 +308,7 @@ function PainelDuplicidade({ ocorrencia, categorias, categoriasLoading, categori
 }
 
 type DetalheProps = Props & { id: string; onVoltar: () => void };
-function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading, categoriasError }: DetalheProps) {
+function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading, categoriasError, recarregarCategorias }: DetalheProps) {
   const { profile } = useAuth();
   const [dados, setDados] = useState<DetalheOcorrencia | null>(null);
   const [historico, setHistorico] = useState<HistoricoAdministrativoOcorrencia[]>([]);
@@ -433,7 +439,7 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading, ca
               </section>}
             {podeMarcarDuplicidade && painelDuplicidade &&
               <PainelDuplicidade ocorrencia={ocorrencia} categorias={categorias} categoriasLoading={categoriasLoading}
-                categoriasError={categoriasError} onFechar={() => setPainelDuplicidade(false)}
+                categoriasError={categoriasError} recarregarCategorias={recarregarCategorias} onFechar={() => setPainelDuplicidade(false)}
                 onConcluido={async () => {
                   await recarregar();
                   setPainelDuplicidade(false);
