@@ -93,9 +93,9 @@ input::placeholder, textarea::placeholder { color: #586a80; opacity: 1; }
   .layout-inicio > .home-filters, .layout-inicio > .home-list { grid-column: 1 / -1; }
   .layout-inicio > .home-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .layout-atividade > .activity-intro, .layout-atividade > .activity-period, .layout-atividade > .activity-action { grid-column: 1 / -1; }
-  .layout-detalhe > .detail-title { grid-column: 1 / -1; }
-  .layout-detalhe > .detail-summary { grid-column: 1; grid-row: 2 / 4; }
-  .layout-detalhe > .detail-updates, .layout-detalhe > .detail-actions { grid-column: 2; }
+  .layout-detalhe > .detail-title, .layout-detalhe > .detail-duplicate { grid-column: 1 / -1; }
+  .layout-detalhe > .detail-summary { grid-column: 1; }
+  .layout-detalhe > .detail-side { grid-column: 2; }
   .layout-perfil { grid-template-columns: minmax(280px, .85fr) minmax(0, 1.15fr); }
   .layout-perfil > .profile-sidebar { display: flex; flex-direction: column; gap: 24px; grid-column: 1; grid-row: 1; min-width: 0; width: 100%; }
   .layout-perfil > .profile-list { grid-column: 2; grid-row: 1; }

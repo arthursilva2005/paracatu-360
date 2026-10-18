@@ -238,7 +238,7 @@ function HistoricoReal({ ocorrenciaId }: { ocorrenciaId: string }) {
 
   return (
     <div className="detail-updates flex flex-col gap-[12px] w-full" aria-busy={estado.status === "carregando"}>
-      <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</p>
+      <h2 className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Histórico oficial</h2>
       {estado.status === "carregando" ? (
         <p role="status" className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] text-[#586a80] text-[12px]">
           Carregando atualizações...
@@ -407,7 +407,7 @@ function SinalizacoesReal({ ocorrenciaId, status }: { ocorrenciaId: string; stat
         <h2 id="sinalizacoes-titulo" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">
           Como está este problema agora?
         </h2>
-        <p className="text-[#586a80] text-[12px]">Compartilhe como você percebe a situação. Essas informações da comunidade não alteram o status oficial.</p>
+        <p className="text-[#586a80] text-[12px]">Se você passou pelo local recentemente, conte como está a situação. As informações da comunidade ajudam a acompanhar, mas não alteram o status oficial.</p>
       </div>
       <div className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] w-full min-w-0 flex flex-col gap-[12px]">
         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-[8px] w-full min-w-0" aria-busy={ocupado}>
@@ -500,7 +500,7 @@ function AvisoDuplicidade({ principalId, categorias, categoriasLoading }: {
   }, [principalId]);
 
   return <aside aria-label="Ocorrência duplicada"
-    className="w-full min-w-0 rounded-[16px] border border-[#d7e3f0] bg-[#e8f0fe] p-[16px] flex flex-col gap-[8px] [overflow-wrap:anywhere]">
+    className="detail-duplicate w-full min-w-0 rounded-[16px] border border-[#d7e3f0] bg-[#e8f0fe] p-[16px] flex flex-col gap-[8px] [overflow-wrap:anywhere]">
     <h2 className="text-[#10284a] text-[16px] font-bold">Esta ocorrência foi marcada como duplicada.</h2>
     <p className="text-[#586a80] text-[13px]">Ela se refere a um problema já registrado anteriormente.</p>
     {principalId && (estado.status === "carregando"
@@ -538,13 +538,14 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
     : confirmacao.fase === "desfazendo" ? "Removendo confirmação..."
     : confirmacao.precisaEntrar ? "Entrar novamente"
     : confirmacao.fase === "erro" ? "Consultar novamente"
-    : confirmado ? "Desfazer confirmação" : "Também encontrei este problema";
+    : "Também vi este problema";
   const relevancia = calcularRelevancia(quantidade);
   const categoria = resolverCategoria(ocorrencia.categoriaId, categorias);
   const categoriaNome = categoria?.nome
     ?? (categoriasLoading ? "Carregando categoria" : "Categoria indisponível");
   const cor = corRelevancia[relevancia];
-  const progresso = Math.min(100, Math.round((quantidade / 50) * 100));
+  const textoQuantidade = quantidade === 0 ? "Ainda não há confirmações"
+    : quantidade === 1 ? "1 pessoa confirmou" : `${quantidade} pessoas confirmaram`;
 
   return (
     <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
@@ -588,13 +589,14 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
           <div className="detail-summary bg-white rounded-[16px] w-full border border-[#e8eef5]">
             <div className="flex flex-col gap-[14px] p-[16px]">
 
-              {real && <GaleriaOcorrencia fotos={fotos} titulo={ocorrencia.titulo} />}
-
-              {/* Status + relevância */}
-              <div className={`flex items-center justify-between w-full gap-[8px] ${real ? "flex-wrap" : ""}`}>
-                <span className={`${METADADOS_STATUS[ocorrencia.status]?.classeBg ?? "bg-[#586a80]"} px-[10px] py-[5px] rounded-[999px]`}>
-                  <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[12px]">{METADADOS_STATUS[ocorrencia.status].label}</p>
-                </span>
+              {/* Status oficial + relevância */}
+              <div className="flex items-center justify-between w-full gap-[8px] flex-wrap">
+                <div className="flex flex-col items-start gap-[4px]">
+                  <p className="text-[#586a80] text-[11px]">Status oficial</p>
+                  <span className={`${METADADOS_STATUS[ocorrencia.status]?.classeBg ?? "bg-[#586a80]"} px-[10px] py-[5px] rounded-[999px]`}>
+                    <span className="font-['Inter:Bold',sans-serif] font-bold text-white text-[12px]">{METADADOS_STATUS[ocorrencia.status].label}</span>
+                  </span>
+                </div>
                 <div className={`flex items-center gap-[5px] px-[10px] py-[5px] rounded-[999px] ${cor.bg}`}>
                   <div className={`w-[6px] h-[6px] rounded-full shrink-0 ${cor.dot}`} />
                   <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[11px] ${cor.text}`}>
@@ -603,29 +605,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
                 </div>
               </div>
 
-              {/* Barra de progresso */}
-              <div className="flex flex-col gap-[6px] w-full">
-                <div className="flex items-center justify-between">
-                  <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">
-                    {quantidade} confirmações
-                  </p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">
-                    {progresso}% da meta
-                  </p>
-                </div>
-                <div className="w-full bg-[#f3f6fa] rounded-full h-[7px] overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      relevancia === "alta" ? "bg-[#dc2626]" :
-                      relevancia === "media" ? "bg-[#d97706]" : "bg-[#075ce5]"
-                    }`}
-                    style={{ width: `${progresso}%` }}
-                  />
-                </div>
-                <p className="font-['Inter:Regular',sans-serif] font-normal text-[#9aafc4] text-[11px]">
-                  Meta: 50 confirmações para prioridade máxima
-                </p>
-              </div>
+              {real && <GaleriaOcorrencia fotos={fotos} titulo={ocorrencia.titulo} />}
 
               {/* Descrição */}
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[13px] leading-relaxed w-full">
@@ -648,12 +628,44 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
             </div>
           </div>
 
+          <div className="detail-side flex flex-col gap-[20px] w-full min-w-0">
+          {/* Confirmação */}
+          <section className="detail-actions flex flex-col gap-[12px] w-full pb-[8px]" aria-labelledby="confirmacao-titulo">
+            <div className="flex flex-col gap-[4px]">
+              <h2 id="confirmacao-titulo" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Você também viu este problema?</h2>
+              <p className="text-[#586a80] text-[12px]">Sua confirmação ajuda a mostrar quantas pessoas encontraram a mesma situação.</p>
+            </div>
+            <div className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[12px]">
+              <p aria-live="polite" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">{textoQuantidade}</p>
+              <p className="text-[#586a80] text-[12px]">As confirmações ajudam a indicar a relevância da ocorrência para a comunidade.</p>
+
+              {confirmado ? (
+                <>
+                  <p role="status" className="rounded-[12px] bg-[#e8f0fe] px-[14px] py-[10px] text-[#075ce5] text-[13px] font-semibold">Você confirmou este problema</p>
+                  {real && <button type="button" onClick={() => void confirmacao.alterar()} disabled={ocupado} aria-busy={ocupado}
+                    className="self-start rounded-[10px] border border-[#d7e3f0] bg-white px-[14px] py-[10px] text-[#075ce5] text-[13px] font-semibold cursor-pointer disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5]">
+                    Desfazer confirmação
+                  </button>}
+                </>
+              ) : (
+                <button type="button" onClick={() => real ? void confirmacao.alterar() : onConfirmar(ocorrencia.id)}
+                  disabled={ocupado} aria-busy={ocupado}
+                  className="w-full rounded-[16px] bg-[#075ce5] hover:bg-[#0a47b8] px-[14px] py-[14px] text-white text-[14px] font-bold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5]">
+                  {real ? textoAcao : "Também vi este problema"}
+                </button>
+              )}
+
+              {real && <p className="text-[#586a80] text-[12px]">Quem registrou esta ocorrência não pode confirmá-la.</p>}
+              {real && confirmacao.mensagem && <p role="status" className="text-[#586a80] text-[12px]">{confirmacao.mensagem}</p>}
+            </div>
+          </section>
+
           {real && <SinalizacoesReal ocorrenciaId={ocorrencia.id} status={ocorrencia.status} />}
 
-          {/* Atualizações */}
+          {/* Histórico */}
           {real && <HistoricoReal ocorrenciaId={ocorrencia.id} />}
           {!real && <div className="detail-updates flex flex-col gap-[12px] w-full">
-            <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</p>
+            <h2 className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</h2>
             {[
               { titulo: "Encaminhado para manutenção", tempo: "Há 2 dias", texto: "A ocorrência foi enviada para a equipe de infraestrutura urbana e está em análise para agendamento do reparo." },
               { titulo: `${ocorrencia.quantidadeConfirmacoes} confirmações recebidas`, tempo: "Há 3 dias", texto: "Moradores confirmaram a ocorrência. A equipe iniciou o levantamento do local para priorização." },
@@ -667,51 +679,6 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
               </div>
             ))}
           </div>}
-
-          {/* Ações */}
-          <div className="detail-actions flex flex-col gap-[12px] w-full pb-[8px]">
-            <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Ações</p>
-            <div className="flex gap-[12px] w-full">
-              <button
-                onClick={() => real ? void confirmacao.alterar() : !confirmadoPorMim && onConfirmar(ocorrencia.id)}
-                disabled={real ? ocupado : confirmadoPorMim}
-                aria-busy={ocupado}
-                className={`flex-1 rounded-[16px] py-[14px] px-[8px] border-none outline-none cursor-pointer transition-all duration-150 active:scale-[0.98] flex flex-col items-center gap-[4px] ${
-                  ocupado ? "bg-[#075ce5] opacity-60 cursor-not-allowed" : confirmado
-                    ? (real ? "bg-[#e8f0fe]" : "bg-[#e8f0fe] cursor-default")
-                    : "bg-[#075ce5] hover:bg-[#0a47b8]"
-                }`}
-              >
-                {real ? (
-                  <p className={`font-['Inter:Bold',sans-serif] font-bold text-[13px] ${confirmado ? "text-[#075ce5]" : "text-white"}`}>
-                    {textoAcao}
-                  </p>
-                ) : confirmadoPorMim ? (
-                  <>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#075ce5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <p className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5] text-[13px]">Confirmado</p>
-                  </>
-                ) : (
-                  <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[14px]">Confirmar problema</p>
-                )}
-              </button>
-
-              <button className="flex-1 rounded-[16px] py-[14px] bg-white border border-[#d7e3f0] outline-none cursor-pointer active:opacity-80 transition-opacity">
-                <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Compartilhar</p>
-              </button>
-            </div>
-
-            {real && confirmacao.mensagem && <p role="status" className="text-[#586a80] text-[12px]">{confirmacao.mensagem}</p>}
-
-            {confirmado && (
-              <div className="bg-[#e8f0fe] rounded-[12px] px-[14px] py-[10px] w-full">
-                <p className="font-['Inter:Regular',sans-serif] font-normal text-[#075ce5] text-[12px] text-center">
-                  {real ? "Você confirmou este problema." : "Obrigado! Sua confirmação ajuda a priorizar esta ocorrência."}
-                </p>
-              </div>
-            )}
           </div>
 
         </div>
