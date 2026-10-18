@@ -10,7 +10,7 @@ import type { EstadoCategorias } from "@/hooks/useCategorias";
 import { resolverCategoria } from "@/hooks/useCategorias";
 import { buscarHistoricoAdministrativo, type HistoricoAdministrativoOcorrencia } from "@/lib/historicoOcorrencias";
 import { alterarStatusOcorrencia, buscarPrincipaisDuplicidade, buscarTituloPrincipal, CANDIDATOS_POR_PAGINA, exigeJustificativa, marcarOcorrenciaDuplicada, mensagemErroModeracao, proximosStatus, type CandidatoPrincipal } from "@/lib/moderacao";
-import { buscarOcorrenciaPorId, ehUuidOcorrencia, listarOcorrenciasEquipe, type DetalheOcorrencia, type OcorrenciaHome } from "@/lib/ocorrencias";
+import { buscarOcorrenciaPorId, listarOcorrenciasEquipe, type DetalheOcorrencia, type OcorrenciaHome } from "@/lib/ocorrencias";
 
 const STATUS: StatusOcorrencia[] = [
   "registrado", "em_analise", "encaminhado", "em_andamento",

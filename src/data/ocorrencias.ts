@@ -31,28 +31,6 @@ export interface Ocorrencia {
 export type TipoSinalizacaoOcorrencia =
   | "atendimento_iniciado" | "problema_resolvido" | "continua_igual" | "piorou";
 
-export interface SinalizacaoOcorrencia {
-  id: string;
-  ocorrenciaId: string;
-  usuarioId: string;
-  tipo: TipoSinalizacaoOcorrencia;
-  fotoUrl: string | null;
-  ativa: boolean;
-  criadoEm: string;
-}
-
-export interface HistoricoOcorrencia {
-  id: string;
-  ocorrenciaId: string;
-  statusAnterior: StatusOcorrencia | null;
-  statusNovo: StatusOcorrencia;
-  alteradoPorId: string | null;
-  observacao: string | null;
-  criadoEm: string;
-}
-
-export type PapelUsuario = "cidadao" | "moderador" | "administrador";
-
 // Labels e cores atuais preservados; os novos estados ainda não aparecem no Dashboard.
 export const METADADOS_STATUS: Record<StatusOcorrencia, { label: string; bg: string; classeBg: string }> = {
   registrado: { label: "Registrado", bg: "#586a80", classeBg: "bg-[#586a80]" },
@@ -64,8 +42,6 @@ export const METADADOS_STATUS: Record<StatusOcorrencia, { label: string; bg: str
   duplicado: { label: "Duplicado", bg: "#586a80", classeBg: "bg-[#586a80]" },
   arquivado: { label: "Arquivado", bg: "#586a80", classeBg: "bg-[#586a80]" },
 };
-
-export const STATUS_DASHBOARD: StatusOcorrencia[] = ["em_analise", "em_andamento", "encaminhado", "resolvido"];
 
 export function localOcorrencia(ocorrencia: Ocorrencia): string {
   return `${ocorrencia.bairro} · ${ocorrencia.endereco}`;

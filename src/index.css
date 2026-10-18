@@ -78,7 +78,6 @@ input::placeholder, textarea::placeholder { color: #586a80; opacity: 1; }
 /* Compact only the Home spacing below the existing tablet breakpoint. */
 @media (width < 768px) {
   .layout-perfil > .profile-list { order: 3; }
-  .layout-perfil .profile-help { order: 4; }
   .layout-inicio { padding-top: 16px; gap: 16px; }
   .layout-inicio > .home-hero > div { padding-block: 18px; gap: 10px; }
   .layout-inicio > .home-hero button { margin-top: 2px; }
