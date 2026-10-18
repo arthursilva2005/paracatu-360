@@ -288,7 +288,7 @@ export default function Dashboard({
               <Link key={o.id} to={`/ocorrencias/${o.id}`} state={{ from: "/indicadores", activeTab }}
                 className="block no-underline rounded-[16px] focus-visible:outline-2 focus-visible:outline-[#075ce5]">
                 <OcorrenciaCard ocorrencia={o} categorias={categorias}
-                  categoriasLoading={categoriasLoading} exibirDataReal />
+                  categoriasLoading={categoriasLoading} />
               </Link>
             ))}
           </div>

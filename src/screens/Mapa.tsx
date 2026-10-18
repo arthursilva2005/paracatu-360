@@ -137,7 +137,7 @@ export default function Mapa({
                 </p>
               ) : ordenadas.map(ocorrencia => (
                 <OcorrenciaCard key={ocorrencia.id} ocorrencia={ocorrencia}
-                  categorias={categorias} categoriasLoading={categoriasLoading} exibirDataReal
+                  categorias={categorias} categoriasLoading={categoriasLoading}
                   onClick={() => onOpenDetalhe(ocorrencia.id)} />
               ))}
             </div>

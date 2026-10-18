@@ -11,7 +11,7 @@ export type StatusOcorrencia =
 export interface Ocorrencia {
   id: string;
   autorId?: string; // Ausente na leitura pública: a autoria permanece privada no banco.
-  categoriaId: string; // UUID real ou código legado com hífen enquanto os mocks permanecerem locais.
+  categoriaId: string; // UUID da categoria.
   titulo: string;
   descricao: string;
   status: StatusOcorrencia;
@@ -67,119 +67,9 @@ export const METADADOS_STATUS: Record<StatusOcorrencia, { label: string; bg: str
 
 export const STATUS_DASHBOARD: StatusOcorrencia[] = ["em_analise", "em_andamento", "encaminhado", "resolvido"];
 
-// Apresentação temporária dos mocks; timestamps ISO são a fonte de verdade do modelo.
-const TEMPOS_MOCK: Record<string, string> = {
-  "1": "Há 2 dias", "2": "Há 5 horas", "3": "Ontem", "4": "Há 1 dia", "5": "Há 3 horas",
-};
-
-export function tempoOcorrencia(ocorrencia: Ocorrencia): string {
-  return TEMPOS_MOCK[ocorrencia.id] ?? "Agora mesmo";
-}
-
 export function localOcorrencia(ocorrencia: Ocorrencia): string {
-  // O mock 4 já exibia endereço antes do bairro.
-  return ocorrencia.id === "4"
-    ? `${ocorrencia.endereco} · ${ocorrencia.bairro}`
-    : `${ocorrencia.bairro} · ${ocorrencia.endereco}`;
+  return `${ocorrencia.bairro} · ${ocorrencia.endereco}`;
 }
-
-export const ocorrenciasIniciais: Ocorrencia[] = [
-  {
-    id: "1",
-    categoriaId: "transito-vias",
-    status: "encaminhado",
-    titulo: "Buraco na via próximo à escola",
-    endereco: "Rua da Praça",
-    bairro: "Centro",
-    descricao: "O buraco está localizado na pista sentido escola, próximo ao cruzamento com a Rua das Flores. O trecho está com trânsito lento e risco de danos a veículos.",
-    quantidadeConfirmacoes: 24,
-    autorId: "usuario-mock-1",
-    latitude: -17.221,
-    longitude: -46.871,
-    fotos: [],
-    criadoEm: "2026-09-10T10:00:00-03:00",
-    atualizadoEm: "2026-09-10T10:00:00-03:00",
-    resolvidoEm: null,
-    arquivadoEm: null,
-    ocorrenciaPrincipalId: null,
-  },
-  {
-    id: "2",
-    categoriaId: "infraestrutura",
-    status: "em_analise",
-    titulo: "Ponto de iluminação apagado",
-    endereco: "Rua das Flores",
-    bairro: "Bairro do Piloto",
-    descricao: "Poste sem luz há mais de uma semana. O trecho fica escuro à noite, gerando insegurança para pedestres.",
-    quantidadeConfirmacoes: 12,
-    autorId: "usuario-mock-2",
-    latitude: -17.222,
-    longitude: -46.872,
-    fotos: [],
-    criadoEm: "2026-09-12T05:00:00-03:00",
-    atualizadoEm: "2026-09-12T05:00:00-03:00",
-    resolvidoEm: null,
-    arquivadoEm: null,
-    ocorrenciaPrincipalId: null,
-  },
-  {
-    id: "3",
-    categoriaId: "limpeza-urbana",
-    status: "resolvido",
-    titulo: "Entulho retirado da calçada",
-    endereco: "Calçada da Igreja",
-    bairro: "Centro",
-    descricao: "Entulho de obra estava bloqueando a passagem de pedestres e cadeirantes na calçada.",
-    quantidadeConfirmacoes: 8,
-    autorId: "usuario-mock-3",
-    latitude: -17.223,
-    longitude: -46.873,
-    fotos: [],
-    criadoEm: "2026-09-11T10:00:00-03:00",
-    atualizadoEm: "2026-09-12T08:00:00-03:00",
-    resolvidoEm: "2026-09-12T08:00:00-03:00",
-    arquivadoEm: null,
-    ocorrenciaPrincipalId: null,
-  },
-  {
-    id: "4",
-    categoriaId: "seguranca",
-    status: "em_analise",
-    titulo: "Semáforo com defeito no cruzamento",
-    endereco: "Av. Olegário Maciel",
-    bairro: "Centro",
-    descricao: "Semáforo piscando em amarelo continuamente, sem alternar as fases. Causa confusão e risco de acidentes.",
-    quantidadeConfirmacoes: 31,
-    autorId: "usuario-mock-4",
-    latitude: -17.224,
-    longitude: -46.874,
-    fotos: [],
-    criadoEm: "2026-09-11T10:00:00-03:00",
-    atualizadoEm: "2026-09-11T10:00:00-03:00",
-    resolvidoEm: null,
-    arquivadoEm: null,
-    ocorrenciaPrincipalId: null,
-  },
-  {
-    id: "5",
-    categoriaId: "transito-vias",
-    status: "em_andamento",
-    titulo: "Alagamento na Rua das Acácias",
-    endereco: "Rua das Acácias",
-    bairro: "Bairro São João",
-    descricao: "Boca de lobo entupida causa alagamento a cada chuva, prejudicando moradores e comércios locais.",
-    quantidadeConfirmacoes: 47,
-    autorId: "usuario-mock-5",
-    latitude: -17.225,
-    longitude: -46.875,
-    fotos: [],
-    criadoEm: "2026-09-12T07:00:00-03:00",
-    atualizadoEm: "2026-09-12T07:00:00-03:00",
-    resolvidoEm: null,
-    arquivadoEm: null,
-    ocorrenciaPrincipalId: null,
-  },
-];
 
 export function calcularRelevancia(confirmacoes: number): "alta" | "media" | "baixa" {
   if (confirmacoes >= 30) return "alta";

@@ -8,7 +8,7 @@ O frontend usa React 19, TypeScript, Vite 8, React Router 7 e Tailwind CSS 4. O 
 
 Já são reais: cadastro e login, sessão persistente, recuperação de senha, categorias ativas, registro de ocorrências com localização escolhida no mapa e endereço/bairro informados pelo usuário, upload de uma a três fotos, listagem e detalhe, confirmações, sinalizações comunitárias, histórico de status, perfil, atividade, mapa, indicadores e moderação por papéis. O status oficial é controlado pelas regras do banco.
 
-Os cinco registros de exemplo com IDs de `1` a `5` continuam disponíveis apenas no detalhe legado para compatibilidade. Eles não abastecem as listagens reais da Home, Mapa, Perfil, Atividade ou Indicadores. Notificações e configurações ainda não possuem fluxo próprio. O cadastro por e-mail e a recuperação dependem da configuração de entrega de e-mails no Supabase.
+O detalhe de ocorrência aceita apenas IDs reais em formato UUID; um ID inválido apresenta o estado de ocorrência não encontrada. Notificações e configurações ainda não possuem fluxo próprio. O cadastro por e-mail e a recuperação dependem da configuração de entrega de e-mails no Supabase.
 
 ## Executar localmente
 

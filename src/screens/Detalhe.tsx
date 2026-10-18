@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, tempoOcorrencia, type StatusOcorrencia } from "@/data/ocorrencias";
+import { Ocorrencia, calcularRelevancia, corRelevancia, labelRelevancia, METADADOS_STATUS, localOcorrencia, type StatusOcorrencia } from "@/data/ocorrencias";
 import { CategoriaOcorrencia, resolverCategoria } from "@/hooks/useCategorias";
 import Cabecalho from "@/components/Cabecalho";
 import Navegacao, { TabName } from "@/components/Navegacao";
@@ -17,11 +17,8 @@ type Props = {
   onNavigate: (tab: TabName) => void;
   onBack: () => void;
   id: string;
-  ocorrenciaMock?: Ocorrencia;
   categorias: CategoriaOcorrencia[];
   categoriasLoading: boolean;
-  confirmadoPorMim: boolean;
-  onConfirmar: (id: string) => void;
 };
 
 type EstadoDetalhe =
@@ -29,13 +26,13 @@ type EstadoDetalhe =
   | { status: "pronto"; dados: DetalheOcorrencia; usuarioId: string | null };
 
 export default function Detalhe(props: Props) {
-  const real = ehUuidOcorrencia(props.id);
+  const idValido = ehUuidOcorrencia(props.id);
   const { user, loading } = useAuth();
   const usuarioId = user?.id ?? null;
   const [estado, setEstado] = useState<EstadoDetalhe>({ status: "carregando" });
 
   useEffect(() => {
-    if (!real || loading) return;
+    if (!idValido || loading) return;
     let ativo = true;
     setEstado({ status: "carregando" });
     void buscarOcorrenciaPorId(props.id).then(dados => {
@@ -44,16 +41,15 @@ export default function Detalhe(props: Props) {
       if (ativo) setEstado({ status: "erro" });
     });
     return () => { ativo = false; };
-  }, [props.id, real, loading, usuarioId]);
+  }, [props.id, idValido, loading, usuarioId]);
 
-  const aguardando = real && (loading || estado.status === "carregando" ||
+  const aguardando = idValido && (loading || estado.status === "carregando" ||
     (estado.status === "pronto" && estado.usuarioId !== usuarioId));
-  const ocorrencia = real
-    ? (!aguardando && estado.status === "pronto" ? estado.dados.ocorrencia : undefined)
-    : props.ocorrenciaMock;
+  const ocorrencia = idValido && !aguardando && estado.status === "pronto"
+    ? estado.dados.ocorrencia : undefined;
 
   if (!ocorrencia) {
-    const erro = real && !aguardando && estado.status === "erro";
+    const erro = idValido && !aguardando && estado.status === "erro";
     return (
       <div className="app-screen bg-[#f3f6fa] flex flex-col items-start overflow-clip relative size-full">
         <Cabecalho />
@@ -74,12 +70,11 @@ export default function Detalhe(props: Props) {
     );
   }
 
-  return <ConteudoDetalhe key={`${props.id}:${usuarioId ?? "anon"}`} {...props} ocorrencia={ocorrencia} real={real}
-    confirmadoPorMim={!real && props.confirmadoPorMim}
-    fotos={real && estado.status === "pronto" ? estado.dados.fotos : []} />;
+  return <ConteudoDetalhe key={`${props.id}:${usuarioId ?? "anon"}`} {...props} ocorrencia={ocorrencia}
+    fotos={estado.status === "pronto" ? estado.dados.fotos : []} />;
 }
 
-function useConfirmacaoReal(ocorrencia: Ocorrencia, real: boolean) {
+function useConfirmacaoReal(ocorrencia: Ocorrencia) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const usuarioId = user?.id;
@@ -87,7 +82,7 @@ function useConfirmacaoReal(ocorrencia: Ocorrencia, real: boolean) {
   const [confirmacaoId, setConfirmacaoId] = useState<string | null>(null);
   const [quantidade, setQuantidade] = useState(ocorrencia.quantidadeConfirmacoes);
   const [fase, setFase] = useState<"carregando" | "pronto" | "confirmando" | "desfazendo" | "erro">(
-    real && usuarioId ? "carregando" : "pronto",
+    usuarioId ? "carregando" : "pronto",
   );
   const [mensagem, setMensagem] = useState("");
   const [precisaEntrar, setPrecisaEntrar] = useState(false);
@@ -95,7 +90,7 @@ function useConfirmacaoReal(ocorrencia: Ocorrencia, real: boolean) {
   const geracao = useRef(0);
 
   async function carregar(inicial: boolean, versao: number) {
-    if (!real || !usuarioId || operando.current) return;
+    if (!usuarioId || operando.current) return;
     operando.current = true;
     setFase("carregando");
     setMensagem("");
@@ -134,10 +129,10 @@ function useConfirmacaoReal(ocorrencia: Ocorrencia, real: boolean) {
       window.removeEventListener("focus", atualizarAoRetornar);
       document.removeEventListener("visibilitychange", atualizarAoRetornar);
     };
-  }, [id, real, usuarioId]);
+  }, [id, usuarioId]);
 
   async function alterar() {
-    if (!real || operando.current) return;
+    if (operando.current) return;
     if (!usuarioId) {
       navigate("/entrar", { state: { from: `/ocorrencias/${id}` } });
       return;
@@ -526,13 +521,13 @@ function AvisoDuplicidade({ principalId, categorias, categoriasLoading }: {
   </aside>;
 }
 
-function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, onConfirmar, confirmadoPorMim, real, fotos }: Props & {
-  ocorrencia: Ocorrencia; real: boolean; fotos: FotoOcorrenciaLeitura[];
+function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias, categoriasLoading, fotos }: Props & {
+  ocorrencia: Ocorrencia; fotos: FotoOcorrenciaLeitura[];
 }) {
-  const confirmacao = useConfirmacaoReal(ocorrencia, real);
-  const quantidade = real ? confirmacao.quantidade : ocorrencia.quantidadeConfirmacoes;
-  const confirmado = real ? confirmacao.fase === "pronto" && confirmacao.confirmacaoId !== null : confirmadoPorMim;
-  const ocupado = real && ["carregando", "confirmando", "desfazendo"].includes(confirmacao.fase);
+  const confirmacao = useConfirmacaoReal(ocorrencia);
+  const quantidade = confirmacao.quantidade;
+  const confirmado = confirmacao.fase === "pronto" && confirmacao.confirmacaoId !== null;
+  const ocupado = ["carregando", "confirmando", "desfazendo"].includes(confirmacao.fase);
   const textoAcao = confirmacao.fase === "carregando" ? "Consultando confirmação..."
     : confirmacao.fase === "confirmando" ? "Confirmando..."
     : confirmacao.fase === "desfazendo" ? "Removendo confirmação..."
@@ -566,7 +561,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
       </div>
 
       <div className="screen-scroll flex-1 overflow-y-auto w-full">
-        <div className={`screen-content layout-detalhe content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full ${real ? "[overflow-wrap:anywhere]" : ""}`}>
+        <div className="screen-content layout-detalhe content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full [overflow-wrap:anywhere]">
 
           {/* Título */}
           <div className="detail-title flex flex-col gap-[8px] w-full">
@@ -581,7 +576,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
             </p>
           </div>
 
-          {real && ocorrencia.status === "duplicado" &&
+          {ocorrencia.status === "duplicado" &&
             <AvisoDuplicidade principalId={ocorrencia.ocorrenciaPrincipalId}
               categorias={categorias} categoriasLoading={categoriasLoading} />}
 
@@ -605,7 +600,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
                 </div>
               </div>
 
-              {real && <GaleriaOcorrencia fotos={fotos} titulo={ocorrencia.titulo} />}
+              <GaleriaOcorrencia fotos={fotos} titulo={ocorrencia.titulo} />
 
               {/* Descrição */}
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[13px] leading-relaxed w-full">
@@ -617,7 +612,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
                 {[
                   { label: "Categoria", value: categoriaNome },
                   { label: "Local", value: localOcorrencia(ocorrencia) },
-                  { label: "Registrado", value: real ? new Date(ocorrencia.criadoEm).toLocaleDateString("pt-BR") : tempoOcorrencia(ocorrencia) },
+                  { label: "Registrado", value: new Date(ocorrencia.criadoEm).toLocaleDateString("pt-BR") },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between">
                     <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">{label}</p>
@@ -642,43 +637,28 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
               {confirmado ? (
                 <>
                   <p role="status" className="rounded-[12px] bg-[#e8f0fe] px-[14px] py-[10px] text-[#075ce5] text-[13px] font-semibold">Você confirmou este problema</p>
-                  {real && <button type="button" onClick={() => void confirmacao.alterar()} disabled={ocupado} aria-busy={ocupado}
+                  <button type="button" onClick={() => void confirmacao.alterar()} disabled={ocupado} aria-busy={ocupado}
                     className="self-start rounded-[10px] border border-[#d7e3f0] bg-white px-[14px] py-[10px] text-[#075ce5] text-[13px] font-semibold cursor-pointer disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5]">
                     Desfazer confirmação
-                  </button>}
+                  </button>
                 </>
               ) : (
-                <button type="button" onClick={() => real ? void confirmacao.alterar() : onConfirmar(ocorrencia.id)}
+                <button type="button" onClick={() => void confirmacao.alterar()}
                   disabled={ocupado} aria-busy={ocupado}
                   className="w-full rounded-[16px] bg-[#075ce5] hover:bg-[#0a47b8] px-[14px] py-[14px] text-white text-[14px] font-bold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075ce5]">
-                  {real ? textoAcao : "Também vi este problema"}
+                  {textoAcao}
                 </button>
               )}
 
-              {real && <p className="text-[#586a80] text-[12px]">Quem registrou esta ocorrência não pode confirmá-la.</p>}
-              {real && confirmacao.mensagem && <p role="status" className="text-[#586a80] text-[12px]">{confirmacao.mensagem}</p>}
+              <p className="text-[#586a80] text-[12px]">Quem registrou esta ocorrência não pode confirmá-la.</p>
+              {confirmacao.mensagem && <p role="status" className="text-[#586a80] text-[12px]">{confirmacao.mensagem}</p>}
             </div>
           </section>
 
-          {real && <SinalizacoesReal ocorrenciaId={ocorrencia.id} status={ocorrencia.status} />}
+          <SinalizacoesReal ocorrenciaId={ocorrencia.id} status={ocorrencia.status} />
 
           {/* Histórico */}
-          {real && <HistoricoReal ocorrenciaId={ocorrencia.id} />}
-          {!real && <div className="detail-updates flex flex-col gap-[12px] w-full">
-            <h2 className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Atualizações</h2>
-            {[
-              { titulo: "Encaminhado para manutenção", tempo: "Há 2 dias", texto: "A ocorrência foi enviada para a equipe de infraestrutura urbana e está em análise para agendamento do reparo." },
-              { titulo: `${ocorrencia.quantidadeConfirmacoes} confirmações recebidas`, tempo: "Há 3 dias", texto: "Moradores confirmaram a ocorrência. A equipe iniciou o levantamento do local para priorização." },
-            ].map((a, i) => (
-              <div key={i} className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[8px]">
-                <div className="flex items-start justify-between gap-[8px]">
-                  <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px] flex-1">{a.titulo}</p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal text-[#9aafc4] text-[11px] shrink-0 mt-[1px]">{a.tempo}</p>
-                </div>
-                <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] leading-relaxed">{a.texto}</p>
-              </div>
-            ))}
-          </div>}
+          <HistoricoReal ocorrenciaId={ocorrencia.id} />
           </div>
 
         </div>

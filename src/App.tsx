@@ -1,8 +1,7 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "react-router";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
-import { Ocorrencia, ocorrenciasIniciais } from "@/data/ocorrencias";
 import useCategorias from "@/hooks/useCategorias";
 import {
   ErroEnvioFotos,
@@ -101,10 +100,6 @@ export default function App() {
   const isAuthScreen = ["/entrar", "/recuperar-senha", "/redefinir-senha"].includes(location.pathname);
   const detalheMatch = useMatch("/ocorrencias/:id");
   const moderacaoMatch = useMatch("/moderacao/:id");
-  const [{ ocorrencias, confirmadas }, setEstado] = useState<{
-    ocorrencias: Ocorrencia[];
-    confirmadas: string[];
-  }>({ ocorrencias: ocorrenciasIniciais, confirmadas: [] });
   const navigationState = location.state as { from?: string; activeTab?: TabName; registroConcluido?: boolean } | null;
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const activeTab: TabName =
@@ -137,19 +132,6 @@ export default function App() {
     });
   }
 
-  function confirmarOcorrencia(id: string) {
-    if (ehUuidOcorrencia(id)) return;
-    setEstado(prev => {
-      if (prev.confirmadas.includes(id) ||
-        !prev.ocorrencias.some(o => o.id === id)) return prev;
-      return {
-        ocorrencias: prev.ocorrencias.map(o => o.id === id
-          ? { ...o, quantidadeConfirmacoes: o.quantidadeConfirmacoes + 1 } : o),
-        confirmadas: [...prev.confirmadas, id],
-      };
-    });
-  }
-
   async function registrarNovaOcorrencia(
     dados: DadosCriacaoOcorrencia,
     arquivos: readonly File[],
@@ -161,11 +143,9 @@ export default function App() {
 
     validarFotos(arquivos);
     const novaOcorrencia = await criarOcorrencia(dados, user.id);
-    let fotos: Ocorrencia["fotos"];
-
     try {
       onEnviandoFotos();
-      fotos = await enviarFotosOcorrencia(novaOcorrencia.id, arquivos);
+      await enviarFotosOcorrencia(novaOcorrencia.id, arquivos);
     } catch (error) {
       let ocorrenciaRemovida = false;
       if (error instanceof ErroEnvioFotos && error.limpeza.objetosRemovidos) {
@@ -189,10 +169,6 @@ export default function App() {
       throw error;
     }
 
-    setEstado(prev => ({
-      ...prev,
-      ocorrencias: [{ ...novaOcorrencia, fotos }, ...prev.ocorrencias],
-    }));
     return novaOcorrencia.id;
   }
 
@@ -249,9 +225,6 @@ export default function App() {
               activeTab={activeTab}
               onNavigate={navigate}
               onBack={goBack}
-              ocorrenciaMock={ocorrencias.find(o => o.id === detalheId)}
-              confirmadoPorMim={confirmadas.includes(detalheId)}
-              onConfirmar={confirmarOcorrencia}
               {...categoriasState}
             />
           } />
