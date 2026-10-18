@@ -407,7 +407,7 @@ function SinalizacoesReal({ ocorrenciaId, status }: { ocorrenciaId: string; stat
         <h2 id="sinalizacoes-titulo" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">
           Como está este problema agora?
         </h2>
-        <p className="text-[#586a80] text-[12px]">Compartilhe como você percebe a situação atualmente.</p>
+        <p className="text-[#586a80] text-[12px]">Compartilhe como você percebe a situação. Essas informações da comunidade não alteram o status oficial.</p>
       </div>
       <div className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] w-full min-w-0 flex flex-col gap-[12px]">
         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-[8px] w-full min-w-0" aria-busy={ocupado}>

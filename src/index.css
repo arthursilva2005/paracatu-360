@@ -42,6 +42,13 @@ body,
 .login-layout { overflow-y: auto; }
 .login-layout > * { flex-shrink: 0; }
 
+:where(button, a, input, textarea, select, [role="button"]):focus-visible {
+  outline: 2px solid #075ce5 !important;
+  outline-offset: 2px !important;
+}
+
+input::placeholder, textarea::placeholder { color: #586a80; opacity: 1; }
+
 .filter-chips { display: flex; flex-wrap: nowrap; gap: 8px; width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-behavior: smooth; scrollbar-width: none; }
 .filter-chips::-webkit-scrollbar { display: none; }
 .filter-chip { flex: none; min-height: 40px; padding: 7px 12px; border: 1px solid #d7e3f0; border-radius: 999px; background: white; color: #10284a; font: 600 13px Inter, sans-serif; white-space: nowrap; cursor: pointer; transition: background-color .15s, border-color .15s; }
@@ -164,6 +171,7 @@ body,
 }
 
 @media (max-width: 359px) {
+  .app-navigation button p { letter-spacing: -.06em; }
   .occurrence-card > div > :first-child { flex-wrap: wrap; gap: 6px; }
   .home-filter-heading { row-gap: 6px; }
   .home-sort { display: grid; grid-template-columns: max-content max-content; gap: 4px 6px; }

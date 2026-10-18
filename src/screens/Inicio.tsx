@@ -191,10 +191,12 @@ export default function Inicio({
               <p role="alert" className="col-span-full bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px]">Não foi possível carregar as ocorrências agora.</p>
             ) : ordenadas.length === 0 ? (
               <div className="col-span-full bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
-                <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Nenhuma ocorrência</p>
+                <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">
+                  {ocorrencias.length === 0 ? "Ainda não há ocorrências públicas" : "Nenhuma ocorrência nesta categoria"}
+                </p>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px] text-center">
-                  {ocorrencias.length === 0 ? "Nenhuma ocorrência registrada ainda." :
-                    `Não há ocorrências na categoria "${categorias.find(cat => cat.id === catFiltro)?.nome ?? "selecionada"}" ainda.`}
+                  {ocorrencias.length === 0 ? "Quando houver relatos públicos, eles aparecerão aqui." :
+                    `Não encontramos relatos em "${categorias.find(cat => cat.id === catFiltro)?.nome ?? "esta categoria"}". Tente outra categoria.`}
                 </p>
               </div>
             ) : (

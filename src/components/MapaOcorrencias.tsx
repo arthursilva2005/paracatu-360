@@ -230,7 +230,8 @@ export default function MapaOcorrencias({ ocorrencias, categorias, categoriasLoa
         © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer"
           onPointerDown={event => event.stopPropagation()} className="underline">OpenStreetMap</a> contributors
       </div>
-      <div className="absolute bottom-[34px] sm:bottom-[9px] right-[9px] z-[2] flex gap-[8px] rounded-[8px] bg-white/95 px-[7px] py-[5px] text-[10px] text-[#10284a]">
+      <div className="absolute bottom-[34px] sm:bottom-[9px] right-[9px] z-[2] flex gap-[8px] rounded-[8px] bg-white/95 px-[7px] py-[5px] text-[11px] text-[#10284a]" role="group" aria-label="Relevância das ocorrências no mapa">
+        <span className="font-semibold">Relevância:</span>
         <span><span className="text-[#dc2626]">●</span> Alta</span>
         <span><span className="text-[#d97706]">●</span> Média</span>
         <span><span className="text-[#075ce5]">●</span> Baixa</span>

@@ -136,9 +136,9 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
 
           {/* Ações rápidas */}
           <div className="profile-actions content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ações rápidas</p>
+            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ação rápida</p>
             <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
-              <div className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90" onClick={() => onNavigate("nova")}>
+              <button type="button" className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90 text-left" onClick={() => onNavigate("nova")}>
                 <div className="bg-[#075ce5] content-stretch flex flex-col items-center justify-center relative rounded-[18px] shrink-0 size-[36px]">
                   <div className="relative shrink-0 size-[18px]">
                     <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 18 18">
@@ -148,46 +148,9 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
                 </div>
                 <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start leading-[1.45] min-w-px not-italic relative">
                   <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[14px] w-full">Registrar problema</p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Abra uma nova ocorrência</p>
+                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Conte o que aconteceu na cidade</p>
                 </div>
-              </div>
-              <div className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90">
-                <div className="bg-[#075ce5] content-stretch flex flex-col items-center justify-center relative rounded-[18px] shrink-0 size-[36px]">
-                  <div className="relative shrink-0 size-[18px]">
-                    <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 18 18">
-                      <path d={svgPaths.p13cb380} stroke="white" strokeLinecap="round" strokeWidth="2" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start leading-[1.45] min-w-px not-italic relative">
-                  <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[14px] w-full">Notificações</p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Acompanhe atualizações</p>
-                </div>
-              </div>
-              <div className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90">
-                <div className="bg-[#075ce5] content-stretch flex flex-col items-center justify-center relative rounded-[18px] shrink-0 size-[36px]">
-                  <div className="relative shrink-0 size-[18px]">
-                    <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 18 18">
-                      <path d={svgPaths.p1f61bb80} stroke="white" strokeLinecap="round" strokeWidth="2" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start leading-[1.45] min-w-px not-italic relative">
-                  <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[14px] w-full">Configurações</p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Preferências e privacidade</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Precisa de ajuda */}
-          <div className="profile-help content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Precisa de ajuda?</p>
-            <p className="[word-break:break-word] font-['Inter:Regular',sans-serif] font-normal leading-[1.45] not-italic relative shrink-0 text-[#586a80] text-[13px] w-full">Acesse o centro de ajuda ou entre em contato com a equipe.</p>
-            <div className="bg-[#075ce5] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90">
-              <div className="content-stretch flex flex-col items-start p-[14px] relative size-full">
-                <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[14px] text-center text-white w-full">Centro de ajuda</p>
-              </div>
+              </button>
             </div>
           </div>
           </div>

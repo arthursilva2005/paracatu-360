@@ -181,8 +181,8 @@ export default function Atividade({
         <div className="screen-content layout-atividade content-stretch flex flex-col gap-[20px] items-start p-[22px] relative w-full">
 
           <div className="activity-intro [word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
-            <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[22px] w-full">Atividade</p>
-            <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Acompanhe atualizações e histórico das ocorrências.</p>
+            <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[22px] w-full">Atualizações</p>
+            <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Acompanhe o andamento das ocorrências na cidade.</p>
           </div>
 
           <div className="activity-period content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
@@ -203,11 +203,11 @@ export default function Atividade({
           </div>
 
           {carregando ? (
-            <p role="status" className="col-span-full text-[#586a80] text-[14px]">Carregando atividades...</p>
+            <p role="status" className="col-span-full text-[#586a80] text-[14px]">Carregando atualizações...</p>
           ) : erro ? (
-            <p role="alert" className="col-span-full text-[#10284a] text-[14px]">Não foi possível carregar as atividades agora.</p>
+            <p role="alert" className="col-span-full text-[#10284a] text-[14px]">Não foi possível carregar as atualizações agora.</p>
           ) : filtradas.length === 0 ? (
-            <p role="status" className="col-span-full text-[#586a80] text-[14px]">Nenhuma atualização neste período.</p>
+            <p role="status" className="col-span-full text-[#586a80] text-[14px]">Nenhuma atualização neste período. Escolha outro período para ver mais.</p>
           ) : (
             <>
               <div className="activity-recent content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">

@@ -82,7 +82,7 @@ function Sucesso({ titulo, categoria, onVerOcorrencia, onVoltarInicio }: {
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[14px] leading-relaxed">
           <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] break-words">"{titulo}"</span> foi enviada como{" "}
           <span className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5]">{categoria}</span>.
-          <br/>Você receberá atualizações sobre o andamento.
+          <br/>Você pode acompanhar o andamento na tela Atualizações.
         </p>
       </div>
       <div className="flex flex-col gap-[10px] w-full">
@@ -366,7 +366,7 @@ export default function NovaOcorrencia({
 
             {/* Descrição — textarea real */}
             <div className="new-description content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-              <label htmlFor="titulo-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Título da ocorrência</label>
+              <label htmlFor="titulo-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Título do problema</label>
               <input
                 id="titulo-ocorrencia"
                 value={titulo}
@@ -380,13 +380,14 @@ export default function NovaOcorrencia({
                 placeholder="Resuma o problema em um título"
                 className="bg-white w-full min-w-0 rounded-[16px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce]"
               />
-              {erroTitulo && <p id="erro-titulo" role="alert" className="font-['Inter:Regular',sans-serif] text-[#586a80] text-[12px]">{erroTitulo}</p>}
+              {erroTitulo && <p id="erro-titulo" role="alert" className="font-['Inter:Regular',sans-serif] text-[#dc2626] text-[12px]">{erroTitulo}</p>}
 
               <div className="flex items-center justify-between w-full">
-                <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px]">Descreva o problema</p>
-                <p className="font-['Inter:Regular',sans-serif] font-normal text-[#9aafc4] text-[11px]">{descricao.length}/300</p>
+                <label htmlFor="descricao-ocorrencia" className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px]">Descreva o problema</label>
+                <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[11px]" aria-live="off">{descricao.length}/300</p>
               </div>
               <textarea
+                id="descricao-ocorrencia"
                 value={descricao}
                 disabled={registrando || registroIncompleto}
                 onChange={e => setDescricao(e.target.value.slice(0, 300))}
@@ -398,7 +399,7 @@ export default function NovaOcorrencia({
 
             {/* Fotos */}
             <div className="new-photos content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos</p>
+              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos do problema</p>
               <input
                 ref={cameraRef}
                 type="file"
@@ -470,7 +471,7 @@ export default function NovaOcorrencia({
                 </p>
               )}
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] text-center w-full">
-                Ao registrar, você receberá atualizações sobre o andamento do caso.
+                Após registrar, acompanhe o andamento na tela Atualizações.
               </p>
             </div>
 

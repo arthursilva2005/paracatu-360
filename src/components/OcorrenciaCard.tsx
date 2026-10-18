@@ -31,6 +31,15 @@ export default function OcorrenciaCard({ ocorrencia, categorias, categoriasLoadi
     <div
       className="occurrence-card bg-white relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90 transition-opacity"
       onClick={onClick}
+      aria-label={onClick ? `Abrir ocorrência: ${titulo}` : undefined}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      } : undefined}
     >
       {exibirFoto && (
         <div className="relative aspect-[2/1] max-h-[220px] w-full overflow-hidden rounded-t-[16px] bg-[#eaf0f7]">

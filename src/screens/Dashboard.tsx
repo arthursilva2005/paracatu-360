@@ -152,7 +152,7 @@ export default function Dashboard({
             />
             <KPI
               valor={indicadores.confirmacoesAtivas}
-              label="Confirmações ativas"
+              label="Total de confirmações"
               cor="bg-[#e0f2fe]"
               icon={<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" stroke="#0284c7" strokeWidth="1.8" strokeLinecap="round"/></svg>}
             />
@@ -232,7 +232,7 @@ export default function Dashboard({
           {/* Bairros informados nas ocorrências públicas */}
           <div className="dashboard-neighborhoods bg-white rounded-[16px] p-[16px] flex flex-col gap-[12px] border border-[#e8eef5]">
             <div className="flex items-center justify-between">
-              <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Bairros mais ativos</p>
+              <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Bairros com mais ocorrências</p>
             </div>
             {indicadores.porBairro.length === 0 && <p className="text-[#586a80] text-[12px]">Nenhum bairro disponível.</p>}
             {indicadores.porBairro.map(({ bairro, count }) => (
