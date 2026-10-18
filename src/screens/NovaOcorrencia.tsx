@@ -66,8 +66,9 @@ function ImageIcon() {
     </svg>
   );
 }
-function Sucesso({ titulo, categoria, onVerOcorrencia, onVoltarInicio }: {
-  titulo: string; categoria: string; onVerOcorrencia: () => void; onVoltarInicio: () => void;
+function Sucesso({ titulo, categoria, onVerOcorrencia, onMinhasOcorrencias, onVoltarInicio }: {
+  titulo: string; categoria: string; onVerOcorrencia: () => void;
+  onMinhasOcorrencias: () => void; onVoltarInicio: () => void;
 }) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 px-[28px] py-[24px] gap-[24px] text-center">
@@ -78,25 +79,34 @@ function Sucesso({ titulo, categoria, onVerOcorrencia, onVoltarInicio }: {
         </svg>
       </div>
       <div className="flex flex-col gap-[8px] w-full min-w-0 [overflow-wrap:anywhere]">
-        <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px]">Ocorrência registrada!</p>
+        <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px]">Ocorrência registrada com sucesso.</h1>
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[14px] leading-relaxed">
           <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] break-words">"{titulo}"</span> foi enviada como{" "}
           <span className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5]">{categoria}</span>.
-          <br/>Você pode acompanhar o andamento na tela Atualizações.
+          <br/>Você pode acompanhar seus registros em Minhas ocorrências.
         </p>
       </div>
       <div className="flex flex-col gap-[10px] w-full">
         <button
+          type="button"
           onClick={onVerOcorrencia}
           className="bg-[#075ce5] hover:bg-[#0a47b8] active:scale-[0.98] w-full rounded-[16px] py-[15px] cursor-pointer border-none outline-none transition-all"
         >
-          <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[15px]">Ver ocorrência</p>
+          <span className="font-['Inter:Bold',sans-serif] font-bold text-white text-[15px]">Ver ocorrência</span>
         </button>
         <button
+          type="button"
+          onClick={onMinhasOcorrencias}
+          className="bg-white w-full rounded-[16px] py-[15px] cursor-pointer border border-[#d7e3f0] outline-none active:opacity-80 transition-all"
+        >
+          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Minhas ocorrências</span>
+        </button>
+        <button
+          type="button"
           onClick={onVoltarInicio}
           className="bg-white w-full rounded-[16px] py-[15px] cursor-pointer border border-[#d7e3f0] outline-none active:opacity-80 transition-all"
         >
-          <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Voltar para o início</p>
+          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Voltar para o início</span>
         </button>
       </div>
     </div>
@@ -143,6 +153,12 @@ export default function NovaOcorrencia({
   const pedidoGpsRef = useRef(0);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galeriaRef = useRef<HTMLInputElement>(null);
+  const categoriaRef = useRef<HTMLSelectElement>(null);
+  const pontoRef = useRef<HTMLHeadingElement>(null);
+  const bairroRef = useRef<HTMLInputElement>(null);
+  const enderecoRef = useRef<HTMLInputElement>(null);
+  const tituloRef = useRef<HTMLInputElement>(null);
+  const fotoBotaoRef = useRef<HTMLButtonElement>(null);
   const registrando = faseRegistro !== "idle";
 
   useEffect(() => () => {
@@ -255,30 +271,48 @@ export default function NovaOcorrencia({
 
   async function handleRegistrar() {
     if (sucesso || envioEmAndamento.current || registroIncompleto || localizandoRef.current) return;
-    if (!categoriaSelecionada || categoriasLoading || categoriasError) {
-      setErroCategoria("Selecione a categoria do problema.");
-      return;
-    }
+    const categoriaInvalida = !categoriaSelecionada || categoriasLoading || Boolean(categoriasError);
     const tituloValido = titulo.trim();
-    if (tituloValido.length < 5 || tituloValido.length > 80) {
-      setErroTitulo("Informe um título com 5 a 80 caracteres.");
-      return;
-    }
     const bairroInformado = bairro.trim();
     const enderecoInformado = endereco.trim();
-    setErroBairro(bairroInformado ? "" : "Informe o bairro da ocorrência.");
-    setErroEndereco(enderecoInformado ? "" : "Informe o endereço da ocorrência.");
-    setErroPonto(ponto ? "" : "Selecione o local da ocorrência no mapa.");
-    if (!bairroInformado || !enderecoInformado || !ponto) return;
-
+    const tituloInvalido = tituloValido.length < 5 || tituloValido.length > 80;
+    let erroFotoAtual = "";
     try {
       validarFotos(fotosSelecionadas.map(foto => foto.arquivo));
     } catch (error) {
-      setErroFotos(error instanceof Error ? error.message : "Selecione de 1 a 3 fotos válidas.");
+      erroFotoAtual = fotosSelecionadas.length === 0 ? "Adicione pelo menos uma foto do problema."
+        : error instanceof Error ? error.message : "Selecione de 1 a 3 fotos válidas.";
+    }
+
+    setErroCategoria(categoriaInvalida ? "Selecione a categoria do problema." : "");
+    setErroPonto(ponto ? "" : "Marque o local do problema no mapa.");
+    setErroBairro(bairroInformado ? "" : "Informe o bairro da ocorrência.");
+    setErroEndereco(enderecoInformado ? "" : "Informe o endereço da ocorrência.");
+    setErroTitulo(tituloInvalido ? "Digite um título com 5 a 80 caracteres." : "");
+    setErroFotos(erroFotoAtual);
+
+    const primeiroInvalido = categoriaInvalida ? categoriaRef.current
+      : !ponto ? pontoRef.current
+      : !bairroInformado ? bairroRef.current
+      : !enderecoInformado ? enderecoRef.current
+      : tituloInvalido ? tituloRef.current
+      : erroFotoAtual ? fotoBotaoRef.current : null;
+    if (categoriaInvalida || !ponto || !bairroInformado || !enderecoInformado || tituloInvalido || erroFotoAtual) {
+      if (primeiroInvalido) {
+        requestAnimationFrame(() => {
+          primeiroInvalido.focus({ preventScroll: true });
+          const campo = primeiroInvalido.getBoundingClientRect();
+          const visor = primeiroInvalido.closest(".screen-scroll")?.getBoundingClientRect();
+          if (campo.top < (visor?.top ?? 0) || campo.bottom > (visor?.bottom ?? window.innerHeight)) {
+            primeiroInvalido.scrollIntoView({
+              behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+              block: "center",
+            });
+          }
+        });
+      }
       return;
     }
-    setErroTitulo("");
-    setErroFotos("");
     setErroRegistro("");
     pedidoGpsRef.current += 1;
     envioEmAndamento.current = true;
@@ -322,6 +356,7 @@ export default function NovaOcorrencia({
             titulo={tituloRegistrado}
             categoria={categoria}
             onVerOcorrencia={() => onOpenDetalhe(idRegistrado!)}
+            onMinhasOcorrencias={() => onNavigate("perfil")}
             onVoltarInicio={onVoltarInicio}
           />
         ) : (
@@ -331,14 +366,16 @@ export default function NovaOcorrencia({
             <div className="new-intro [word-break:break-word] content-stretch flex flex-col gap-[8px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
               <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[24px] w-full">Nova ocorrência</p>
               <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[14px] w-full">Descreva o problema, adicione fotos e escolha o local para abrir o registro.</p>
+              <p className="text-[#586a80] text-[12px] w-full">Campos com * são obrigatórios.</p>
             </div>
 
             <div className="new-report-fields">
             {/* Categoria */}
             <div className="new-category content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
-              <label htmlFor="nova-categoria" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Categoria do problema</label>
+              <label htmlFor="nova-categoria" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Categoria do problema *</label>
               <select
                 id="nova-categoria"
+                ref={categoriaRef}
                 value={categoriaId}
                 onChange={event => { setCategoriaId(event.target.value); setErroCategoria(""); }}
                 disabled={categoriasLoading || Boolean(categoriasError) || registrando || registroIncompleto}
@@ -366,9 +403,10 @@ export default function NovaOcorrencia({
 
             {/* Descrição — textarea real */}
             <div className="new-description content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-              <label htmlFor="titulo-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Título do problema</label>
+              <label htmlFor="titulo-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Título do problema *</label>
               <input
                 id="titulo-ocorrencia"
+                ref={tituloRef}
                 value={titulo}
                 disabled={registrando || registroIncompleto}
                 onChange={e => { setTitulo(e.target.value.slice(0, 80)); setErroTitulo(""); }}
@@ -383,7 +421,7 @@ export default function NovaOcorrencia({
               {erroTitulo && <p id="erro-titulo" role="alert" className="font-['Inter:Regular',sans-serif] text-[#dc2626] text-[12px]">{erroTitulo}</p>}
 
               <div className="flex items-center justify-between w-full">
-                <label htmlFor="descricao-ocorrencia" className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px]">Descreva o problema</label>
+                <label htmlFor="descricao-ocorrencia" className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px]">Descrição do problema (opcional)</label>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[11px]" aria-live="off">{descricao.length}/300</p>
               </div>
               <textarea
@@ -399,7 +437,8 @@ export default function NovaOcorrencia({
 
             {/* Fotos */}
             <div className="new-photos content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-              <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos do problema</p>
+              <h2 id="fotos-titulo" className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Adicione fotos do problema *</h2>
+              <p id="fotos-ajuda" className="text-[#586a80] text-[12px]">Adicione pelo menos 1 foto. Você pode enviar até 3.</p>
               <input
                 ref={cameraRef}
                 type="file"
@@ -421,12 +460,14 @@ export default function NovaOcorrencia({
                 aria-label="Selecionar fotos da galeria"
               />
               <div className="content-stretch flex gap-[12px] items-start relative shrink-0 w-full">
-                <button type="button" disabled={registrando || registroIncompleto} onClick={() => cameraRef.current?.click()}
+                <button ref={fotoBotaoRef} type="button" disabled={registrando || registroIncompleto} onClick={() => cameraRef.current?.click()}
+                  aria-invalid={!!erroFotos} aria-describedby={erroFotos ? "fotos-ajuda erro-fotos" : "fotos-ajuda"}
                   className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] photo-option shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0] disabled:cursor-not-allowed disabled:opacity-60">
                   <CameraIcon />
                   <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#586a80] text-[11px]">Câmera</span>
                 </button>
                 <button type="button" disabled={registrando || registroIncompleto} onClick={() => galeriaRef.current?.click()}
+                  aria-invalid={!!erroFotos} aria-describedby={erroFotos ? "fotos-ajuda erro-fotos" : "fotos-ajuda"}
                   className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[16px] photo-option shrink-0 size-[96px] cursor-pointer active:opacity-80 gap-[4px] border border-dashed border-[#d7e3f0] disabled:cursor-not-allowed disabled:opacity-60">
                   <ImageIcon />
                   <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#586a80] text-[11px]">Galeria</span>
@@ -451,7 +492,7 @@ export default function NovaOcorrencia({
                   ))}
                 </div>
               )}
-              {erroFotos && <p role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px]">{erroFotos}</p>}
+              {erroFotos && <p id="erro-fotos" role="alert" className="font-['Inter:Regular',sans-serif] font-normal text-[#dc2626] text-[12px]">{erroFotos}</p>}
             </div>
 
             {/* Registrar */}
@@ -471,7 +512,7 @@ export default function NovaOcorrencia({
                 </p>
               )}
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] text-center w-full">
-                Após registrar, acompanhe o andamento na tela Atualizações.
+                Após registrar, encontre seu relato em Minhas ocorrências.
               </p>
             </div>
 
@@ -480,7 +521,10 @@ export default function NovaOcorrencia({
             <div className="new-location-column">
               {/* Localização real: GPS opcional, ponto obrigatório e endereço manual. */}
               <div className="new-location content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-                <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full">Onde aconteceu?</p>
+                <h2 ref={pontoRef} tabIndex={-1} aria-describedby={erroPonto ? "local-ajuda erro-ponto" : "local-ajuda"}
+                  className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[14px] w-full focus:outline-2 focus:outline-offset-2 focus:outline-[#075ce5]">Local do problema *</h2>
+                <p id="local-ajuda" className="text-[#586a80] text-[12px]">Use sua localização ou toque no mapa para marcar o local.</p>
+                {erroPonto && <p id="erro-ponto" role="alert" className="text-[#dc2626] text-[12px] w-full">{erroPonto}</p>}
                 <div className="bg-white content-stretch flex flex-col gap-[14px] items-start p-[16px] relative rounded-[16px] shrink-0 w-full border border-[#d7e3f0]">
                   <div className="content-stretch flex gap-[12px] items-center relative shrink-0 w-full">
                     <div className="bg-[#f3f6fa] content-stretch flex flex-col items-center justify-center relative rounded-[12px] shrink-0 size-[40px]">
@@ -513,11 +557,9 @@ export default function NovaOcorrencia({
                     <EditIcon />
                     <p>Toque no mapa ou arraste o ponto para ajustar o local.</p>
                   </div>
-                  {erroPonto && <p role="alert" className="text-[#dc2626] text-[12px] w-full">{erroPonto}</p>}
-
                   <div className="flex flex-col gap-[6px] w-full">
-                    <label htmlFor="bairro-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Bairro</label>
-                    <input id="bairro-ocorrencia" type="text" value={bairro} required
+                    <label htmlFor="bairro-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Bairro *</label>
+                    <input id="bairro-ocorrencia" ref={bairroRef} type="text" value={bairro} required
                       disabled={registrando || registroIncompleto}
                       onChange={event => { setBairro(event.target.value); setErroBairro(""); }}
                       aria-invalid={!!erroBairro}
@@ -527,8 +569,8 @@ export default function NovaOcorrencia({
                     {erroBairro && <p id="erro-bairro" role="alert" className="text-[#dc2626] text-[12px]">{erroBairro}</p>}
                   </div>
                   <div className="flex flex-col gap-[6px] w-full">
-                    <label htmlFor="endereco-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Endereço</label>
-                    <input id="endereco-ocorrencia" type="text" value={endereco} required
+                    <label htmlFor="endereco-ocorrencia" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[13px]">Endereço *</label>
+                    <input id="endereco-ocorrencia" ref={enderecoRef} type="text" value={endereco} required
                       disabled={registrando || registroIncompleto}
                       onChange={event => { setEndereco(event.target.value); setErroEndereco(""); }}
                       aria-invalid={!!erroEndereco}
