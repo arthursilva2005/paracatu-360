@@ -384,7 +384,7 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading, ca
     try {
       await alterarStatusOcorrencia(ocorrencia.id, ocorrencia.status, novoStatus, texto || null);
       await recarregar();
-      setMensagem("Status atualizado. A justificativa pública foi registrada no histórico quando informada.");
+      setMensagem("Status atualizado. Se você informou uma justificativa, ela aparece no histórico.");
     } catch (error) {
       const codigo = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
       if (codigo === "P3604") await recarregar();

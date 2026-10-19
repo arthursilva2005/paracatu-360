@@ -205,7 +205,7 @@ export default function Atividade({
           {carregando ? (
             <p role="status" className="col-span-full text-[#586a80] text-[14px]">Carregando atualizações...</p>
           ) : erro ? (
-            <p role="alert" className="col-span-full text-[#10284a] text-[14px]">Não foi possível carregar as atualizações agora.</p>
+            <p role="alert" className="col-span-full text-[#10284a] text-[14px]">Não foi possível carregar as atualizações agora. Atualize a página para tentar novamente.</p>
           ) : filtradas.length === 0 ? (
             <p role="status" className="col-span-full text-[#586a80] text-[14px]">
               {periodo === "hoje" ? "Não houve atualizações hoje." :
@@ -228,7 +228,7 @@ export default function Atividade({
               <div className="activity-history content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
                 <div className="[word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
                   <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[18px] w-full">Ocorrências mais confirmadas</p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Uma ocorrência por card, ordenada pelas confirmações atuais.</p>
+                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Veja quais ocorrências atualizadas neste período receberam mais confirmações.</p>
                 </div>
                 {porRelevancia.map(item => (
                   <CartaoAtividade key={item.ocorrencia.id} item={item} categorias={categorias}

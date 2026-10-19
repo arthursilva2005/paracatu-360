@@ -109,7 +109,7 @@ export default function Dashboard({
           </div>
 
           {carregando && <p role="status" className="bg-white rounded-[16px] p-[16px] text-[#586a80] text-[13px]">Carregando indicadores...</p>}
-          {!carregando && erro && <p role="alert" className="bg-white rounded-[16px] p-[16px] text-[#586a80] text-[13px]">Não foi possível carregar os indicadores agora.</p>}
+          {!carregando && erro && <p role="alert" className="bg-white rounded-[16px] p-[16px] text-[#586a80] text-[13px]">Não foi possível carregar os indicadores agora. Atualize a página para tentar novamente.</p>}
           {!carregando && !erro && <>
           {indicadores.total === 0 && (
             <p className="bg-white rounded-[16px] p-[16px] text-[#586a80] text-[13px]">Nenhuma ocorrência pública registrada ainda.</p>
@@ -238,7 +238,7 @@ export default function Dashboard({
             <div className="flex items-center justify-between">
               <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Bairros com mais ocorrências</p>
             </div>
-            {indicadores.porBairro.length === 0 && <p className="text-[#586a80] text-[12px]">Nenhum bairro disponível.</p>}
+            {indicadores.porBairro.length === 0 && <p className="text-[#586a80] text-[12px]">Ainda não há dados de bairros.</p>}
             {indicadores.porBairro.map(({ bairro, count }) => (
               <div key={bairro} className="flex items-center gap-[10px]">
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] w-[130px] max-w-[40%] shrink-0 break-words">{bairro || "Bairro não informado"}</p>
@@ -254,7 +254,7 @@ export default function Dashboard({
           {/* Ocorrências mais recentes */}
           <div className="dashboard-recent flex flex-col gap-[12px] w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">Ocorrências recentes</p>
-            {indicadores.recentes.length === 0 && <p className="text-[#586a80] text-[12px]">Nenhuma ocorrência para mostrar.</p>}
+            {indicadores.recentes.length === 0 && <p className="text-[#586a80] text-[12px]">Ainda não há ocorrências recentes para mostrar.</p>}
             {indicadores.recentes.map(ocorrencia => (
               <Link key={ocorrencia.id} to={`/ocorrencias/${ocorrencia.id}`}
                 state={{ from: "/indicadores", activeTab }}
@@ -283,7 +283,7 @@ export default function Dashboard({
                 <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#075ce5] text-[12px]">Ver todas</p>
               </button>
             </div>
-            {indicadores.maisRelevantes.length === 0 && <p className="text-[#586a80] text-[12px]">Nenhuma ocorrência para mostrar.</p>}
+            {indicadores.maisRelevantes.length === 0 && <p className="text-[#586a80] text-[12px]">Ainda não há ocorrências para comparar por confirmações.</p>}
             {indicadores.maisRelevantes.map(o => (
               <Link key={o.id} to={`/ocorrencias/${o.id}`} state={{ from: "/indicadores", activeTab }}
                 className="block no-underline rounded-[16px] focus-visible:outline-2 focus-visible:outline-[#075ce5]">

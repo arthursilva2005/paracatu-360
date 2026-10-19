@@ -132,7 +132,7 @@ export default function Mapa({
                 </div>
               ) : ordenadas.length === 0 ? (
                 <p className="w-full rounded-[16px] bg-white p-[20px] text-[#586a80] text-[14px]">
-                  {categoriaFiltro ? "Nenhuma ocorrência nesta categoria com localização disponível." :
+                  {categoriaFiltro ? "Não há ocorrências desta categoria no mapa. Tente outra categoria." :
                     "Nenhuma ocorrência com localização disponível."}
                 </p>
               ) : ordenadas.map(ocorrencia => (

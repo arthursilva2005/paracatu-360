@@ -82,9 +82,9 @@ function Sucesso({ titulo, categoria, onVerOcorrencia, onMinhasOcorrencias, onVo
       <div className="flex flex-col gap-[8px] w-full min-w-0 [overflow-wrap:anywhere]">
         <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px]">Ocorrência registrada com sucesso.</h1>
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[14px] leading-relaxed">
-          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] break-words">"{titulo}"</span> foi enviada como{" "}
+          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] break-words">"{titulo}"</span> foi registrada na categoria{" "}
           <span className="font-['Inter:Bold',sans-serif] font-bold text-[#075ce5]">{categoria}</span>.
-          <br/>Você pode acompanhar seus registros em Minhas ocorrências.
+          <br/>Você pode vê-la agora ou acompanhá-la em Minhas ocorrências.
         </p>
       </div>
       <div className="flex flex-col gap-[10px] w-full">

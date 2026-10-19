@@ -173,7 +173,7 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
             {carregando ? (
               <p role="status" className="bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px] w-full">Carregando suas ocorrências, fotos e confirmações...</p>
             ) : erroOcorrencias ? (
-              <p role="alert" className="bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px] w-full">Não foi possível carregar suas ocorrências agora.</p>
+              <p role="alert" className="bg-white rounded-[16px] p-[24px] text-[#586a80] text-[14px] w-full">Não foi possível carregar suas ocorrências agora. Atualize a página para tentar novamente.</p>
             ) : ocorrencias.length === 0 ? (
               <div className="bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[12px] w-full">
                 <p className="font-['Inter:Regular',sans-serif] text-[#586a80] text-[14px] text-center">Você ainda não registrou nenhuma ocorrência.</p>

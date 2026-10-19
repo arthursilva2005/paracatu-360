@@ -238,7 +238,7 @@ export default function MapaOcorrencias({ ocorrencias, categorias, categoriasLoa
       </div>
       {erroTiles && (
         <p role="alert" className="absolute bottom-[32px] left-[9px] z-[2] rounded bg-white/95 px-[6px] py-[4px] text-[#586a80] text-[11px]">
-          Parte do mapa não carregou.
+          Parte do mapa não carregou. Tente atualizar a página.
         </p>
       )}
     </div>

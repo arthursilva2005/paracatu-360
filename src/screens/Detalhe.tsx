@@ -240,11 +240,11 @@ function HistoricoReal({ ocorrenciaId }: { ocorrenciaId: string }) {
         </p>
       ) : estado.status === "erro" ? (
         <p role="alert" className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] text-[#586a80] text-[12px]">
-          Não foi possível carregar as atualizações agora.
+          Não foi possível carregar as atualizações agora. Atualize a página para tentar novamente.
         </p>
       ) : estado.eventos.length === 0 ? (
         <p className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] text-[#586a80] text-[12px]">
-          Nenhuma atualização registrada.
+          Ainda não há atualizações no histórico desta ocorrência.
         </p>
       ) : estado.eventos.map(evento => (
         <div key={evento.id} className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[8px]">

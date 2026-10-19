@@ -119,6 +119,6 @@ export function mensagemErroSinalizacao(error: unknown): string {
   if (erro?.code === "P3622") return "Esta opção não está disponível.";
   if (erro?.code === "P3623") return "Esta ocorrência não aceita novas sinalizações.";
   if (erro?.code === "P3624") return "Essa sinalização foi alterada em outra sessão. Recarregamos o estado atual.";
-  if (erro?.code === "P3626") return "A operação está indisponível nesta transação. Tente novamente.";
+  if (erro?.code === "P3626") return "Não foi possível concluir seu relato agora. Tente novamente.";
   return "Não foi possível atualizar sua sinalização agora.";
 }

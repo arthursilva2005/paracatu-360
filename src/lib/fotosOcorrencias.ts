@@ -87,7 +87,7 @@ export function erroArquivoFoto(arquivo: File): string | null {
     return "Selecione fotos JPEG, PNG ou WebP.";
   }
   if (arquivo.size === 0 || arquivo.size > TAMANHO_MAXIMO_FOTO) {
-    return "Cada foto deve ter até 5 MiB e não pode estar vazia.";
+    return "Cada foto precisa ter conteúdo e até cerca de 5 MB.";
   }
   return null;
 }

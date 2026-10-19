@@ -203,11 +203,11 @@ export default function Inicio({
             ) : ordenadas.length === 0 ? (
               <div className="col-span-full bg-white rounded-[16px] p-[24px] flex flex-col items-center gap-[8px]">
                 <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[15px]">
-                  {ocorrencias.length === 0 ? "Ainda não há ocorrências públicas" : "Nenhuma ocorrência nesta categoria"}
+                  {ocorrencias.length === 0 ? "Ainda não há ocorrências públicas por aqui." : "Não há ocorrências públicas nesta categoria."}
                 </p>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px] text-center">
-                  {ocorrencias.length === 0 ? "Quando houver relatos públicos, eles aparecerão aqui." :
-                    `Não encontramos relatos em "${categorias.find(cat => cat.id === catFiltro)?.nome ?? "esta categoria"}". Tente outra categoria.`}
+                  {ocorrencias.length === 0 ? "Quando houver novos registros públicos, eles aparecerão nesta página." :
+                    "Escolha outra categoria ou volte para Todas."}
                 </p>
               </div>
             ) : (
