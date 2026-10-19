@@ -1,6 +1,7 @@
 # Paracatu 360
 
 O Paracatu 360 é uma plataforma web de participação cidadã para registrar e acompanhar problemas urbanos em Paracatu, Minas Gerais. Abrange relatos sobre vias, infraestrutura, limpeza urbana, meio ambiente, saneamento e segurança.
+O Paracatu 360 é uma iniciativa independente e apartidária e não representa oficialmente a Prefeitura de Paracatu.
 
 **Produção / Demo online:** [paracatu-360.vercel.app](https://paracatu-360.vercel.app)
 
@@ -18,7 +19,7 @@ Os fluxos ativos utilizam dados reais do Supabase. O aplicativo oferece autentic
 
 ## Funcionalidades
 
-**Cidadão:** consultar ocorrências e seus detalhes, filtrar por categoria, visualizar o mapa e indicadores, criar ocorrência com localização e uma a três fotos, confirmar que também encontrou um problema, sinalizar a situação observada, acompanhar o histórico, consultar atividade e ver as próprias ocorrências. Cadastro, login, recuperação de senha e sessão persistente usam Supabase Auth.
+**Cidadão:** consultar ocorrências e seus detalhes, filtrar por categoria, visualizar o mapa e indicadores, criar ocorrência com localização e uma a três fotos, confirmar que também encontrou um problema, sinalizar a situação observada, acompanhar o histórico, consultar Atualizações e ver as próprias ocorrências. Cadastro, login, recuperação de senha e sessão persistente usam Supabase Auth.
 
 **Equipe:** moderadores e administradores acessam a área de moderação para analisar ocorrências, alterar o status oficial, registrar decisões no histórico e marcar duplicidades conforme suas permissões.
 
@@ -39,15 +40,16 @@ Os papéis são **cidadão**, **moderador** e **administrador**. As ações disp
 | `/recuperar-senha` | Público | Solicitação de recuperação de senha |
 | `/redefinir-senha` | Público | Definição de nova senha |
 | `/mapa` | Público | Mapa de ocorrências |
+| `/sobre` | Público | Sobre o Paracatu 360, funcionamento, privacidade e confiança |
 | `/ocorrencias/:id` | Público, conforme visibilidade da ocorrência | Detalhe e histórico |
 | `/indicadores` | Público | Indicadores da cidade |
 | `/ocorrencias/nova` | Usuário autenticado | Registro de ocorrência |
-| `/atividade` | Usuário autenticado | Atualizações e atividade |
+| `/atividade` | Usuário autenticado | Atualizações relacionadas às ocorrências e à participação do usuário |
 | `/perfil` | Usuário autenticado | Dados pessoais e próprias ocorrências |
 | `/moderacao` | Moderador ou administrador | Lista de moderação |
 | `/moderacao/:id` | Moderador ou administrador | Análise administrativa |
 
-O aplicativo usa `BrowserRouter`. A configuração da Vercel reescreve as rotas para `index.html`, permitindo acesso direto e recarga da página. A proteção efetiva dos dados está nas permissões e políticas RLS do Supabase.
+O aplicativo usa React Router com `createBrowserRouter` e `RouterProvider`. A configuração da Vercel reescreve as rotas para `index.html`, permitindo acesso direto e recarga da página. A proteção efetiva dos dados está nas permissões e políticas RLS do Supabase.
 
 ## Executar localmente
 
