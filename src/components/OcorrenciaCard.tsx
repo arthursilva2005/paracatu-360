@@ -83,7 +83,7 @@ export default function OcorrenciaCard({ ocorrencia, categorias, categoriasLoadi
               <path d="M8 1.5C4.41 1.5 1.5 4.41 1.5 8C1.5 11.59 4.41 14.5 8 14.5C11.59 14.5 14.5 11.59 14.5 8C14.5 4.41 11.59 1.5 8 1.5ZM7 11.5L3.5 8L4.56 6.94L7 9.37L11.44 4.93L12.5 6L7 11.5Z" fill="#075ce5" opacity="0.7"/>
             </svg>
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">
-              {confirmacoes} confirmações
+              {confirmacoes} {confirmacoes === 1 ? "confirmação" : "confirmações"}
             </p>
           </div>
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">{tempo}</p>

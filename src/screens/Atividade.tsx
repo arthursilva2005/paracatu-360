@@ -117,7 +117,7 @@ function CartaoAtividade({
         {ocorrencia.bairro} · {ocorrencia.endereco}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-[8px] w-full text-[#586a80] text-[12px] font-['Inter:Regular',sans-serif]">
-        <span>{ocorrencia.quantidadeConfirmacoes} confirmações</span>
+        <span>{ocorrencia.quantidadeConfirmacoes} {ocorrencia.quantidadeConfirmacoes === 1 ? "confirmação" : "confirmações"}</span>
         <time dateTime={evento.criadoEm}>{dataHora}</time>
       </div>
     </button>

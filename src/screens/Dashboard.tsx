@@ -266,7 +266,7 @@ export default function Dashboard({
                 <span className="font-bold text-[#10284a] text-[14px] break-words">{ocorrencia.titulo}</span>
                 <span className="text-[#586a80] text-[12px] break-words">
                   {ocorrencia.bairro} · {new Date(ocorrencia.criadoEm).toLocaleDateString("pt-BR")}
-                  {" · "}{ocorrencia.quantidadeConfirmacoes} confirmações
+                  {" · "}{ocorrencia.quantidadeConfirmacoes} {ocorrencia.quantidadeConfirmacoes === 1 ? "confirmação" : "confirmações"}
                 </span>
               </Link>
             ))}

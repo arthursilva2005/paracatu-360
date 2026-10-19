@@ -198,7 +198,7 @@ export default function MapaOcorrencias({ ocorrencias, categorias, categoriasLoa
             {selecionada.ocorrencia.bairro + " · " + selecionada.ocorrencia.endereco}
           </p>
           <p className="mt-[4px] text-[#586a80] text-[11px]">
-            {selecionada.ocorrencia.quantidadeConfirmacoes} confirmações
+            {selecionada.ocorrencia.quantidadeConfirmacoes} {selecionada.ocorrencia.quantidadeConfirmacoes === 1 ? "confirmação" : "confirmações"}
           </p>
           <button
             type="button"
