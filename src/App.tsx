@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "react-router";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
@@ -12,17 +12,18 @@ import {
 import { criarOcorrencia, ehUuidOcorrencia, type DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
 import { supabase } from "@/lib/supabase";
 import Login from "@/screens/Login";
-import RecuperarSenha from "@/screens/RecuperarSenha";
-import RedefinirSenha from "@/screens/RedefinirSenha";
 import Inicio from "@/screens/Inicio";
-import Mapa from "@/screens/Mapa";
 import NovaOcorrencia from "@/screens/NovaOcorrencia";
 import Atividade from "@/screens/Atividade";
 import Perfil from "@/screens/Perfil";
 import Detalhe from "@/screens/Detalhe";
-import Dashboard from "@/screens/Dashboard";
-import Moderacao from "@/screens/Moderacao";
-import Sobre from "@/screens/Sobre";
+
+const RecuperarSenha = lazy(() => import("@/screens/RecuperarSenha"));
+const RedefinirSenha = lazy(() => import("@/screens/RedefinirSenha"));
+const Mapa = lazy(() => import("@/screens/Mapa"));
+const Dashboard = lazy(() => import("@/screens/Dashboard"));
+const Moderacao = lazy(() => import("@/screens/Moderacao"));
+const Sobre = lazy(() => import("@/screens/Sobre"));
 
 const tabPaths: Record<TabName, string> = {
   inicio: "/",
@@ -201,7 +202,7 @@ export default function App() {
         </aside>
       )}
       <main className="app-main">
-
+        <Suspense fallback={<div className="app-screen bg-[#f3f6fa] flex items-center justify-center" role="status" aria-live="polite">Carregando...</div>}>
         <Routes>
           <Route path="/entrar" element={<RotaLogin />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
@@ -266,6 +267,7 @@ export default function App() {
           } />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </main>
     </div>
   );
