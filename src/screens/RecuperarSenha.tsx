@@ -51,7 +51,7 @@ export default function RecuperarSenha() {
   return (
     <div className="login-layout bg-[#f3f6fa] flex flex-col items-center justify-between size-full">
       <div className="bg-[#f3f6fa] w-full flex flex-col items-center justify-center pt-[56px] pb-[48px] px-[32px]">
-        <img src={logo} alt="Paracatu360" className="w-[200px] object-contain drop-shadow-lg" />
+        <img src={logo} alt="Paracatu 360" className="w-[200px] object-contain drop-shadow-lg" />
       </div>
       <form className="flex-1 w-full flex flex-col justify-center px-[28px] gap-[20px]" onSubmit={enviarLink} noValidate>
         <div className="flex flex-col gap-[6px]">

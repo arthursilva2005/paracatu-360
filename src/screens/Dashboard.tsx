@@ -102,7 +102,7 @@ export default function Dashboard({
 
           {/* Cabeçalho do dashboard */}
           <div className="dashboard-title flex flex-col gap-[4px]">
-            <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px]">Dashboard 360</p>
+            <p className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[22px]">Indicadores da cidade</p>
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">
               Visão geral das ocorrências públicas.
             </p>

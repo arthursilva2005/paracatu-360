@@ -136,7 +136,7 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
 
           {/* Ações rápidas */}
           <div className="profile-actions content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ação rápida</p>
+            <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[#10284a] text-[18px] w-full">Ações rápidas</p>
             <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
               <button type="button" className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90 text-left" onClick={() => onNavigate("nova")}>
                 <div className="bg-[#075ce5] content-stretch flex flex-col items-center justify-center relative rounded-[18px] shrink-0 size-[36px]">

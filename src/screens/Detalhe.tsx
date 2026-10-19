@@ -233,7 +233,7 @@ function HistoricoReal({ ocorrenciaId }: { ocorrenciaId: string }) {
 
   return (
     <div className="detail-updates flex flex-col gap-[12px] w-full" aria-busy={estado.status === "carregando"}>
-      <h2 className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Histórico oficial</h2>
+      <h2 className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Histórico da ocorrência</h2>
       {estado.status === "carregando" ? (
         <p role="status" className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] text-[#586a80] text-[12px]">
           Carregando atualizações...
@@ -402,7 +402,7 @@ function SinalizacoesReal({ ocorrenciaId, status }: { ocorrenciaId: string; stat
         <h2 id="sinalizacoes-titulo" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">
           Como está este problema agora?
         </h2>
-        <p className="text-[#586a80] text-[12px]">Se você passou pelo local recentemente, conte como está a situação. As informações da comunidade ajudam a acompanhar, mas não alteram o status oficial.</p>
+        <p className="text-[#586a80] text-[12px]">Se você passou pelo local recentemente, conte como está a situação. As informações da comunidade ajudam a acompanhar, mas não alteram automaticamente o status da ocorrência na plataforma.</p>
       </div>
       <div className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] w-full min-w-0 flex flex-col gap-[12px]">
         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-[8px] w-full min-w-0" aria-busy={ocupado}>
@@ -533,7 +533,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
     : confirmacao.fase === "desfazendo" ? "Removendo confirmação..."
     : confirmacao.precisaEntrar ? "Entrar novamente"
     : confirmacao.fase === "erro" ? "Consultar novamente"
-    : "Também vi este problema";
+    : "Também encontrei este problema";
   const relevancia = calcularRelevancia(quantidade);
   const categoria = resolverCategoria(ocorrencia.categoriaId, categorias);
   const categoriaNome = categoria?.nome
@@ -584,10 +584,10 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
           <div className="detail-summary bg-white rounded-[16px] w-full border border-[#e8eef5]">
             <div className="flex flex-col gap-[14px] p-[16px]">
 
-              {/* Status oficial + relevância */}
+              {/* Status da ocorrência + relevância */}
               <div className="flex items-center justify-between w-full gap-[8px] flex-wrap">
                 <div className="flex flex-col items-start gap-[4px]">
-                  <p className="text-[#586a80] text-[11px]">Status oficial</p>
+                  <p className="text-[#586a80] text-[11px]">Status da ocorrência</p>
                   <span className={`${METADADOS_STATUS[ocorrencia.status]?.classeBg ?? "bg-[#586a80]"} px-[10px] py-[5px] rounded-[999px]`}>
                     <span className="font-['Inter:Bold',sans-serif] font-bold text-white text-[12px]">{METADADOS_STATUS[ocorrencia.status].label}</span>
                   </span>
@@ -627,7 +627,7 @@ function ConteudoDetalhe({ activeTab, onNavigate, onBack, ocorrencia, categorias
           {/* Confirmação */}
           <section className="detail-actions flex flex-col gap-[12px] w-full pb-[8px]" aria-labelledby="confirmacao-titulo">
             <div className="flex flex-col gap-[4px]">
-              <h2 id="confirmacao-titulo" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Você também viu este problema?</h2>
+              <h2 id="confirmacao-titulo" className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[18px]">Você também encontrou este problema?</h2>
               <p className="text-[#586a80] text-[12px]">Sua confirmação ajuda a mostrar quantas pessoas encontraram a mesma situação.</p>
             </div>
             <div className="bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[12px]">

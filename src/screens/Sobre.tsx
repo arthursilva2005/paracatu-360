@@ -10,7 +10,7 @@ type Props = {
 
 const etapas = [
   { titulo: "Encontre um problema", texto: "Identifique uma situação urbana que precisa de atenção." },
-  { titulo: "Registre a ocorrência", texto: "Informe categoria, localização, título, descrição e uma foto." },
+  { titulo: "Registre a ocorrência", texto: "Informe título, categoria, localização e ao menos uma foto. Se quiser, acrescente uma descrição." },
   { titulo: "A comunidade participa", texto: "Outros moradores podem confirmar que também encontraram o problema." },
   { titulo: "Acompanhe as atualizações", texto: "Veja mudanças de status, histórico e relatos da comunidade." },
   { titulo: "Veja os dados da cidade", texto: "Acompanhe o mapa e os indicadores públicos do Paracatu 360." },

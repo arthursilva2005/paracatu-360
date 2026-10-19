@@ -182,7 +182,7 @@ export default function Atividade({
 
           <div className="activity-intro [word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
             <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[22px] w-full">Atualizações</p>
-            <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Acompanhe as mudanças oficiais recentes nas ocorrências da cidade.</p>
+            <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Acompanhe as mudanças de status recentes nas ocorrências da cidade.</p>
           </div>
 
           <div className="activity-period content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
@@ -217,7 +217,7 @@ export default function Atividade({
               <div className="activity-recent content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
                 <div className="[word-break:break-word] content-stretch flex flex-col gap-[4px] items-start leading-[1.45] not-italic relative shrink-0 w-full">
                   <p className="font-['Inter:Bold',sans-serif] font-bold relative shrink-0 text-[#10284a] text-[18px] w-full">Atualizações recentes</p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Eventos oficiais no período, dos mais novos aos mais antigos.</p>
+                  <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Atualizações do período, das mais novas às mais antigas.</p>
                 </div>
                 {filtradas.map(item => (
                   <CartaoAtividade key={item.evento.id} item={item} categorias={categorias}
@@ -242,7 +242,7 @@ export default function Atividade({
             <div className="content-stretch flex flex-col gap-[8px] items-start p-[16px] relative size-full">
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[10px] text-white w-full">NOVO PROBLEMA</p>
               <p className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] not-italic relative shrink-0 text-[16px] text-white w-full">Registrar uma nova ocorrência</p>
-              <p className="[word-break:break-word] font-['Inter:Regular',sans-serif] font-normal leading-[1.45] not-italic relative shrink-0 text-[12px] text-white w-full">Compartilhe fotos, localização e detalhes para ajudar a equipe a priorizar.</p>
+              <p className="[word-break:break-word] font-['Inter:Regular',sans-serif] font-normal leading-[1.45] not-italic relative shrink-0 text-[12px] text-white w-full">Registre fotos, localização e detalhes para dar visibilidade ao problema.</p>
               <button type="button" className="bg-[#ffcc36] relative rounded-[16px] shrink-0 w-full cursor-pointer active:opacity-90 p-[14px]"
                 onClick={() => onNavigate("nova")}>
                 <span className="[word-break:break-word] font-['Inter:Bold',sans-serif] font-bold leading-[1.45] text-[#10284a] text-[14px] text-center w-full">Registrar problema</span>

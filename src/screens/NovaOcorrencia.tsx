@@ -384,7 +384,7 @@ export default function NovaOcorrencia({
       console.error("Não foi possível registrar a ocorrência.", error);
       if (error instanceof RegistroIncompletoError) {
         setRegistroIncompleto(true);
-        setErroRegistro("O registro não foi concluído e pode ter ficado pendente. Não tente enviá-lo novamente; entre em contato com o suporte.");
+        setErroRegistro("O registro não foi concluído e pode ter ficado pendente. Não tente enviá-lo novamente; confira em Minhas ocorrências se foi salvo.");
       } else {
         setErroRegistro("Não foi possível registrar a ocorrência. Tente novamente.");
       }

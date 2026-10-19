@@ -107,11 +107,11 @@ export default function Login() {
       <div className="bg-[#f3f6fa] w-full flex flex-col items-center justify-center pt-[56px] pb-[48px] px-[32px]">
         <img
           src={logo}
-          alt="Paracatu360"
+          alt="Paracatu 360"
           className="w-[200px] object-contain drop-shadow-lg"
         />
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px] mt-[12px] tracking-widest uppercase text-center">
-          Cidade Conectada, Resultados Reais.
+          Veja. Registre. Acompanhe.
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function Login() {
           </p>
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[14px]">
             {modo === "login"
-              ? "Entre para acompanhar e registrar ocorrências na sua cidade."
+              ? "Explore ocorrências públicas sem conta. Entre para registrar e participar."
               : "Cadastre-se para participar e acompanhar sua cidade."}
           </p>
         </div>

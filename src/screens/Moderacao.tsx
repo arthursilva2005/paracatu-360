@@ -80,7 +80,7 @@ function ListaAdministrativa({ categorias, categoriasLoading, categoriasError, r
   return <>
     <header className="min-w-0">
       <h1 className="text-[#10284a] text-[24px] font-bold">Moderação</h1>
-      <p className="text-[#586a80] text-[13px]">Acompanhe os relatos e as decisões oficiais.</p>
+      <p className="text-[#586a80] text-[13px]">Acompanhe os relatos e as decisões de moderação.</p>
     </header>
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-[10px] w-full">
       <label className="min-w-0 text-[#586a80] text-[12px] flex flex-col gap-[5px]">Status
@@ -474,7 +474,7 @@ function DetalheAdministrativo({ id, onVoltar, categorias, categoriasLoading, ca
               {mensagem && <p role="status" className="text-[#586a80] text-[13px]">{mensagem}</p>}
             </section>
             <section className="min-w-0 bg-white rounded-[16px] border border-[#e8eef5] p-[16px] flex flex-col gap-[12px]">
-              <h2 className="text-[#10284a] text-[18px] font-bold">Histórico oficial</h2>
+              <h2 className="text-[#10284a] text-[18px] font-bold">Histórico da ocorrência</h2>
               {historicoCarregando ? <p role="status" className="text-[#586a80] text-[13px]">Carregando histórico...</p>
                 : historicoErro ? <p role="alert" className="text-[#586a80] text-[13px]">Não foi possível carregar o histórico.</p>
                 : historico.length === 0 ? <p className="text-[#586a80] text-[13px]">Ainda não há atualizações.</p>
