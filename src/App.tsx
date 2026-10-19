@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, type ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "react-router";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +11,7 @@ import {
 } from "@/lib/fotosOcorrencias";
 import { criarOcorrencia, ehUuidOcorrencia, type DadosCriacaoOcorrencia } from "@/lib/ocorrencias";
 import { supabase } from "@/lib/supabase";
+import { consumirRetornoGoogle, origemDoLogin } from "@/lib/retornoLogin";
 import Login from "@/screens/Login";
 import Inicio from "@/screens/Inicio";
 import NovaOcorrencia from "@/screens/NovaOcorrencia";
@@ -33,23 +34,6 @@ const tabPaths: Record<TabName, string> = {
   perfil: "/perfil",
   moderacao: "/moderacao",
 };
-
-const rotasProtegidas = new Set(["/ocorrencias/nova", "/atividade", "/perfil", "/moderacao"]);
-
-function rotaOrigemSegura(state: unknown): string {
-  if (!state || typeof state !== "object" || !("from" in state)) return "/";
-
-  const from = (state as { from?: unknown }).from;
-  if (typeof from !== "string" || !from.startsWith("/") || from.startsWith("//") ||
-    /[\\\u0000-\u0020\u007f]/.test(from)) return "/";
-
-  const pathname = from.split(/[?#]/, 1)[0];
-  const detalhe = pathname.match(/^\/ocorrencias\/([^/]+)$/);
-  const detalheModeracao = pathname.match(/^\/moderacao\/([^/]+)$/);
-  return rotasProtegidas.has(pathname) ||
-    (detalhe && ehUuidOcorrencia(detalhe[1])) ||
-    (detalheModeracao && ehUuidOcorrencia(detalheModeracao[1])) ? from : "/";
-}
 
 function RotaProtegida({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -82,13 +66,18 @@ function RotaEquipe({ children }: { children: ReactNode }) {
 function RotaLogin() {
   const { session, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const redirecionando = useRef(false);
 
-  if (loading) {
+  useEffect(() => {
+    if (loading || !session || redirecionando.current) return;
+    redirecionando.current = true;
+    const retornoGoogle = consumirRetornoGoogle();
+    navigate(origemDoLogin(location.state) ?? retornoGoogle ?? "/", { replace: true });
+  }, [loading, location.state, navigate, session]);
+
+  if (loading || session) {
     return <div className="app-screen bg-[#f3f6fa]" aria-busy="true" />;
-  }
-
-  if (session) {
-    return <Navigate to={rotaOrigemSegura(location.state)} replace />;
   }
 
   return <Login />;

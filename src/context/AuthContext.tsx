@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { limparRetornoGoogle } from "@/lib/retornoLogin";
 
 export type PapelUsuario = "cidadao" | "moderador" | "administrador";
 
@@ -37,6 +38,7 @@ type AuthContextValue = {
   passwordRecovery: boolean;
   concluirRecuperacaoSenha: () => void;
   signIn: (email: string, password: string) => Promise<ResultadoAuth>;
+  entrarComGoogle: () => Promise<ResultadoAuth>;
   signUp: (nome: string, email: string, password: string) => Promise<ResultadoCadastro>;
   signOut: () => Promise<ResultadoAuth>;
 };
@@ -216,12 +218,23 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   async function signIn(email: string, password: string): Promise<ResultadoAuth> {
+    limparRetornoGoogle();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) definirUsuarioRecuperacao(null);
     return { error };
   }
 
+  async function entrarComGoogle(): Promise<ResultadoAuth> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/entrar` },
+    });
+    if (!error) definirUsuarioRecuperacao(null);
+    return { error };
+  }
+
   async function signUp(nome: string, email: string, password: string): Promise<ResultadoCadastro> {
+    limparRetornoGoogle();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -258,6 +271,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     passwordRecovery: Boolean(session && recoveryUserId === session.user.id),
     concluirRecuperacaoSenha,
     signIn,
+    entrarComGoogle,
     signUp,
     signOut,
   }), [loading, profileState.error, profileState.profile, recoveryUserId, session, user]);

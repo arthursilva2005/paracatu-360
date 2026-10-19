@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
-import { Link } from "react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useLocation } from "react-router";
 import { useAuth } from "@/context/AuthContext";
+import { guardarRetornoGoogle, limparRetornoGoogle, origemDoLogin } from "@/lib/retornoLogin";
 
 const logo = `${import.meta.env.BASE_URL}logoptu360.jpg`;
 
@@ -36,15 +37,25 @@ function mensagemErroCadastro(error: { message: string; status?: number } | null
 }
 
 export default function Login() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, entrarComGoogle } = useAuth();
+  const location = useLocation();
   const [modo, setModo] = useState<"login" | "cadastro">("login");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
+  const ocupado = submitting || googleLoading;
+
+  useEffect(() => {
+    const parametros = new URLSearchParams(location.search || location.hash.replace(/^#/, ""));
+    if (!parametros.has("error")) return;
+    limparRetornoGoogle();
+    setErro("Não foi possível entrar com Google. Tente novamente.");
+  }, [location.hash, location.search]);
 
   function trocarModo(novoModo: "login" | "cadastro") {
     setModo(novoModo);
@@ -56,7 +67,7 @@ export default function Login() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (ocupado) return;
 
     if (modo === "cadastro" && !nome.trim()) {
       setErro("Informe seu nome.");
@@ -101,6 +112,27 @@ export default function Login() {
     }
   }
 
+  async function handleGoogle() {
+    if (ocupado) return;
+    setGoogleLoading(true);
+    setErro("");
+    setMensagem("");
+    guardarRetornoGoogle(origemDoLogin(location.state));
+
+    try {
+      const { error } = await entrarComGoogle();
+      if (error) {
+        limparRetornoGoogle();
+        setErro("Não foi possível iniciar o acesso com Google. Tente novamente.");
+      }
+    } catch {
+      limparRetornoGoogle();
+      setErro("Não foi possível iniciar o acesso com Google. Tente novamente.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <div className="login-layout bg-[#f3f6fa] flex flex-col items-center justify-between size-full" data-name="Login">
       {/* Topo azul com logo */}
@@ -128,6 +160,23 @@ export default function Login() {
           </p>
         </div>
 
+        <button
+          type="button"
+          onClick={handleGoogle}
+          disabled={ocupado}
+          className="bg-white hover:bg-[#f7faff] active:bg-[#eef4ff] w-full rounded-[16px] py-[16px] cursor-pointer border border-[#d7e3f0] outline-none focus-visible:ring-2 focus-visible:ring-[#075ce5] focus-visible:ring-offset-2 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[16px]">
+            {googleLoading ? "Conectando ao Google..." : "Continuar com Google"}
+          </span>
+        </button>
+
+        <div className="flex items-center gap-[12px]">
+          <div className="flex-1 h-px bg-[#d7e3f0]" />
+          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">ou</p>
+          <div className="flex-1 h-px bg-[#d7e3f0]" />
+        </div>
+
         <div className="flex flex-col gap-[12px]">
           {modo === "cadastro" && (
             <div className="flex flex-col gap-[6px]">
@@ -140,7 +189,7 @@ export default function Login() {
                 placeholder="Seu nome"
                 autoComplete="name"
                 required
-                disabled={submitting}
+                disabled={ocupado}
                 className="bg-white rounded-[14px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce] w-full disabled:opacity-70"
               />
             </div>
@@ -157,7 +206,7 @@ export default function Login() {
               placeholder="seu@email.com"
               autoComplete="email"
               required
-              disabled={submitting}
+              disabled={ocupado}
               className="bg-white rounded-[14px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce] w-full disabled:opacity-70"
             />
           </div>
@@ -174,7 +223,7 @@ export default function Login() {
               autoComplete={modo === "login" ? "current-password" : "new-password"}
               minLength={6}
               required
-              disabled={submitting}
+              disabled={ocupado}
               className="bg-white rounded-[14px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce] w-full disabled:opacity-70"
             />
           </div>
@@ -191,7 +240,7 @@ export default function Login() {
                 autoComplete="new-password"
                 minLength={6}
                 required
-                disabled={submitting}
+                disabled={ocupado}
                 className="bg-white rounded-[14px] px-[16px] py-[14px] border border-[#d7e3f0] font-['Inter:Regular',sans-serif] font-normal text-[#10284a] text-[14px] outline-none focus:border-[#075ce5] transition-colors placeholder:text-[#b0bfce] w-full disabled:opacity-70"
               />
             </div>
@@ -215,7 +264,7 @@ export default function Login() {
         {/* Botão entrar */}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={ocupado}
           className="bg-[#075ce5] hover:bg-[#0a47b8] active:bg-[#083a96] active:scale-[0.98] w-full rounded-[16px] py-[16px] cursor-pointer border-none outline-none transition-all duration-150 shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 disabled:active:scale-100"
         >
           <p className="font-['Inter:Bold',sans-serif] font-bold text-white text-[16px] text-center">
@@ -225,13 +274,6 @@ export default function Login() {
           </p>
         </button>
 
-        {/* Divisor */}
-        <div className="flex items-center gap-[12px]">
-          <div className="flex-1 h-px bg-[#d7e3f0]" />
-          <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[12px]">ou</p>
-          <div className="flex-1 h-px bg-[#d7e3f0]" />
-        </div>
-
         {/* Cadastro */}
         <div className="flex flex-col items-center gap-[4px]">
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[#586a80] text-[13px]">
@@ -239,7 +281,7 @@ export default function Login() {
           </p>
           <button
             type="button"
-            disabled={submitting}
+            disabled={ocupado}
             onClick={() => trocarModo(modo === "login" ? "cadastro" : "login")}
             className="bg-transparent border-none p-0 font-['Inter:Bold',sans-serif] font-bold text-[#075ce5] text-[13px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
           >
