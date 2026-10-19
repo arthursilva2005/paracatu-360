@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 export type TabName = "inicio" | "mapa" | "nova" | "atividade" | "perfil" | "moderacao";
 
 type Props = {
-  activeTab: TabName;
+  activeTab: TabName | null;
   onNavigate: (tab: TabName) => void;
 };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import svgPaths from "@/assets/svg-w4jnqeqhpf";
 import { listarMinhasOcorrencias, type OcorrenciaHome } from "@/lib/ocorrencias";
 import { EstadoCategorias } from "@/hooks/useCategorias";
@@ -151,6 +151,15 @@ export default function Perfil({ activeTab, onNavigate, onOpenDetalhe, categoria
                   <p className="font-['Inter:Regular',sans-serif] font-normal relative shrink-0 text-[#586a80] text-[12px] w-full">Conte o que aconteceu na cidade</p>
                 </div>
               </button>
+              <Link to="/sobre" className="bg-white content-stretch flex gap-[12px] items-center p-[16px] relative rounded-[16px] shrink-0 w-full no-underline text-left">
+                <div className="bg-[#e8f0fe] content-stretch flex items-center justify-center rounded-[18px] shrink-0 size-[36px] text-[#075ce5]">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+                    <path d="M12 11v5m0-8h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <span className="font-['Inter:Bold',sans-serif] font-bold text-[#10284a] text-[14px]">Sobre o Paracatu 360</span>
+              </Link>
             </div>
           </div>
           </div>

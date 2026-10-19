@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "react-router";
+import { Link, Navigate, Route, Routes, useLocation, useMatch, useNavigate } from "react-router";
 import Navegacao, { TabName } from "@/components/Navegacao";
 import { useAuth } from "@/context/AuthContext";
 import useCategorias from "@/hooks/useCategorias";
@@ -22,6 +22,7 @@ import Perfil from "@/screens/Perfil";
 import Detalhe from "@/screens/Detalhe";
 import Dashboard from "@/screens/Dashboard";
 import Moderacao from "@/screens/Moderacao";
+import Sobre from "@/screens/Sobre";
 
 const tabPaths: Record<TabName, string> = {
   inicio: "/",
@@ -185,7 +186,18 @@ export default function App() {
               <p className="desktop-city">Paracatu, Minas Gerais</p>
             </div>
           </div>
-          <Navegacao activeTab={activeTab} onNavigate={navigate} />
+          <Navegacao activeTab={pathname === "/sobre" ? null : activeTab} onNavigate={navigate} />
+          <div className="desktop-institutional">
+            <Link to="/sobre" aria-current={pathname === "/sobre" ? "page" : undefined}
+              className="desktop-about-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M12 11v5m0-8h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              <span>Sobre o Paracatu 360</span>
+            </Link>
+            <p className="desktop-institutional-tagline">Veja. Registre. Acompanhe.</p>
+          </div>
         </aside>
       )}
       <main className="app-main">
@@ -194,6 +206,7 @@ export default function App() {
           <Route path="/entrar" element={<RotaLogin />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+          <Route path="/sobre" element={<Sobre activeTab={null} onNavigate={navigate} />} />
           <Route path="/" element={<Inicio activeTab={activeTab} onNavigate={navigate}
             onOpenDetalhe={openDetalhe}
             {...categoriasState} onOpenDashboard={openDashboard}

@@ -123,7 +123,7 @@ input::placeholder, textarea::placeholder { color: #586a80; opacity: 1; }
   .sort-chip { min-height: 32px; }
   .app-shell { display: grid; grid-template-columns: 216px minmax(0, 1fr); }
   .app-shell--login { display: block; }
-  .desktop-navigation { display: block; background: white; border-right: 1px solid #e8eef5; padding: 28px 16px; overflow-y: auto; }
+  .desktop-navigation { display: flex; flex-direction: column; height: 100dvh; background: white; border-right: 1px solid #e8eef5; padding: 28px 16px; overflow-y: auto; }
   .desktop-identity { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
   .desktop-logo { width: 44px; height: 44px; object-fit: contain; flex: none; border-radius: 8px; }
   .desktop-brand { color: #075ce5; font: 700 17px Inter, sans-serif; white-space: nowrap; }
@@ -137,6 +137,11 @@ input::placeholder, textarea::placeholder { color: #586a80; opacity: 1; }
   .desktop-navigation .app-navigation button > .absolute { display: none; }
   .desktop-navigation .app-navigation button[aria-label] > div { width: 28px; height: 28px; box-shadow: none; }
   .desktop-new-label { display: inline; color: #075ce5; font: 600 13px Inter, sans-serif; }
+  .desktop-institutional { margin-top: auto; padding-top: 24px; border-top: 1px solid #e8eef5; }
+  .desktop-about-link { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 10px; border-radius: 10px; color: #586a80; font: 600 12px Inter, sans-serif; text-decoration: none; }
+  .desktop-about-link:hover, .desktop-about-link[aria-current="page"] { color: #075ce5; background: #e8f0fe; }
+  .desktop-about-link svg { flex: none; }
+  .desktop-institutional-tagline { padding: 8px 10px 0; color: #586a80; font: 400 11px Inter, sans-serif; }
   .screen-content { padding: 36px; gap: 28px; }
   .layout-inicio { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
   .layout-inicio > .home-hero > div { padding: 32px; max-width: 620px; }
